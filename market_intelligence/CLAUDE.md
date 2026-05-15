@@ -17,7 +17,7 @@
 - `shared/`, `portfolio_analyzer/`, `coach_chat/` 수정 금지
 - `tests/` 본인 모듈용 테스트는 추가 OK
 
-## 룰 (CTO가 강제)
+## 공통 룰
 
 1. 모듈 출력은 `shared.models.MarketOutput` Pydantic 객체
 2. 매수/매도 추천 표현 금지
@@ -60,4 +60,4 @@ cat docs/daily-logs/eunseo/$(ls docs/daily-logs/eunseo/ | tail -1)
 
 ## 일정 (5/14 8주차 기준)
 
-세부 진행은 본인의 노션 페이지/회의록 참고. CTO에게 막힌 거 있으면 즉시 핑.
+세부 진행은 본인의 노션 페이지/회의록 참고. 병승에게 막힌 거 있으면 즉시 핑.

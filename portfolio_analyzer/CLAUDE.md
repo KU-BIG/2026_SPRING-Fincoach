@@ -20,7 +20,7 @@
 - 이 폴더 안 자유롭게 수정 OK
 - `shared/`, `market_intelligence/`, `coach_chat/` 수정 금지
 
-## 룰 (CTO가 강제)
+## 공통 룰
 
 1. 수빈에게 가는 4개 함수 시그니처는 노션 5/14 회의대로 (`get_portfolio_data` 등)
 2. LLM 리포트에 `shared.disclaimers.attach()` 호출

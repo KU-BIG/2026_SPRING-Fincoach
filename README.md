@@ -4,7 +4,7 @@
 
 ## 팀
 
-- 병승 (CTO/총감독): 아키텍처, shared 모듈, 통합/리뷰
+- 병승: 아키텍처, shared 모듈, 통합/리뷰
 - 은서: Market Intelligence (`market_intelligence/`)
 - 현태: Portfolio Analyzer (`portfolio_analyzer/`)
 - 수빈: Coach Chat (`coach_chat/`)
@@ -25,7 +25,7 @@ Claude 사용자는 이 폴더에서 Claude 켜면 됩니다. `CLAUDE.md`가 자
 
 ```
 fincoach/
-  shared/                  공통 모델/유틸 (CTO만 수정)
+  shared/                  공통 모델/유틸 (병승만 수정)
   market_intelligence/     은서
   portfolio_analyzer/      현태
   coach_chat/              수빈 + Streamlit 메인
@@ -45,6 +45,6 @@ fincoach/
 ## 룰 한 줄 요약
 
 1. main 직접 push 금지. 항상 `feature/{이름}-{기능}` 브랜치
-2. `shared/` 수정은 CTO 승인 필수
+2. `shared/` 수정은 병승 승인 필수
 3. 매수/매도 추천 표현 금지 (정보 제공만)
 4. 작업 끝나면 `claude /wrap-day` 실행

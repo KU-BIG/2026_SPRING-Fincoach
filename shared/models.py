@@ -1,7 +1,7 @@
 """Data contracts between modules.
 
 These Pydantic models are the source of truth for inter-module communication.
-Changes require an ADR in docs/decisions/ and CTO review.
+Changes require an ADR in docs/decisions/ and 병승 review.
 """
 
 from __future__ import annotations

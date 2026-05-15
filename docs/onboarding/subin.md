@@ -95,7 +95,7 @@ def build_system_prompt(ctx: ChatContext) -> str:
 ## 블로커 발생 시
 
 ```bash
-claude /ask-cto "{질문}"
+claude /ask "{질문}"
 ```
 
 ## 일정

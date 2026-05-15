@@ -25,7 +25,7 @@
 ## 핵심 룰 4가지
 
 1. `main` 직접 push 금지. 작업은 `feature/{본인이름}-{기능}` 브랜치에서 수행
-2. `shared/` 폴더 수정 금지 (CTO 영역)
+2. `shared/` 폴더 수정 금지 (공통 영역)
 3. 타 모듈 폴더 수정 금지
 4. 매수/매도 직접 추천 표현 금지 (법적 리스크)
 
@@ -48,13 +48,13 @@ claude /start-day
 ## 블로커 발생 시
 
 ```
-claude /ask-cto "{질문}"
+claude /ask "{질문}"
 ```
-GitHub Issue 자동 생성. CTO가 답변.
+GitHub Issue 자동 생성. 병승이 답변.
 
 ## 모듈 내부 자율성
 
-본인 모듈 내부의 프레임워크/라이브러리/구조는 모듈 owner 결정. CTO는 모듈 간 인터페이스(`shared/`)와 안전 룰만 강제. 주요 결정은 `docs/decisions/`에 ADR로 기록.
+본인 모듈 내부의 프레임워크/라이브러리/구조는 모듈 owner 결정. 공통 영역은 모듈 간 인터페이스(`shared/`)와 안전 룰만 강제. 주요 결정은 `docs/decisions/`에 ADR로 기록.
 
 ## FAQ
 

@@ -15,18 +15,18 @@
 2. **`docs/daily-logs/{본인}/{날짜}.md`** 자동 저장
    - `wrap-day` 스킬이 매일 작업 끝날 때 자동 생성
    - 다음 채팅 시작할 때 `start-day` 스킬이 자동 로드
-3. **CTO 대리 에이전트** (`cto-bot`)
+3. **대리 에이전트** (`fincoach-bot`)
    - PR 리뷰, ADR 초안, 디지스트
 4. **자동화 스킬** (`.claude/skills/`)
-   - `sync-main`, `wrap-day`, `start-day`, `safe-pr`, `ask-cto`, `cto-review`
+   - `sync-main`, `wrap-day`, `start-day`, `safe-pr`, `ask`, `review`
 
 ## 결과
 
 - 좋은 점:
   - 컨텍스트 손실 문제 자동 해소.
   - 사람이 가이드 안 읽어도 LLM이 룰 적용.
-  - CTO 시간 절약 (cto-bot이 1차 리뷰).
-  - 일일 로그가 회사형 기록 보존.
+  - 리뷰 시간 절약 (fincoach-bot이 1차 리뷰).
+  - 일일 로그가 작업 기록 보존.
 - 트레이드오프: Claude 의존도 높음. Claude 없으면 메뉴얼 작업.
 
 ## 대안
@@ -45,4 +45,4 @@
 
 - [x] CLAUDE.md 5개 작성 (루트 + 4개 폴더)
 - [x] 스킬 6개 작성
-- [x] cto-bot 에이전트 작성
+- [x] fincoach-bot 에이전트 작성

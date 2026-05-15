@@ -17,7 +17,7 @@
 - Streamlit 메인 앱 (`coach_chat/main.py`)도 여기서 관리
 - `shared/`, `market_intelligence/`, `portfolio_analyzer/` 수정 금지
 
-## 룰 (CTO가 강제)
+## 공통 룰
 
 1. LLM 응답에는 항상 `shared.disclaimers.QA_DISCLAIMER` 첨부
 2. 모듈 간 데이터는 `shared.models` Pydantic 객체로 받기 (dict 직접 다루지 마)
@@ -48,7 +48,7 @@ m = mock_market_output()
 r = mock_analysis_report()
 ```
 
-## Streamlit 메인 앱 골격은 0주차에 CTO가 세팅함
+## Streamlit 메인 앱 골격은 0주차에 병승이 세팅
 
 본인 작업: Q&A 챗 UI, 컨텍스트 빌더 (`coach_chat/context_builder.py`)
 

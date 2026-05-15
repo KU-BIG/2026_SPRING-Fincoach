@@ -1,6 +1,6 @@
 # 환경 셋업
 
-운영체제별 단계. 블로커 발생 시 [FAQ](FAQ.md) 우선 확인 후 `claude /ask-cto`.
+운영체제별 단계. 블로커 발생 시 [FAQ](FAQ.md) 우선 확인 후 `claude /ask`.
 
 ## 사전 확인
 
@@ -119,5 +119,5 @@ claude /start-day
 ## 블로커 발생 시
 
 - [FAQ](FAQ.md) 우선 확인
-- `claude /ask-cto "{질문}"` 으로 Issue 생성
+- `claude /ask "{질문}"` 으로 Issue 생성
 - GitHub Issue 직접 작성: https://github.com/youdie006/KUBIG_conf3/issues/new

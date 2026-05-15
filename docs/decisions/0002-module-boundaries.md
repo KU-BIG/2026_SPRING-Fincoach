@@ -15,9 +15,9 @@
 - `market_intelligence/` (은서): 외부 시장 데이터 수집/가공 → `MarketOutput`
 - `portfolio_analyzer/` (현태): 사용자 포트폴리오 분석/백테스트 → 4개 dict 반환 함수
 - `coach_chat/` (수빈): Streamlit UI + LLM 챗
-- `shared/` (CTO): 데이터 계약, mock, config
+- `shared/` (병승): 데이터 계약, mock, config
 
-각 팀원은 자기 폴더만 수정. `shared/`는 CTO 영역(CODEOWNERS 자동 라우팅).
+각 팀원은 자기 폴더만 수정. `shared/`는 공통 영역(CODEOWNERS 자동 라우팅).
 
 ## 결과
 

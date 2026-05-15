@@ -1,5 +1,5 @@
 ---
-name: 질문 (CTO에게)
+name: 질문 (병승에게)
 about: 의사결정/리뷰 필요한 질문
 labels: question
 assignees: youdie006

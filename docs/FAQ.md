@@ -1,6 +1,6 @@
 # FAQ
 
-자주 막히는 것들. 여기 없는 거면 `claude /ask-cto "{질문}"` 또는 GitHub Issue.
+자주 막히는 것들. 여기 없는 거면 `claude /ask "{질문}"` 또는 GitHub Issue.
 
 ## 셋업
 
@@ -33,7 +33,7 @@
 ### Q. merge conflict 났어요
 - 우선 `git rebase --abort` 로 안전하게 복귀
 - 그 다음 `claude /sync-main` 으로 main 최신화 시도
-- 그래도 conflict면 `claude /ask-cto "conflict 났어, {파일명}"` 으로 도움 요청
+- 그래도 conflict면 `claude /ask "conflict 났어, {파일명}"` 으로 도움 요청
 
 ### Q. 어제 작업한 게 사라졌어요 (새 채팅 켰더니)
 - `claude /start-day` 실행하면 일일 로그에서 복구
@@ -58,7 +58,7 @@
 
 ### Q. Claude가 시크릿(.env, API 키)을 코드에 넣었어요
 - 즉시 새 채팅 시작 + `git diff` 로 확인
-- 만약 commit/push 됐으면 CTO에게 즉시 핑 (`/ask-cto`)
+- 만약 commit/push 됐으면 병승에게 즉시 핑 (`/ask`)
 - API 키 회전 필요
 
 ### Q. dev mode (mock 응답) 어떻게 켜나요
@@ -90,4 +90,4 @@
 
 ### Q. `ruff check` 가 너무 빡빡해요
 - 본인 모듈에선 `# noqa: {룰}` 로 해당 줄 무시 가능 (남용 금지)
-- 룰이 진짜 부적절하면 `pyproject.toml`의 `[tool.ruff.lint]` 에서 ignore 추가 + PR (CTO 리뷰)
+- 룰이 진짜 부적절하면 `pyproject.toml`의 `[tool.ruff.lint]` 에서 ignore 추가 + PR (병승 리뷰)

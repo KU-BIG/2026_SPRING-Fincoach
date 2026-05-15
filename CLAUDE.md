@@ -8,7 +8,7 @@ FinCoach - 내 포트폴리오를 아는 AI 금융 코치. Python 3.11+, Streaml
 
 ## 팀 구조와 모듈 소유권
 
-- `shared/` - 병승 (CTO) 소유. 다른 팀원은 READ-ONLY
+- `shared/` - 병승 소유. 다른 팀원은 READ-ONLY
 - `market_intelligence/` - 은서
 - `portfolio_analyzer/` - 현태
 - `coach_chat/` - 수빈
@@ -19,7 +19,7 @@ FinCoach - 내 포트폴리오를 아는 AI 금융 코치. Python 3.11+, Streaml
 ## 절대 룰 (어기지 마)
 
 1. **main 브랜치 직접 push 금지.** 항상 feature 브랜치에서 작업하고 PR 올려라. (branch protection으로 자동 차단)
-2. **shared/ 수정은 CODEOWNERS 리뷰 필수.** CTO 리뷰가 자동으로 요청된다. 승인 받으면 본인이 머지해도 된다.
+2. **shared/ 수정은 CODEOWNERS 리뷰 필수.** 병승 리뷰가 자동으로 요청된다. 승인 받으면 본인이 머지해도 된다.
 3. **다른 사람 모듈 폴더 수정 금지.** 예: 은서가 `portfolio_analyzer/` 수정 X.
 4. **위험 git 명령 금지:** `git push --force`, `git push -f`, `git reset --hard`. hook으로 차단되어 있다.
 5. **매수/매도 추천 표현 금지.** "정보 제공"으로만 작성. 법적 리스크.
@@ -45,9 +45,9 @@ claude /wrap-day       # 자동 commit + push + PR 업데이트 + 일일 로그 
 
 ## 모듈 내부 자유
 
-CTO가 강제하는 것: **shared/의 입출력 계약 + 룰(main 보호, 매수/매도 금지 등).**
+공통 영역 (공통 룰): **shared/의 입출력 계약 + 룰(main 보호, 매수/매도 금지 등).**
 
-CTO가 강제하지 않는 것:
+모듈 자율 영역:
 - 모듈 안의 파일 구조, 클래스 분리, 함수 시그니처
 - 모듈 안에서 쓰는 프레임워크 (Streamlit / React / FastAPI / CLI / 무엇이든)
 - 라이브러리 선택 (yfinance vs pykrx, openai vs anthropic 등)

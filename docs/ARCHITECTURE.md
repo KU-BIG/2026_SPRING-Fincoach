@@ -8,7 +8,7 @@
 
 ## 모듈 책임
 
-### shared/ (병승, CTO)
+### shared/ (병승)
 - 데이터 계약 (Pydantic 모델)
 - mock 데이터 (개발 중 다른 모듈 안 기다리고 진행 가능하게)
 - 환경설정, 면책, 공통 예외
@@ -74,13 +74,13 @@ fincoach/
 │   ├── ARCHITECTURE.md      이 문서
 │   ├── INTERFACES.md        모듈 인터페이스 명세
 │   ├── GIT_WORKFLOW.md      Git 워크플로우
-│   ├── PR_REVIEW_PLAYBOOK.md CTO 리뷰 가이드
+│   ├── PR_REVIEW_PLAYBOOK.md PR 리뷰 체크리스트
 │   ├── decisions/           ADR
 │   ├── meetings/            회의록
 │   ├── daily-logs/          팀원별 일일 로그
 │   └── onboarding/          팀원별 첫날 가이드
 ├── .claude/
-│   ├── agents/cto-bot.md    CTO 대리 에이전트
+│   ├── agents/fincoach-bot.md    리뷰 대리 에이전트
 │   ├── skills/              자동화 스킬
 │   └── settings.json        Bash hook (위험 명령 차단)
 └── .github/

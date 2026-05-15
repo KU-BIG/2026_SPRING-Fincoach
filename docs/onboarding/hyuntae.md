@@ -87,7 +87,7 @@ def name_to_ticker(name: str, market: str = "auto") -> str | None:
 ## 블로커 발생 시
 
 ```bash
-claude /ask-cto "{질문}"
+claude /ask "{질문}"
 ```
 
 ## 일정

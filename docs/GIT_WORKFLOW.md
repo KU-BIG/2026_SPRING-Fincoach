@@ -24,7 +24,7 @@
 2. `claude /wrap-day` 실행 (draft PR 자동 생성)
 3. CI 돌면서 통과 확인 (ruff + pytest)
 4. PR ready for review로 전환 (`gh pr ready`)
-5. CODEOWNERS가 자동으로 리뷰 요청 (`shared/` 변경 시 CTO 자동)
+5. CODEOWNERS가 자동으로 리뷰 요청 (`shared/` 변경 시 병승 자동)
 6. 리뷰 받고 수정 사항 반영
 7. 1 approval + CI 통과되면 본인이 squash & merge
 
@@ -57,7 +57,7 @@
 
 ## main이 망가졌을 때 (드물지만 발생 가능)
 
-CTO만 처리:
+병승만 처리:
 
 ```bash
 git checkout main
@@ -72,7 +72,7 @@ git push   # main에 revert commit은 PR로 처리 필요. branch protection 확
 
 ```bash
 git rebase --abort      # 안전하게 복귀
-claude /ask-cto "{충돌 내용}"   # CTO에게 핑
+claude /ask "{충돌 내용}"   # 병승에게 핑
 ```
 
 ## 일일 로그가 중요한 이유
@@ -83,13 +83,13 @@ claude /ask-cto "{충돌 내용}"   # CTO에게 핑
 
 기술 선택을 바꾸거나 `shared/`를 변경할 때는 `docs/decisions/`에 ADR 추가. 템플릿: [`docs/decisions/TEMPLATE.md`](decisions/TEMPLATE.md).
 
-## CTO 부재 시
+## 리뷰 위임
 
-대리 에이전트 `cto-bot` 호출:
+대리 에이전트 `fincoach-bot` 호출:
 
 ```
-claude /cto-review 5         # PR #5 리뷰
-claude /cto-review digest    # 데일리 디지스트
+claude /review 5         # PR #5 리뷰
+claude /review digest    # 데일리 디지스트
 ```
 
-다만 머지 자체는 사람이 수행 (`cto-bot`은 GO/NO-GO 판단만).
+머지 자체는 사람이 수행 (`fincoach-bot`은 GO/NO-GO 판단만).

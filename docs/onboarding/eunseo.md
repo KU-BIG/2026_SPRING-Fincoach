@@ -84,15 +84,15 @@ def collect_market(tickers: list[str]) -> MarketOutput:
 ## 룰 체크
 
 - `main` 직접 commit 금지
-- `shared/` 수정 금지 (CTO 영역)
+- `shared/` 수정 금지 (공통 영역)
 - 타 모듈 폴더 수정 금지
 - 매수/매도 추천 표현 금지
 
 ## 블로커 발생 시
 
 ```bash
-claude /ask-cto "{질문}"     # GitHub Issue 자동 생성
-claude /cto-review {PR번호}   # cto-bot 1차 리뷰
+claude /ask "{질문}"     # GitHub Issue 자동 생성
+claude /review {PR번호}   # fincoach-bot 1차 리뷰
 ```
 
 ## 일정

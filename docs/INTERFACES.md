@@ -134,9 +134,9 @@ from shared.mocks import (
 ## 인터페이스 변경 절차
 
 1. `shared/models.py` 변경 안 만들고 **먼저 ADR 작성** (`docs/decisions/####-*.md`)
-2. CTO(병승) 리뷰 받고 ADR 채택
+2. 병승 리뷰 받고 ADR 채택
 3. ADR 채택 후 PR 올림 (코드 변경 + ADR 첨부)
-4. CODEOWNERS가 CTO에게 자동 리뷰 요청
+4. CODEOWNERS가 병승에게 자동 리뷰 요청
 5. 영향받는 다른 모듈도 같은 PR에서 함께 갱신
 6. 모든 mock 갱신 (`shared/mocks.py`)
 7. `tests/test_contracts.py` 갱신
