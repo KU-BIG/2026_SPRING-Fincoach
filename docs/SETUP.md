@@ -1,6 +1,6 @@
 # 환경 셋업
 
-운영체제별 단계. 막히면 [FAQ](FAQ.md) → 그래도 안 되면 `claude /ask-cto`.
+운영체제별 단계. 블로커 발생 시 [FAQ](FAQ.md) 우선 확인 후 `claude /ask-cto`.
 
 ## 사전 확인
 
@@ -51,21 +51,20 @@ cp .env.example .env
 
 ## Claude Code 설치
 
-세 가지 옵션. 본인 편한 거 사용:
+3개 옵션 중 선택:
 
-### 옵션 1: VS Code 확장 (가장 쉬움)
-- VS Code 열기
-- Extensions → "Claude Code" 검색 → 설치
+### 옵션 1: VS Code 확장
+- VS Code → Extensions → "Claude Code" 검색 → 설치
 - 사이드바 아이콘 클릭 → 로그인
 
-### 옵션 2: 터미널 CLI (병승 추천)
+### 옵션 2: 터미널 CLI
 ```bash
 npm install -g @anthropic-ai/claude-code
 claude login
 ```
 
 ### 옵션 3: JetBrains IDE
-- IDE Plugin Marketplace → "Claude Code" → 설치
+- Plugin Marketplace → "Claude Code" → 설치
 
 ## Git 설정
 
@@ -74,9 +73,9 @@ git config user.name "{본인 이름 - 예: eunseo 또는 은서}"
 git config user.email "{본인 이메일}"
 ```
 
-이름이 영문이면 `wrap-day` 스킬이 자동으로 본인 식별. 한글이어도 매핑됨.
+`wrap-day` 스킬이 영문/한글 이름 모두 자동 매핑.
 
-GitHub 계정 인증 (gh CLI 추천):
+GitHub 계정 인증:
 ```bash
 brew install gh             # macOS
 # 또는 sudo apt install gh   # Ubuntu
@@ -92,16 +91,16 @@ ruff check .                # lint 통과해야 함
 python -c "from shared.mocks import mock_market_output; print(mock_market_output().daily_market_summary)"
 ```
 
-마지막 명령이 시장 브리핑 한 문장 찍으면 OK.
+마지막 명령이 시장 브리핑 1문장 출력 시 정상.
 
-## Claude 켜기
+## Claude 실행
 
 ```bash
 cd fincoach
 claude                      # 또는 VS Code에서 사이드바
 ```
 
-`CLAUDE.md` 자동 로드됨. 본인 모듈 폴더로 이동해서 켜면 본인 룰까지 추가 로드:
+`CLAUDE.md` 자동 로드됨. 모듈 폴더에서 실행 시 모듈별 룰까지 추가 로드:
 
 ```bash
 cd market_intelligence      # 은서
@@ -115,10 +114,10 @@ cd coach_chat               # 수빈
 claude /start-day
 ```
 
-→ 어제 로그 (첫날은 없음) + main 최신화 + 오늘 할 일 안내.
+전일 로그(첫날 없음) + main 최신화 + 당일 작업 안내 자동 실행.
 
-## 막히면
+## 블로커 발생 시
 
-- [FAQ](FAQ.md) 먼저 보기
+- [FAQ](FAQ.md) 우선 확인
 - `claude /ask-cto "{질문}"` 으로 Issue 생성
-- 또는 직접 GitHub Issue: https://github.com/youdie006/KUBIG_conf3/issues/new
+- GitHub Issue 직접 작성: https://github.com/youdie006/KUBIG_conf3/issues/new

@@ -67,7 +67,7 @@
 
 ## 모듈/스택
 
-### Q. 우리 모듈에 라이브러리 추가하고 싶어요
+### Q. 본인 모듈에 라이브러리 추가 방법
 - `pyproject.toml` 의 `dependencies` 에 추가 후 `uv pip install -e ".[dev]"` 다시
 - 무거운 라이브러리는 ADR 권장 (`docs/decisions/`)
 
