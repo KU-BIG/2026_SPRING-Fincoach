@@ -1,0 +1,20 @@
+# CODEOWNERS - 자동 PR 리뷰 요청
+# 형식: 경로  @사용자명
+
+# 디폴트: 모든 변경은 CTO에게도 알림
+*                       @youdie006
+
+# CTO 전용 영역 (반드시 CTO 리뷰)
+/shared/                @youdie006
+/.github/               @youdie006
+/.claude/               @youdie006
+/docs/decisions/        @youdie006
+/CLAUDE.md              @youdie006
+/AGENTS.md              @youdie006
+/pyproject.toml         @youdie006
+/README.md              @youdie006
+
+# 모듈 owner (자신의 모듈은 본인이 1차 리뷰)
+/market_intelligence/   @eunseo5703 @youdie006
+/portfolio_analyzer/    @vivaldi47 @youdie006
+/coach_chat/            @ssuebin @youdie006

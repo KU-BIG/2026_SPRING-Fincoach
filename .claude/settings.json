@@ -1,0 +1,15 @@
+{
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'cmd=$(jq -r .tool_input.command); if echo \"$cmd\" | grep -qE \"git push.*(-f|--force)\"; then echo \"BLOCKED: force push 금지. main 보호 룰 위반.\" >&2; exit 2; fi; if echo \"$cmd\" | grep -qE \"git reset --hard\"; then echo \"BLOCKED: reset --hard 금지. 작업 손실 위험.\" >&2; exit 2; fi; if echo \"$cmd\" | grep -qE \"git push.*origin.*main\"; then echo \"BLOCKED: main 직접 push 금지. PR로 머지하세요.\" >&2; exit 2; fi; if echo \"$cmd\" | grep -qE \"rm -rf (shared|\\.github|docs)/\"; then echo \"BLOCKED: 보호 폴더 삭제 금지.\" >&2; exit 2; fi; exit 0'"
+          }
+        ]
+      }
+    ]
+  }
+}
