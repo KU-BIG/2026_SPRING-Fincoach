@@ -7,13 +7,13 @@ Changes require an ADR in docs/decisions/ and CTO review.
 from __future__ import annotations
 
 from datetime import date, datetime
-from enum import Enum
+from enum import StrEnum
 from typing import Literal
 
 from pydantic import BaseModel, Field, field_validator
 
 
-class Market(str, Enum):
+class Market(StrEnum):
     KR = "KR"
     US = "US"
 

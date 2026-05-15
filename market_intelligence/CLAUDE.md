@@ -17,12 +17,20 @@
 - `shared/`, `portfolio_analyzer/`, `coach_chat/` 수정 금지
 - `tests/` 본인 모듈용 테스트는 추가 OK
 
-## 룰
+## 룰 (CTO가 강제)
 
-1. 외부 API (yfinance/pytrends/RSS)는 반드시 캐시 레이어 거치기 (실패해도 fallback 동작)
-2. 함수 반환은 dict 말고 `shared.models`의 Pydantic 객체
-3. 비용 큰 호출 (LLM 요약 등)은 dev mode에서 mock 반환
-4. 매수/매도 표현 금지
+1. 모듈 출력은 `shared.models.MarketOutput` Pydantic 객체
+2. 매수/매도 추천 표현 금지
+
+## 자유 (은서가 결정)
+
+- 데이터 소스 (yfinance / pykrx / 네이버 / 조선 RSS 등)
+- 캐싱 전략 (메모리 / SQLite / Redis / 파일)
+- LLM 사용 여부 (요약 안 만들고 raw만 줘도 됨)
+- 함수 분리, 클래스 구조
+- 비용/속도 트레이드오프
+
+큰 결정은 `docs/decisions/`에 ADR.
 
 ## 개발 시작
 

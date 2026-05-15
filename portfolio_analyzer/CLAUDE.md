@@ -20,12 +20,20 @@
 - 이 폴더 안 자유롭게 수정 OK
 - `shared/`, `market_intelligence/`, `coach_chat/` 수정 금지
 
-## 룰
+## 룰 (CTO가 강제)
 
-1. 한국 종목은 `pykrx`로, 미국은 `yfinance`로 (한글 종목명 처리)
-2. 백테스트는 vectorized (pandas)로. for 루프 금지
-3. LLM 리포트는 반드시 `shared.disclaimers`의 면책 문구 첨부
-4. **매수/매도 직접 추천 금지.** "정보 제공" 톤으로만
+1. 수빈에게 가는 4개 함수 시그니처는 노션 5/14 회의대로 (`get_portfolio_data` 등)
+2. LLM 리포트에 `shared.disclaimers.attach()` 호출
+3. 매수/매도 직접 추천 금지 ("정보 제공" 톤)
+
+## 자유 (현태가 결정)
+
+- 한국/미국 데이터 소스 (pykrx, yfinance, KIS API 등)
+- 백테스트 알고리즘
+- 차트 라이브러리 (plotly / altair / matplotlib)
+- 캐싱 전략, 파일 분리
+
+큰 결정은 `docs/decisions/`에 ADR.
 
 ## MVP 1단계 (확정된 우선순위 - 노션 5/14 회의)
 

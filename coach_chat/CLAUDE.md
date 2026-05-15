@@ -17,12 +17,21 @@
 - Streamlit 메인 앱 (`coach_chat/main.py`)도 여기서 관리
 - `shared/`, `market_intelligence/`, `portfolio_analyzer/` 수정 금지
 
-## 룰
+## 룰 (CTO가 강제)
 
-1. 5주차 회의 결정: **Q&A 기능만 우선**. 대시보드 등은 P1
-2. LLM 응답에는 항상 `shared.disclaimers.QA_DISCLAIMER` 첨부
-3. 다른 모듈 출력은 `shared.models` Pydantic 객체로 받기 (dict 직접 다루지 마)
-4. 세션 캐시 사용 (현태가 같은 데이터 두 번 안 만들게)
+1. LLM 응답에는 항상 `shared.disclaimers.QA_DISCLAIMER` 첨부
+2. 모듈 간 데이터는 `shared.models` Pydantic 객체로 받기 (dict 직접 다루지 마)
+3. 매수/매도 추천 표현 금지
+
+## 자유 (수빈이 결정)
+
+- 프레임워크: Streamlit / React+Vite / Next.js / CLI 등 무엇이든 본인이 정해라
+  - 노션 MVP 명세는 React+TS+FastAPI 였음. 5주차 회의 후 단순화 논의 있었음. 최종 선택은 본인이
+- Q&A만 vs 대시보드까지 vs 풀버전 (스코프)
+- 세션 캐싱 전략
+- LLM 클라이언트 (openai / anthropic / litellm)
+
+본인 모듈에서 큰 결정 (스택 변경 등)은 `docs/decisions/`에 ADR 추가하면 좋다.
 
 ## 개발 시작
 

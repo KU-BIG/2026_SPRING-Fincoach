@@ -43,6 +43,17 @@ claude /wrap-day       # 자동 commit + push + PR 업데이트 + 일일 로그 
 
 자세한 내용은 [docs/INTERFACES.md](docs/INTERFACES.md).
 
+## 모듈 내부 자유
+
+CTO가 강제하는 것: **shared/의 입출력 계약 + 룰(main 보호, 매수/매도 금지 등).**
+
+CTO가 강제하지 않는 것:
+- 모듈 안의 파일 구조, 클래스 분리, 함수 시그니처
+- 모듈 안에서 쓰는 프레임워크 (Streamlit / React / FastAPI / CLI / 무엇이든)
+- 라이브러리 선택 (yfinance vs pykrx, openai vs anthropic 등)
+
+이건 본인 모듈 owner의 결정이다. 본인이 본인 AI와 같이 정해라. 큰 변경(예: 프론트엔드 스택 결정)은 ADR로 기록 남겨라.
+
 ## 컨텍스트 관리 (8주차 회의 결정사항)
 
 매일 작업 끝날 때 `docs/daily-logs/{이름}/{날짜}.md`에 자동 로그가 저장된다. 새 채팅 시작할 때 본인의 최근 로그를 먼저 읽어라:

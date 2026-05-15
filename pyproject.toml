@@ -4,19 +4,15 @@ version = "0.1.0"
 description = "FinCoach - portfolio-aware AI financial coach"
 requires-python = ">=3.11"
 dependencies = [
-    "streamlit>=1.40",
     "pydantic>=2.9",
-    "yfinance>=0.2.40",
-    "pykrx>=1.0.45",
-    "pandas>=2.2",
-    "numpy>=2.0",
-    "plotly>=5.24",
-    "openai>=1.50",
-    "pytrends>=4.9",
-    "feedparser>=6.0",
-    "beautifulsoup4>=4.12",
     "python-dotenv>=1.0",
 ]
+
+# 모듈별 의존성은 본인이 추가. 예:
+# market_intelligence: yfinance, pykrx, pytrends, feedparser
+# portfolio_analyzer:  yfinance, pykrx, pandas, numpy, plotly, openai
+# coach_chat:          (수빈이 스택 정한 뒤 추가)
+# 통합 시 한곳에 모으거나 모듈별 extras로 분리
 
 [project.optional-dependencies]
 dev = [

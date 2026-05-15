@@ -5,6 +5,9 @@ shared/models의 모든 모델이 mock 데이터로 정상 검증되는지 확�
 
 from __future__ import annotations
 
+import pytest
+from pydantic import ValidationError
+
 from shared.mocks import (
     mock_analysis_report,
     mock_backtest_result,
@@ -57,10 +60,6 @@ def test_stock_data_serializable() -> None:
 
 
 def test_portfolio_rejects_empty_accounts() -> None:
-    import pytest
-
-    from pydantic import ValidationError
-
     with pytest.raises(ValidationError):
         Portfolio(accounts=[])
 
