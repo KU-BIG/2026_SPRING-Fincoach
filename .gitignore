@@ -25,9 +25,11 @@ env/
 
 .streamlit/secrets.toml
 
-# Claude session artifacts (개인 - 공유 안 함)
+# Claude Code 개인/메타 설정 (공유 안 함 — 워크플로 자율 + 메타 콘텐츠 금지 룰)
 .claude/session-*.md
 .claude/sessions/
+.claude/agents/
+.claude/skills/
 
 # 캐시
 .cache/

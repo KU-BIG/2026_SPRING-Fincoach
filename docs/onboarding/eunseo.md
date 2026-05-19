@@ -1,6 +1,6 @@
 # 은서 온보딩
 
-소요 시간: 첫날 30분.
+소요 시간: 첫날 30분. 환경 셋업 위주. 실제 작업 지시문은 `docs/team-instructions/eunseo.md`.
 
 ## 0. 사전 준비
 
@@ -24,8 +24,6 @@ git 설정:
 git config user.name eunseo
 git config user.email {본인 이메일}
 ```
-
-`wrap-day` 스킬이 신원 자동 감지 (영문/한글 모두 매핑).
 
 ## 2. Claude 실행 (1분)
 
@@ -51,25 +49,13 @@ python -c "from shared.mocks import mock_market_output; print(mock_market_output
 
 본인이 만들 출력의 구조 확인.
 
-## 5. 작업 시작 (15분)
+## 5. 작업 지시문 주입 (5분)
 
-```bash
-claude /start-day
-```
-
-자동으로 브랜치 생성 및 작업 준비.
-
-작업 종료:
-```bash
-claude /wrap-day
-```
-
-자동 커밋/푸시/draft PR/일일 로그.
+`docs/team-instructions/eunseo.md` 안의 코드 블록을 Claude 첫 메시지로 그대로 붙여넣음. 본인 모듈 owner 룰과 첫 PR 목표가 모두 포함돼 있음.
 
 ## 6. 첫 PR
 
-- `market_intelligence/engine.py` 파일 생성
-- `mock_market_output()` 반환하는 더미 함수 1개
+`market_intelligence/engine.py` 파일 생성. mock 반환 더미 함수 1개부터:
 
 ```python
 from shared.models import MarketOutput
@@ -88,13 +74,6 @@ def collect_market(tickers: list[str]) -> MarketOutput:
 - 타 모듈 폴더 수정 금지
 - 매수/매도 추천 표현 금지
 
-## 블로커 발생 시
+## 블로커/질문
 
-```bash
-claude /ask "{질문}"     # GitHub Issue 자동 생성
-claude /review {PR번호}   # fincoach-bot 1차 리뷰
-```
-
-## 일정
-
-노션 8주차 회의록 기준. 진행 상황은 본인 노션 페이지에 업데이트.
+GitHub Issue 작성. 또는 팀 톡방.

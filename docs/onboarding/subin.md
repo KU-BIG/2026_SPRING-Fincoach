@@ -1,6 +1,6 @@
 # 수빈 온보딩
 
-소요 시간: 첫날 30분.
+소요 시간: 첫날 30분. 환경 셋업 위주. 실제 작업 지시문은 `docs/team-instructions/subin.md`.
 
 ## 0. 사전 준비
 
@@ -35,17 +35,13 @@ claude
 cat coach_chat/CLAUDE.md
 ```
 
-5주차 회의 결정: Q&A 기능 우선. 대시보드는 P1.
+Q&A 기능 우선. 대시보드는 P1.
 
-## 4. 스택 결정 (가장 먼저)
+## 4. 프론트엔드
 
-`coach_chat`의 프론트엔드 스택은 모듈 owner 결정 사항. 선택지:
-- Streamlit (빠른 시연용)
-- React + Vite + TS (노션 MVP 원안)
-- Next.js
-- CLI (LLM 응답만 검증할 경우)
+`web/`에 React + Vite + TypeScript 스캐폴드가 이미 존재. UI 작업은 그 위에서 진행 (Chat.tsx, Learn.tsx 등 본인 담당 화면).
 
-결정 후 `docs/decisions/0008-coach-chat-frontend.md` ADR 작성 필수 (`docs/decisions/TEMPLATE.md` 참조).
+다른 방식 쓰고 싶으면 ADR 작성 후 진행 (`docs/decisions/TEMPLATE.md`).
 
 ## 5. mock 데이터 확인
 
@@ -61,16 +57,13 @@ print('Report:', r.summary)
 
 본인이 LLM context로 받을 데이터 구조.
 
-## 6. 작업 시작
+## 6. 작업 지시문 주입
 
-```bash
-claude /start-day
-```
+`docs/team-instructions/subin.md` 안의 코드 블록을 Claude 첫 메시지로 그대로 붙여넣음. 본인 모듈 owner 룰과 첫 PR 목표가 모두 포함돼 있음.
 
 ## 7. 첫 PR
 
-- 스택 결정 ADR 1개
-- `coach_chat/context_builder.py` 작성:
+`coach_chat/context_builder.py` 작성:
 
 ```python
 from shared.models import ChatContext, MarketOutput, AnalysisReport
@@ -92,12 +85,6 @@ def build_system_prompt(ctx: ChatContext) -> str:
 - LLM 응답에 `shared.disclaimers.QA_DISCLAIMER` 첨부
 - 모듈 간 데이터는 `shared.models` Pydantic 객체 사용 (dict 직접 다루지 말 것)
 
-## 블로커 발생 시
+## 블로커/질문
 
-```bash
-claude /ask "{질문}"
-```
-
-## 일정
-
-노션 MVP 기능 명세 + 8주차 회의록 참조. Q&A 기능 위주로 진행.
+GitHub Issue 작성. 또는 팀 톡방.

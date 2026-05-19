@@ -1,6 +1,6 @@
 # 현태 온보딩
 
-소요 시간: 첫날 30분.
+소요 시간: 첫날 30분. 환경 셋업 위주. 실제 작업 지시문은 `docs/team-instructions/hyuntae.md`.
 
 ## 0. 사전 준비
 
@@ -35,7 +35,7 @@ claude
 cat portfolio_analyzer/CLAUDE.md
 ```
 
-5/14 노션 기준 인터페이스 4개 함수:
+외부 공개 인터페이스 4개 함수:
 - `get_portfolio_data() -> dict`
 - `get_analysis_report() -> dict`
 - `get_backtest_result() -> dict`
@@ -51,15 +51,12 @@ print(mock_analysis_report().model_dump_json(indent=2))
 "
 ```
 
-## 5. 작업 시작
+## 5. 작업 지시문 주입
 
-```bash
-claude /start-day
-```
+`docs/team-instructions/hyuntae.md` 안의 코드 블록을 Claude 첫 메시지로 그대로 붙여넣음. 본인 모듈 owner 룰과 첫 PR 목표가 모두 포함돼 있음.
 
 ## 6. 첫 PR (MVP 1단계 step 1-2)
 
-5/14 노션 자료 기반:
 1. JSON 스키마 확인 (`shared/models.py`의 `Portfolio`/`Account`/`Holding` 활용)
 2. 종목명 → 티커 매칭 함수 (`portfolio_analyzer/ticker_matcher.py`)
 
@@ -70,10 +67,8 @@ def name_to_ticker(name: str, market: str = "auto") -> str | None:
     ...
 ```
 
-## 도구 (5/14 본인 정리)
+## 참고 도구
 
-- `stock_skills` 스킬
-- `korea-stock-analyzer-mcp` MCP
 - `yfinance`, `pykrx` 라이브러리
 - `context7` MCP (라이브러리 최신 문서 조회)
 
@@ -84,12 +79,6 @@ def name_to_ticker(name: str, market: str = "auto") -> str | None:
 - 매수/매도 추천 표현 금지 (도메인 특성상 특히 주의)
 - LLM 리포트에 `shared.disclaimers.attach(report, "report")` 호출
 
-## 블로커 발생 시
+## 블로커/질문
 
-```bash
-claude /ask "{질문}"
-```
-
-## 일정
-
-노션 8주차 회의록 + 본인 페이지 참조.
+GitHub Issue 작성. 또는 팀 톡방.
