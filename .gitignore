@@ -25,11 +25,9 @@ env/
 
 .streamlit/secrets.toml
 
-# Claude Code 개인/메타 설정 (공유 안 함 — 워크플로 자율 + 메타 콘텐츠 금지 룰)
+# Claude Code 개인 세션 파일만 제외 (공용 commands/agents는 공유)
 .claude/session-*.md
 .claude/sessions/
-.claude/agents/
-.claude/skills/
 
 # 캐시
 .cache/
