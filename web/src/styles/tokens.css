@@ -1,0 +1,59 @@
+/* FinCoach Design Tokens. Single source of truth: /DESIGN.md */
+
+:root {
+  --bg-base: #FAFBFC;
+  --bg-surface: #FFFFFF;
+  --bg-muted: #F3F5F7;
+
+  --fg-primary: #0F1419;
+  --fg-secondary: #525965;
+  --fg-muted: #8B919C;
+
+  --border: #E4E7EB;
+  --border-strong: #CDD2D9;
+
+  --accent: #0E8270;
+  --accent-soft: #DCEFEA;
+  --accent-fg: #FFFFFF;
+
+  --positive: #00875F;
+  --negative: #D7263D;
+  --warn: #B26A00;
+  --info: #155EEF;
+
+  --radius-xs: 6px;
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+}
+
+.dark {
+  --bg-base: #0E1116;
+  --bg-surface: #161B22;
+  --bg-muted: #1F242C;
+
+  --fg-primary: #E6E8EB;
+  --fg-secondary: #A1A8B3;
+  --fg-muted: #6C737F;
+
+  --border: #2A2F38;
+  --border-strong: #3A4150;
+
+  --accent: #3BC4A8;
+  --accent-soft: #14302B;
+  --accent-fg: #0E1116;
+
+  --positive: #3DD68C;
+  --negative: #FF6675;
+  --warn: #FFB257;
+  --info: #5B8DEF;
+}
