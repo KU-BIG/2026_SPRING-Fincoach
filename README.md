@@ -21,6 +21,18 @@ cp .env.example .env
 
 Claude 사용자는 이 폴더에서 Claude 켜면 됩니다. `CLAUDE.md`가 자동 로드되어 룰을 알려줍니다.
 
+## 실행
+
+```bash
+# 백엔드 API (포트 8000)
+uvicorn api.main:app --reload
+
+# 프론트엔드 (별도 터미널, 포트 5173)
+cd web && npm install && npm run dev
+```
+
+API 헬스체크: `http://localhost:8000/api/health`
+
 ## 폴더
 
 ```
@@ -28,10 +40,12 @@ fincoach/
   shared/                  공통 모델/유틸 (병승만 수정)
   market_intelligence/     은서
   portfolio_analyzer/      현태
-  coach_chat/              수빈 + Streamlit 메인
+  coach_chat/              수빈
+  api/                     통합 레이어 (owner별 라우터)
+  web/                     React + Vite 프론트엔드
   tests/                   계약 검증 + 통합 테스트
   docs/                    아키텍처/온보딩/회의록/의사결정
-  .claude/skills/          팀 공용 자동화 스킬
+  .claude/commands/        팀 공용 자동화 명령
 ```
 
 ## 문서
