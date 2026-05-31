@@ -1,33 +1,21 @@
-"""공개 함수 4개 — 수빈/웹 UI가 호출하는 진입점.
-
-현재는 shared.mocks 기반 mock 반환. 이후 PR에서 실제 데이터 연동 예정.
-"""
+"""공개 함수 4개 — 수빈/웹 UI가 호출하는 진입점."""
 
 from __future__ import annotations
 
-from shared.mocks import mock_analysis_report, mock_backtest_result, mock_portfolio
+from portfolio_analyzer.calculator import calculate_portfolio
+from shared.mocks import (
+    mock_analysis_report,
+    mock_backtest_result,
+    mock_portfolio,
+    mock_stock_data,
+)
 
 
 def get_portfolio_data() -> dict:
     """포트폴리오 요약 데이터 반환. 빠름, dashboard 상시 호출 OK."""
     portfolio = mock_portfolio()
-    accounts = []
-    for acc in portfolio.accounts:
-        accounts.append({
-            "account_name": acc.account_name,
-            "cash_krw": acc.cash_krw,
-            "cash_usd": acc.cash_usd,
-            "holdings": [h.model_dump() for h in acc.holdings],
-        })
-
-    return {
-        "accounts": accounts,
-        "summary": {
-            "total_value": 0,
-            "total_pnl": 0,
-        },
-        "errors": [],
-    }
+    stock_data = mock_stock_data()
+    return calculate_portfolio(portfolio.accounts, stock_data)
 
 
 def get_analysis_report(force_refresh: bool = False) -> dict:
