@@ -1,5 +1,7 @@
-"""coach_chat 진입점 자리.
+"""coach_chat FastAPI 서버 진입점.
 
-병승은 여기 안 채운다. 수빈이 스택(Streamlit/React/CLI 등)을 정한 뒤 본인이 채운다.
-참고용 mock은 `shared.mocks`에 있음.
+실행:
+  uvicorn coach_chat.main:app --reload --port 8000
 """
+
+from coach_chat.api import app  # noqa: F401

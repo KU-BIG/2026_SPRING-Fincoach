@@ -4,10 +4,11 @@ version = "0.1.0"
 description = "FinCoach - portfolio-aware AI financial coach"
 requires-python = ">=3.11"
 dependencies = [
+    "anthropic>=0.105.2",
+    "fastapi>=0.136.3",
     "pydantic>=2.9",
     "python-dotenv>=1.0",
-    "fastapi>=0.115",
-    "uvicorn[standard]>=0.32",
+    "uvicorn[standard]>=0.48.0",
 ]
 
 # 모듈별 의존성은 본인이 추가. 예:
@@ -47,6 +48,11 @@ ignore_missing_imports = true
 [build-system]
 requires = ["hatchling"]
 build-backend = "hatchling.build"
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["shared", "market_intelligence", "portfolio_analyzer", "coach_chat", "api"]

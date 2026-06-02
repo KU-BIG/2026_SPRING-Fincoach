@@ -13,7 +13,7 @@ from __future__ import annotations
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api import health
+from api import chat, health
 
 app = FastAPI(title="FinCoach API", version="0.1.0")
 
@@ -27,8 +27,8 @@ app.add_middleware(
 )
 
 app.include_router(health.router)
+app.include_router(chat.router)
 
 # owner별 라우터는 본인 PR에서 추가
 # app.include_router(market.router)
 # app.include_router(portfolio.router)
-# app.include_router(chat.router)

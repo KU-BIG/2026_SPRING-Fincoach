@@ -18,6 +18,16 @@ type PortfolioSummaryPayload = {
   positions: { ticker: string; name: string; weight: number; pnl_pct: number }[];
 };
 
+export type ChatMessage = { role: "user" | "assistant"; content: string };
+
+type ChatPayload = { question: string; history: ChatMessage[] };
+
+export type ChatResult = {
+  answer: string;
+  market_date: string | null;
+  portfolio_loaded: boolean;
+};
+
 type WithSource<T> = T & { source: DataSource };
 
 type MarketSummary = WithSource<MarketSummaryPayload>;
@@ -45,6 +55,15 @@ export const api = {
     } catch {
       return mockPortfolioSummary();
     }
+  },
+
+  async chat(question: string, history: ChatMessage[]): Promise<ChatResult> {
+    const body: ChatPayload = { question, history };
+    return jsonFetch<ChatResult>("/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
   },
 };
 

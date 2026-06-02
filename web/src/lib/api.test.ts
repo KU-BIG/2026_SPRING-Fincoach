@@ -18,3 +18,33 @@ describe("api mock fallback", () => {
     await expect(api.portfolioSummary()).resolves.toMatchObject({ source: "mock" });
   });
 });
+
+describe("api.chat", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  it("returns answer from server", async () => {
+    const mockResult = { answer: "답변입니다.", market_date: "2026-05-31", portfolio_loaded: true };
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({ ok: true, json: async () => mockResult }),
+    );
+
+    const result = await api.chat("삼성전자 어때?", []);
+    expect(result.answer).toBe("답변입니다.");
+    expect(result.portfolio_loaded).toBe(true);
+  });
+
+  it("sends history in request body", async () => {
+    const mockResult = { answer: "ok", market_date: null, portfolio_loaded: false };
+    const fetchMock = vi.fn().mockResolvedValue({ ok: true, json: async () => mockResult });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await api.chat("질문", [{ role: "user", content: "이전 질문" }]);
+
+    const body = JSON.parse(fetchMock.mock.calls[0][1].body);
+    expect(body.history).toHaveLength(1);
+    expect(body.question).toBe("질문");
+  });
+});

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { Card } from "@/components/Card";
+import { api, type ChatMessage } from "@/lib/api";
 
-type Msg = { role: "user" | "assistant"; content: string };
+type Msg = ChatMessage;
 
 export default function Chat() {
   const bottomRef = useRef<HTMLDivElement | null>(null);
@@ -13,29 +14,53 @@ export default function Chat() {
     },
   ]);
   const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
-  }, [messages]);
+  }, [messages, loading]);
 
-  function send() {
+  async function send() {
     const question = input.trim();
-    if (!question) return;
+    if (!question || loading) return;
 
-    const user: Msg = { role: "user", content: question };
-    const reply: Msg = {
-      role: "assistant",
-      content: `(데모) '${question}'에 대한 답변 자리. 수빈 모듈에서 LLM 연결 예정.`,
-    };
-    setMessages((prev) => [...prev, user, reply]);
+    const userMsg: Msg = { role: "user", content: question };
+    const nextMessages = [...messages, userMsg];
+    setMessages(nextMessages);
     setInput("");
+    setLoading(true);
+
+    try {
+      // Anthropic API requires messages to start with "user" — strip leading assistant greeting
+      const prev = nextMessages.slice(0, -1);
+      const firstUserIdx = prev.findIndex((m) => m.role === "user");
+      const history = firstUserIdx >= 0 ? prev.slice(firstUserIdx) : [];
+      const result = await api.chat(question, history);
+      setMessages((prev) => [...prev, { role: "assistant", content: result.answer }]);
+    } catch {
+      setMessages((prev) => [
+        ...prev,
+        {
+          role: "assistant",
+          content: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
+        },
+      ]);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-4">
       <Card className="lg:col-span-1">
         <h3 className="mb-3 text-sm font-semibold">대화</h3>
-        <button className="w-full rounded-sm bg-accent px-3 py-2 text-sm text-accent-fg transition hover:opacity-90">
+        <button
+          onClick={() => setMessages([{
+            role: "assistant",
+            content: "안녕하세요. FinCoach 학습 도우미입니다. 시장 개념, 포트폴리오, 종목에 대해 물어보세요. 매수/매도 직접 추천은 하지 않습니다.",
+          }])}
+          className="w-full rounded-sm bg-accent px-3 py-2 text-sm text-accent-fg transition hover:opacity-90"
+        >
           + 새 대화
         </button>
         <ul className="mt-4 space-y-1 text-sm">
@@ -53,26 +78,34 @@ export default function Chat() {
               className={
                 m.role === "user"
                   ? "ml-auto max-w-[80%] rounded-md bg-accent px-3 py-2 text-sm text-accent-fg"
-                  : "max-w-[80%] rounded-md bg-bg-muted px-3 py-2 text-sm"
+                  : "max-w-[80%] whitespace-pre-wrap rounded-md bg-bg-muted px-3 py-2 text-sm"
               }
             >
               {m.content}
             </div>
           ))}
+          {loading && (
+            <div className="max-w-[80%] rounded-md bg-bg-muted px-3 py-2 text-sm text-fg-muted">
+              입력 중…
+            </div>
+          )}
           <div ref={bottomRef} />
         </div>
+
         <div className="mt-4 flex gap-2 border-t border-border pt-4">
           <input
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && send()}
+            disabled={loading}
             aria-label="질문 입력"
             placeholder="질문을 입력하세요. 예: PER이 뭐예요?"
-            className="flex-1 rounded-sm border border-border bg-bg-base px-3 py-2 text-sm outline-none focus:border-accent"
+            className="flex-1 rounded-sm border border-border bg-bg-base px-3 py-2 text-sm outline-none focus:border-accent disabled:opacity-50"
           />
           <button
             onClick={send}
-            className="rounded-sm bg-accent px-4 py-2 text-sm text-accent-fg transition hover:opacity-90"
+            disabled={loading}
+            className="rounded-sm bg-accent px-4 py-2 text-sm text-accent-fg transition hover:opacity-90 disabled:opacity-50"
           >
             보내기
           </button>
