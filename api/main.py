@@ -10,17 +10,27 @@
 
 from __future__ import annotations
 
+import os
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api import chat, health
 
+
+def _allowed_origins() -> list[str]:
+    """ALLOWED_ORIGINS 환경변수에서 쉼표 구분 도메인 읽기. 비어있으면 dev 디폴트."""
+    raw = os.getenv("ALLOWED_ORIGINS", "").strip()
+    if not raw:
+        return ["http://localhost:5173"]
+    return [o.strip() for o in raw.split(",") if o.strip()]
+
+
 app = FastAPI(title="FinCoach API", version="0.1.0")
 
-# web/ 개발 서버 + 향후 Cloudflare Pages 도메인은 환경변수로 추가
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=_allowed_origins(),
     allow_credentials=True,
     allow_methods=["GET", "POST"],
     allow_headers=["*"],
