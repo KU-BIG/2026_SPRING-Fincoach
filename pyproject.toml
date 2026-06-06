@@ -6,10 +6,13 @@ requires-python = ">=3.11"
 dependencies = [
     "anthropic>=0.105.2",
     "fastapi>=0.136.3",
+    "feedparser>=6.0.12",
+    "pandas>=3.0.3",
     "pydantic>=2.9",
     "pykrx>=1.0",
     "python-dotenv>=1.0",
     "uvicorn[standard]>=0.48.0",
+    "yfinance>=1.4.1",
 ]
 
 # 모듈별 의존성은 본인이 추가. 예:

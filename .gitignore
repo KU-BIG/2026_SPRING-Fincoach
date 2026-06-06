@@ -28,6 +28,7 @@ env/
 # Claude Code 개인 세션 파일만 제외 (공용 commands/agents는 공유)
 .claude/session-*.md
 .claude/sessions/
+market_intelligence/.claude/
 
 # 캐시
 .cache/
