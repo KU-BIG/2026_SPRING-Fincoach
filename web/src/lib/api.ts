@@ -65,6 +65,39 @@ export const api = {
       body: JSON.stringify(body),
     });
   },
+
+  async chatStream(
+    question: string,
+    history: ChatMessage[],
+    onDelta: (text: string) => void,
+  ): Promise<void> {
+    const res = await fetch(`${BASE}/chat/stream`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, history } satisfies ChatPayload),
+    });
+    if (!res.ok || !res.body) throw new Error(`API /chat/stream: ${res.status}`);
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let buf = "";
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buf += decoder.decode(value, { stream: true });
+      const lines = buf.split("\n");
+      buf = lines.pop() ?? "";
+      for (const line of lines) {
+        if (!line.startsWith("data: ")) continue;
+        const payload = line.slice(6);
+        if (payload === "[DONE]") return;
+        const parsed = JSON.parse(payload) as { delta?: string; error?: string };
+        if (parsed.error) throw new Error(parsed.error);
+        if (parsed.delta) onDelta(parsed.delta);
+      }
+    }
+  },
 };
 
 function mockMarketSummary(): MarketSummary {

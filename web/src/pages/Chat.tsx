@@ -26,25 +26,37 @@ export default function Chat() {
 
     const userMsg: Msg = { role: "user", content: question };
     const nextMessages = [...messages, userMsg];
-    setMessages(nextMessages);
+    // placeholder for streaming assistant reply
+    const assistantIdx = nextMessages.length;
+    setMessages([...nextMessages, { role: "assistant", content: "" }]);
     setInput("");
     setLoading(true);
 
+    // Anthropic API requires messages to start with "user" — strip leading assistant greeting
+    const prev = nextMessages.slice(0, -1);
+    const firstUserIdx = prev.findIndex((m) => m.role === "user");
+    const history = firstUserIdx >= 0 ? prev.slice(firstUserIdx) : [];
+
     try {
-      // Anthropic API requires messages to start with "user" — strip leading assistant greeting
-      const prev = nextMessages.slice(0, -1);
-      const firstUserIdx = prev.findIndex((m) => m.role === "user");
-      const history = firstUserIdx >= 0 ? prev.slice(firstUserIdx) : [];
-      const result = await api.chat(question, history);
-      setMessages((prev) => [...prev, { role: "assistant", content: result.answer }]);
+      await api.chatStream(question, history, (delta) => {
+        setMessages((cur) => {
+          const next = [...cur];
+          next[assistantIdx] = {
+            role: "assistant",
+            content: (next[assistantIdx]?.content ?? "") + delta,
+          };
+          return next;
+        });
+      });
     } catch {
-      setMessages((prev) => [
-        ...prev,
-        {
+      setMessages((cur) => {
+        const next = [...cur];
+        next[assistantIdx] = {
           role: "assistant",
           content: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
-        },
-      ]);
+        };
+        return next;
+      });
     } finally {
       setLoading(false);
     }
@@ -84,7 +96,7 @@ export default function Chat() {
               {m.content}
             </div>
           ))}
-          {loading && (
+          {loading && messages[messages.length - 1]?.content === "" && (
             <div className="max-w-[80%] rounded-md bg-bg-muted px-3 py-2 text-sm text-fg-muted">
               입력 중…
             </div>

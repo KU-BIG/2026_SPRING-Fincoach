@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+import json
 import os
+from collections.abc import Generator
 
 import anthropic
 from dotenv import load_dotenv
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
 from coach_chat.context_builder import build_context
@@ -63,24 +66,61 @@ def _build_system_prompt(market: MarketOutput | None, portfolio_loaded: bool) ->
     return "\n".join(lines)
 
 
+def _build_messages(history: list[MessageIn], question: str) -> list[dict]:
+    msgs = [{"role": m.role, "content": m.content} for m in history]
+    msgs.append({"role": "user", "content": question})
+    return msgs
+
+
 def _call_llm(system: str, history: list[MessageIn], question: str) -> str:
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
         raise HTTPException(status_code=503, detail="ANTHROPIC_API_KEY가 설정되지 않았습니다.")
 
     client = anthropic.Anthropic(api_key=api_key)
-
-    messages = [{"role": m.role, "content": m.content} for m in history]
-    messages.append({"role": "user", "content": question})
-
     response = client.messages.create(
         model=os.getenv("LLM_MODEL", "claude-haiku-4-5-20251001"),
         max_tokens=1024,
         system=system,
-        messages=messages,
+        messages=_build_messages(history, question),
     )
-
     return response.content[0].text
+
+
+def _sse(payload: dict) -> str:
+    return f"data: {json.dumps(payload, ensure_ascii=False)}\n\n"
+
+
+def _stream_llm(
+    system: str, history: list[MessageIn], question: str
+) -> Generator[str, None, None]:
+    """SSE 토큰 스트림. API 키 없으면 데모 메시지 반환, LLM 실패 시 1회 재시도."""
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        demo = "[데모 모드] ANTHROPIC_API_KEY가 설정되지 않아 실제 LLM을 호출하지 않습니다."
+        yield _sse({"delta": demo})
+        yield _sse({"delta": f"\n\n---\n{QA_DISCLAIMER}"})
+        yield "data: [DONE]\n\n"
+        return
+
+    client = anthropic.Anthropic(api_key=api_key)
+    msgs = _build_messages(history, question)
+    model = os.getenv("LLM_MODEL", "claude-haiku-4-5-20251001")
+
+    for attempt in range(2):
+        try:
+            with client.messages.stream(
+                model=model, max_tokens=1024, system=system, messages=msgs
+            ) as stream:
+                for text in stream.text_stream:
+                    yield _sse({"delta": text})
+            yield _sse({"delta": f"\n\n---\n{QA_DISCLAIMER}"})
+            yield "data: [DONE]\n\n"
+            return
+        except Exception as exc:
+            if attempt == 1:
+                yield _sse({"error": f"LLM 호출에 실패했습니다: {exc}"})
+                yield "data: [DONE]\n\n"
 
 
 # ── 엔드포인트 ─────────────────────────────────────────────────────────────
@@ -101,4 +141,20 @@ def chat(req: ChatRequest) -> ChatResponse:
         answer=answer_with_disclaimer,
         market_date=str(ctx.market.market_date) if ctx.market else None,
         portfolio_loaded=ctx.portfolio_data is not None,
+    )
+
+
+@router.post("/api/chat/stream")
+def chat_stream(req: ChatRequest) -> StreamingResponse:
+    history = [
+        ChatMessage(role=m.role, content=m.content)  # type: ignore[arg-type]
+        for m in req.history
+    ]
+    ctx = build_context(req.question, history)
+    system = _build_system_prompt(ctx.market, ctx.portfolio_data is not None)
+
+    return StreamingResponse(
+        _stream_llm(system, req.history, req.question),
+        media_type="text/event-stream",
+        headers={"Cache-Control": "no-cache", "X-Accel-Buffering": "no"},
     )
