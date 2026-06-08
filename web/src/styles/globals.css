@@ -10,22 +10,49 @@ body,
 }
 
 body {
-  font-family: Inter, "Pretendard Variable", Pretendard, system-ui, sans-serif;
+  font-family: "Pretendard Variable", Pretendard, Inter, system-ui, sans-serif;
   background: var(--bg-base);
   color: var(--fg-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  font-feature-settings: "ss01", "ss03";
+  letter-spacing: -0.01em;
+}
+
+.display {
+  font-weight: 800;
+  letter-spacing: -0.028em;
+  line-height: 1.04;
+}
+
+.headline {
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+
+.subhead {
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
 }
 
 .num {
   font-family: Inter, system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+
+.caption {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
 }
 
 ::selection {
-  background: var(--accent-soft);
-  color: var(--fg-primary);
+  background: var(--accent);
+  color: var(--accent-fg);
 }
 
 button {

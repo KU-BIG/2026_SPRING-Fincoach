@@ -1,5 +1,4 @@
 import { useEffect, useState } from "react";
-import { Card, CardLabel, CardTitle } from "@/components/Card";
 import { api } from "@/lib/api";
 import { krw, pct, pnlColor } from "@/lib/format";
 
@@ -11,79 +10,80 @@ export default function Portfolio() {
 
   if (!pf) return <div className="text-fg-muted">불러오는 중</div>;
 
+  const pnlSign = pf.total_pnl_krw >= 0 ? "+" : "";
+  const domestic = pf.positions.filter((p) => /^\d/.test(p.ticker)).length;
+  const overseas = pf.positions.length - domestic;
+
   return (
-    <div className="space-y-6">
-      <section>
-        <div className="flex flex-wrap items-center gap-2">
-          <h1 className="text-2xl font-semibold">포트폴리오</h1>
+    <div className="grid grid-cols-12 gap-4 lg:gap-5">
+      {/* 영웅 평가금액 */}
+      <section className="col-span-12 rounded-xl border border-border bg-bg-surface p-8 lg:p-10">
+        <div className="flex flex-wrap items-baseline gap-3">
+          <p className="caption">평가금액</p>
           {pf.source === "mock" && (
-            <span className="rounded-xs border border-warn px-2 py-0.5 text-xs text-fg-secondary">
+            <span className="rounded-sm border border-warn px-2 py-0.5 text-[10px] font-medium text-warn">
               데모 데이터
             </span>
           )}
         </div>
-        <p className="mt-1 text-sm text-fg-secondary">현태 모듈에서 분석 데이터 공급 예정.</p>
-        {pf.source === "mock" && (
-          <p className="mt-2 text-xs text-fg-muted">
-            API 연결 전 또는 호출 실패 시 표시되는 샘플 데이터입니다.
-          </p>
-        )}
+        <p className="num display mt-4 text-[56px] sm:text-[72px]">
+          {krw(pf.total_value_krw)}
+          <span className="ml-2 text-2xl font-medium text-fg-secondary">원</span>
+        </p>
+        <p className={`num mt-3 text-xl ${pnlColor(pf.total_pnl_krw)}`}>
+          {pnlSign}
+          {krw(pf.total_pnl_krw)}원 · {pct(pf.pnl_pct)}
+        </p>
       </section>
 
-      <div className="grid grid-cols-2 gap-5 lg:grid-cols-4">
-        <Card>
-          <CardLabel>총 평가</CardLabel>
-          <p className="num mt-2 text-xl font-semibold">{krw(pf.total_value_krw)}원</p>
-        </Card>
-        <Card>
-          <CardLabel>총 손익</CardLabel>
-          <p className={`num mt-2 text-xl font-semibold ${pnlColor(pf.total_pnl_krw)}`}>
-            {pf.total_pnl_krw >= 0 ? "+" : ""}
-            {krw(pf.total_pnl_krw)}원
-          </p>
-        </Card>
-        <Card>
-          <CardLabel>수익률</CardLabel>
-          <p className={`num mt-2 text-xl font-semibold ${pnlColor(pf.pnl_pct)}`}>
-            {pct(pf.pnl_pct)}
-          </p>
-        </Card>
-        <Card>
-          <CardLabel>종목 수</CardLabel>
-          <p className="num mt-2 text-xl font-semibold">{pf.positions.length}</p>
-        </Card>
-      </div>
+      {/* KPI 3개 */}
+      <Tile span="col-span-12 lg:col-span-4" label="보유 종목" value={`${pf.positions.length}개`} />
+      <Tile span="col-span-6 lg:col-span-4" label="국내" value={`${domestic}개`} />
+      <Tile span="col-span-6 lg:col-span-4" label="해외" value={`${overseas}개`} />
 
-      <Card>
-        <CardTitle>보유 종목</CardTitle>
+      {/* 보유 종목 표 */}
+      <section className="col-span-12 rounded-xl border border-border bg-bg-base p-7">
+        <h2 className="subhead mb-5 text-lg">보유 종목</h2>
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left text-xs text-fg-muted">
-              <th className="pb-2 font-normal">종목</th>
-              <th className="pb-2 text-right font-normal">티커</th>
-              <th className="pb-2 text-right font-normal">비중</th>
-              <th className="pb-2 text-right font-normal">수익률</th>
+              <th className="pb-3 font-medium">종목</th>
+              <th className="pb-3 text-right font-medium">티커</th>
+              <th className="pb-3 text-right font-medium">비중</th>
+              <th className="pb-3 text-right font-medium">수익률</th>
             </tr>
           </thead>
           <tbody>
             {pf.positions.map((p) => (
               <tr key={p.ticker} className="border-b border-border/60 last:border-0">
-                <td className="py-3">{p.name}</td>
+                <td className="py-3 font-medium">{p.name}</td>
                 <td className="num py-3 text-right text-fg-muted">{p.ticker}</td>
                 <td className="num py-3 text-right">{p.weight}%</td>
-                <td className={`num py-3 text-right ${pnlColor(p.pnl_pct)}`}>{pct(p.pnl_pct)}</td>
+                <td className={`num py-3 text-right font-medium ${pnlColor(p.pnl_pct)}`}>
+                  {pct(p.pnl_pct)}
+                </td>
               </tr>
             ))}
           </tbody>
         </table>
-      </Card>
+      </section>
+    </div>
+  );
+}
 
-      <Card>
-        <CardTitle>분석 리포트 자리</CardTitle>
-        <div className="rounded-sm border border-dashed border-border p-6 text-sm text-fg-muted">
-          현태 모듈에서 LLM 분석 리포트 공급 예정 (특성/투자자 유형/리스크/강점/개선 제안).
-        </div>
-      </Card>
+function Tile({
+  label,
+  value,
+  span,
+}: {
+  label: string;
+  value: string;
+  span: string;
+}) {
+  return (
+    <div className={`${span} rounded-xl border border-border bg-bg-base p-6`}>
+      <p className="caption">{label}</p>
+      <p className="num mt-2 text-2xl font-semibold">{value}</p>
     </div>
   );
 }

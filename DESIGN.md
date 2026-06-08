@@ -2,212 +2,213 @@
 
 ## 결 (방향)
 
-**Mercury(mercury.com) 차분한 신뢰감 + 네이버 정보 밀도 + 학습 도구 메타포의 혼합.**
+**모던 Bento 그리드 + 모노톤 흑백 + 큰 산세리프.**
 
-- 토스 결을 그대로 따라하지 않음 (블루도, 일러스트 캐릭터도 차용 X)
-- Stripe 클론 같은 글로벌 핀테크 표준 톤도 피함
-- 카드 그리드 + 4탭 SaaS 표준에서 벗어나 정보가 살아있게
+세리프 매거진 결(올드)도, 회색+청록 SaaS 클론(슬롭)도 모두 폐기. 흰 베이스 + 검정 액센트 + 다양한 크기의 Bento 박스 + 매우 굵은 산세리프 디스플레이로 차별한다.
 
 ## 원칙
 
-- **금융 = 신뢰**: 다크네온 X, 둥근 모서리 8~12px (토스 16px보다 보수적)
-- **학습 + 코치**: 텍스트 위주, 사람처럼 짚어주는 카피 (코치 인격 살리기)
-- **한국어 우선**: Pretendard, 한국 핀테크 데이터 밀도
-- **데이터 영역만 밀도 있게**: 나머지는 숨 쉬게, 표/숫자 영역은 빽빽하게
+- **흑백 모노톤**: 액센트 컬러를 쓰지 않음. 정보 색(positive/negative)만 색
+- **Bento Grid**: 대시보드는 다양한 크기 박스로 정보 시각화 (단조 카드 3-col 폐기)
+- **큰 산세리프**: Pretendard 700~800, display 56~72px
+- **모서리 14~20px**: 모던 핀테크 트렌드
+- **여백 비대칭**: 12-col grid 위에 박스 크기 다양화
 
 ## 컬러
 
 ### Light (디폴트)
 
 ```css
---bg-base:     #FAFBFC;
---bg-surface:  #FFFFFF;
---bg-muted:    #F3F5F7;
+--bg-base:      #FFFFFF;
+--bg-surface:   #F7F7F7;
+--bg-muted:     #EFEFEF;
 
---fg-primary:  #0F1419;
---fg-secondary:#525965;
---fg-muted:    #8B919C;
+--fg-primary:   #0A0A0A;
+--fg-secondary: #525252;
+--fg-muted:     #A3A3A3;
 
---border:      #E4E7EB;
---border-strong:#CDD2D9;
+--border:       #E5E5E5;
+--border-strong:#C2C2C2;
 
---accent:      #0E8270;   /* Teal - 신뢰+성장. 토스블루 회피 */
---accent-soft: #DCEFEA;
---accent-fg:   #FFFFFF;
+--accent:       #0A0A0A;   /* 검정 액센트 (모노톤) */
+--accent-soft:  #F2F2F2;
+--accent-fg:    #FFFFFF;
 
---positive:    #00875F;
---negative:    #D7263D;
---warn:        #B26A00;
---info:        #155EEF;
+--positive:     #1F8F4F;
+--negative:     #D7263D;
+--warn:         #B26A00;
+--info:         #155EEF;
 ```
 
-### Dark (Mercury 결로 더 깊게)
+### Dark
 
 ```css
---bg-base:     #0B0F14;   /* 짙은 네이비. 검정에 가깝지만 따뜻 */
---bg-surface:  #131922;
---bg-muted:    #1B2330;
+--bg-base:      #0A0A0A;
+--bg-surface:   #141414;
+--bg-muted:    #1F1F1F;
 
---fg-primary:  #E8ECF1;
---fg-secondary:#A5ADBA;
---fg-muted:    #6A7280;
+--fg-primary:   #FAFAFA;
+--fg-secondary: #A3A3A3;
+--fg-muted:     #6B6B6B;
 
---border:      #232C3A;
---border-strong:#3A4555;
+--border:       #262626;
+--border-strong:#3F3F3F;
 
---accent:      #3BC4A8;
---accent-soft: #102923;
---accent-fg:   #0B0F14;
+--accent:       #FAFAFA;   /* 흰 액센트 (검정 반전) */
+--accent-soft:  #1F1F1F;
+--accent-fg:    #0A0A0A;
 
---positive:    #3DD68C;
---negative:    #FF6675;
---warn:        #FFB257;
---info:        #5B8DEF;
+--positive:     #4ADE80;
+--negative:     #F87171;
+--warn:         #FBBF24;
+--info:         #60A5FA;
 ```
 
 ### 사용 룰
 
-- 토스블루(#0064FF) 사용 금지
-- Tailwind 기본 팔레트(orange-500 등) 사용 금지
-- 다크모드 네온 그라데이션 금지
-- 수익/손실: positive/negative 토큰만. 빨강=하락 (글로벌 관습)
-- 사이드 컬러 띠 금지 (좌측 3px accent border 같은 거 어디에도 X)
+- 액센트는 흑/백만. Tailwind 기본 팔레트(orange/purple/cyan 등) 금지
+- 그라데이션 금지 (다크 네온 그라데이션은 절대 금지)
+- 사이드 컬러 띠 금지 (좌측 3px accent border 류 어디에도 X)
+- 수익/손실은 positive/negative 토큰만, 빨강=하락
+- 정보 색 외에는 모노톤 유지
 
 ## 타이포
 
-- **본문/한국어**: Pretendard Variable
+### 폰트
+
+- **본문/UI**: Pretendard Variable
 - **숫자**: Inter Variable + `font-variant-numeric: tabular-nums`
-- 모노스페이스 전면 금지 (AI 슬롭)
+- 세리프/모노스페이스 전면 사용 금지
 
-| 토큰 | 크기 | 줄간격 | 용도 |
-|------|------|--------|------|
-| `display`  | 36/44 | 1.18 | 히어로 |
-| `title-1`  | 28/36 | 1.25 | 페이지 제목 |
-| `title-2`  | 22/30 | 1.30 | 섹션 |
-| `title-3`  | 18/26 | 1.35 | 카드 제목 |
-| `body-lg`  | 16/26 | 1.55 | 본문 강조 |
-| `body`     | 14/22 | 1.55 | 본문 |
-| `caption`  | 12/18 | 1.50 | 라벨/메타 |
+### 스케일
 
-두께: 본문 400 / 강조 500 / 제목 600 / 히어로 700
+| 토큰 | 크기 | 두께 | 용도 |
+|------|------|------|------|
+| `display` | 56/64 (sm 64/72) | 800 | 페이지 영웅 |
+| `headline` | 36/44 | 700 | 큰 섹션 |
+| `subhead` | 22/30 | 600 | Bento 박스 제목 |
+| `lead` | 18/30 | 400 | 도입부 |
+| `body` | 15/26 | 400 | 본문 |
+| `caption` | 11/16 | 500 + uppercase | 라벨/메타 |
+| `num-hero` | 56/64 | 700 tabular | 영웅 숫자 |
+| `num-lg` | 32/40 | 600 tabular | 큰 숫자 |
+| `num` | 14/22 | 500 tabular | 표/지표 |
+
+규칙:
+- 페이지마다 영웅 디스플레이 1개 (56~72px)
+- letter-spacing: display는 -0.025em (모던 결)
+- 강조는 두께(500/600/700/800)로
 
 ## 간격 / 모서리
 
-- 8px 베이스 (디테일은 4px 허용)
-- 모서리: xs 6px / sm 8px / md 10px / lg 14px
-- 그림자는 라이트 모드만 (다크는 보더로 대체)
+- 8px 베이스
+- 모서리: xs 6px / sm 8px / md 10px / lg 14px / xl 20px (Bento는 14~20px)
+- 그림자는 옅게(`shadow-card`), 호버시 한 단계 (`shadow-hover`)
+
+## Bento Grid 원칙
+
+- 12-col grid 위에 다양한 크기 박스
+- 영웅 박스(col-span-12) + 큰박스(7/8) + 중간(4/5) + 작은(3) 혼용
+- 박스 내부 패딩 24~32px
+- 각 박스 보더 1px + 살짝 음영
+- 박스 간 간격 16~24px
 
 ## 컴포넌트
 
-### 카드
-- 보더 1px + 약한 그림자
-- 강조는 보더 색 전체 변경 또는 `--accent-soft` 배경 (사이드 띠 X)
+### Bento 박스
+- `bg-bg-surface` 또는 `bg-bg-base`
+- 보더 1px, 모서리 14~20px
+- 패딩 24~32px
 
 ### 버튼
-- Primary: `--accent` 배경
+- Primary: 검정 배경 + 흰 텍스트 (다크는 반전)
 - Secondary: 보더만
-- Ghost: 보더 없음, hover 시 `--bg-muted`
+- 모서리 8~10px
 
 ### 인풋
-- focus 시 `--accent` 보더 + 약한 ring
-- 에러 시 `--negative` 보더
+- 보더 1px, 모서리 8px
+- focus 시 보더 검정(액센트)
 
 ### 차트
-- 라인 1.5~2px, 그리드 옅게
-- 수익 `--positive`, 벤치마크 회색
-- squiggly 데코 금지 (실데이터만)
+- 라인 2px, 그리드 옅게
+- 수익 positive, 벤치마크 회색
+- squiggly 데코 금지
 
 ## 모션
 
 - 180ms / `cubic-bezier(0.2, 0, 0.1, 1)`
-- Hover는 opacity/transform만, 색은 즉시
+- Hover는 opacity/transform/border만, 색은 즉시
 - 페이지 transition 금지
 
-## 카피 톤 (코치 인격)
+## 카피 톤
 
-핀테크 표준 SaaS 카피 (`"오늘의 키워드"`, `"포트폴리오 요약"`)에서 벗어나 **사람처럼 짚어주는 톤**.
+매거진/SaaS-templated 어투 모두 회피. 짧고 직설.
 
 좋은 예:
-- ❌ "오늘의 시장 브리핑" → ✅ "오늘 시장에서 짚어볼 것"
-- ❌ "포트폴리오 요약" → ✅ "지금 내 포트폴리오"
-- ❌ "오늘의 키워드" → ✅ "지금 시장이 주목하는"
-- ❌ "학습" → ✅ "이번 주 배워볼 것" 또는 "개념 짚기"
-- ❌ "차트 자리" placeholder → ✅ 빈 상태 메시지로 ("아직 표시할 데이터가 없어요")
+- "오늘 시장 한 줄"
+- "지금 내 포트폴리오"
+- "이번 주 키워드"
+- "코치 한마디"
 
-규칙:
-- 단정형 짧게 + 구어체 약간
-- 숫자는 천단위 콤마 + 단위 명시
-- 손익은 +/- + 색
-- 모호 단어 금지 ("스마트", "AI 기반", "혁신적")
-- "오늘의 X" 패턴 피하기 (너무 SaaS-templated)
+피할 것:
+- "오늘의 X" (SaaS-templated)
+- "AI 기반 X" / "스마트 X" / "혁신적"
+- 자기참조 카피
+- 동사 3개 나열 (GENERATE/OPTIMIZE/EVOLVE 류)
 
 ## 페이지 구성
 
-### Dashboard (높은 정보 밀도)
+### Dashboard (Bento Grid)
 ```
-[히어로: 한 줄 인사 + 시장 한 줄 요약 + 사용자 이름]
-[상단 4지표 가로 띠: 평가금액 / 손익 / 수익률 / 종목수]
-[메인 좌2: 보유 종목 표 (정보 밀도 높게)]
-[메인 우1: 시장이 주목하는 키워드 (rank로)]
-[하단 좌1: 오늘 시장에서 짚어볼 것 (텍스트 + 핵심 3가지)]
-[하단 우1: 코치가 짚는 것 — AI 코멘트 (해당 데이터 기반)]
+[Bento 영웅 (col-12)] 시장 한 줄 + 평가금액 큰 숫자
+[Bento KPI x 4 (col-3 each)] 평가/손익/수익률/종목수
+[Bento (col-7)] 보유 종목 표  [Bento (col-5)] 시장 키워드
+[Bento (col-12)] 코치 한마디 (큰 인용)
 ```
 
-### Chat (Q&A)
+### Chat
 ```
-[좌: 세션 리스트 (실 데이터 없으면 빈 상태 "첫 대화를 시작해보세요")]
-[우: 채팅 본문 + 입력. 시장 컨텍스트 자동 주입]
-```
-
-빈 상태 카피: "아직 대화가 없어요. 시장 개념이나 내 포트폴리오에 대해 물어보세요."
-
-### Portfolio (정보 밀도)
-```
-[상단: 평가금액 큰 숫자 + 손익 / 수익률]
-[중간: 보유 종목 상세 표 (모든 필드)]
-[하단: 종목별 카드 — 미니 차트 + 매수평단 + 최근 변동 + 코치 코멘트]
+[좌 사이드 (col-3)] 예시 질문 + 새 대화
+[우 메인 (col-9)] 큰 헤드라인 + 대화
 ```
 
-### 학습 (키워드 카드 그리드 폐기 → 목차 + 진도)
+### Portfolio
 ```
-[히어로: "지금 내가 짚어야 할 개념" (포트폴리오와 연관된 키워드 1-2개 강조)]
-[섹션: 카테고리 (시장 기초 / 종목 분석 / 리스크 / 거시) — 가로 탭 또는 좌측 메뉴]
-[본문: 선택된 개념의 3단 구조 (개념 → 현재 시장 사례 → 투자자 대응)]
+[Bento 영웅 (col-12)] 평가금액 num-hero + 손익
+[Bento x 3 (col-4 each)] 종목수 / 국내 / 해외
+[Bento (col-12)] 보유 종목 표
 ```
 
-키워드 카드 그리드 (3-col)는 슬롭이라 폐기. 대신 책의 목차/진도 메타포.
+### Learn
+```
+[좌 TOC (col-3)]
+[우 본문 (col-9)] display 헤드 + 3단 구조
+```
 
-## 절대 금지 (AI 슬롭 클리셰)
+## 절대 금지
 
+- 회색+청록/네온 액센트 (Linear/Vercel SaaS 클론)
+- 세리프 매거진 결 (Bloomberg/FT)
+- 카드 그리드 3-col 패턴 (Bento로 대체)
 - 다크 + 네온 그라데이션
-- Tailwind 기본 팔레트 그대로
+- Tailwind 기본 팔레트
 - 전면 모노스페이스
-- 언더스코어 prefix 섹션명
-- 의미 없는 squiggly 차트 데코
+- 사이드 컬러 띠
+- "오늘의 X" 헤더
 - 가짜 메트릭, 가짜 버전, BUILT WITH 푸터
-- 사이드 컬러 띠 (어디에도 X)
-- "Transform Your X with AI" 류
 - 자기참조 카피, 동사 3개 나열
-- 와이어프레임 큐브 히어로
-- 키워드 카드 3-col 그리드 패턴 (Notion 클론 톤)
-- 가짜 채팅 사이드바 항목 (mock으로 채워두기)
-- "오늘의 X" / "X 요약" 같은 generic SaaS 헤더
 
 ## 참고했지만 차용하지 않는 것
 
 | 참고 | 어떻게 |
 |------|--------|
-| **Mercury** | 짙은 네이비 다크 모드, 차분한 신뢰감, 카드 그림자 적게 |
-| **네이버** | 정보 밀도 높은 그리드, 한국형 표 |
-| **토스** | 친근 단문 카피 일부 — 블루/일러스트는 비사용 |
-| **Stripe** | 타이포 위계, 글로벌 핀테크 신뢰감 톤 — 보라 #635BFF는 비사용 |
-| **카카오뱅크** | 둥근 모서리 정도 — 옐로우 비사용 |
-| **Robinhood** | 차분한 차트 스타일 — green-only 비사용 |
+| Apple Vision Pro UI | Bento Grid 레이아웃 |
+| Linear | 모서리 둥글기, 산세리프 톤 |
+| Public.com | 큰 영웅 숫자 |
+| Vercel | 모노톤 절제 |
 
 ## 변경 절차
 
-이 파일은 디자인 토큰의 source of truth.
-
 1. 토큰 값 변경 → `web/src/styles/tokens.css` 동기화
-2. 페이지 구조 변경 시 PR에 시각 비교 스크린샷
-3. 컬러 시스템·타이포 스케일급 변경은 ADR
+2. 페이지 구조 변경 시 PR에 시각 스크린샷
+3. 컬러/타이포 시스템급은 ADR

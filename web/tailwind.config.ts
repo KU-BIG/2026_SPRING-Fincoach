@@ -39,11 +39,12 @@ export default {
         sm: "8px",
         md: "10px",
         lg: "14px",
+        xl: "20px",
       },
       boxShadow: {
-        card: "0 1px 2px rgba(15,20,25,0.04), 0 1px 3px rgba(15,20,25,0.06)",
-        hover: "0 2px 4px rgba(15,20,25,0.06), 0 6px 18px rgba(15,20,25,0.08)",
-        modal: "0 12px 32px rgba(15,20,25,0.18)",
+        card: "0 1px 2px rgba(10,10,10,0.04)",
+        hover: "0 2px 6px rgba(10,10,10,0.06), 0 6px 18px rgba(10,10,10,0.06)",
+        modal: "0 12px 32px rgba(10,10,10,0.18)",
       },
       transitionTimingFunction: {
         fc: "cubic-bezier(0.2, 0, 0.1, 1)",

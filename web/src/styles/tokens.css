@@ -1,22 +1,22 @@
 /* FinCoach Design Tokens. Single source of truth: /DESIGN.md */
 
 :root {
-  --bg-base: #FAFBFC;
-  --bg-surface: #FFFFFF;
-  --bg-muted: #F3F5F7;
+  --bg-base: #FFFFFF;
+  --bg-surface: #F7F7F7;
+  --bg-muted: #EFEFEF;
 
-  --fg-primary: #0F1419;
-  --fg-secondary: #525965;
-  --fg-muted: #8B919C;
+  --fg-primary: #0A0A0A;
+  --fg-secondary: #525252;
+  --fg-muted: #A3A3A3;
 
-  --border: #E4E7EB;
-  --border-strong: #CDD2D9;
+  --border: #E5E5E5;
+  --border-strong: #C2C2C2;
 
-  --accent: #0E8270;
-  --accent-soft: #DCEFEA;
+  --accent: #0A0A0A;
+  --accent-soft: #F2F2F2;
   --accent-fg: #FFFFFF;
 
-  --positive: #00875F;
+  --positive: #1F8F4F;
   --negative: #D7263D;
   --warn: #B26A00;
   --info: #155EEF;
@@ -25,6 +25,7 @@
   --radius-sm: 8px;
   --radius-md: 10px;
   --radius-lg: 14px;
+  --radius-xl: 20px;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -37,23 +38,23 @@
 }
 
 .dark {
-  --bg-base: #0B0F14;
-  --bg-surface: #131922;
-  --bg-muted: #1B2330;
+  --bg-base: #0A0A0A;
+  --bg-surface: #141414;
+  --bg-muted: #1F1F1F;
 
-  --fg-primary: #E8ECF1;
-  --fg-secondary: #A5ADBA;
-  --fg-muted: #6A7280;
+  --fg-primary: #FAFAFA;
+  --fg-secondary: #A3A3A3;
+  --fg-muted: #6B6B6B;
 
-  --border: #232C3A;
-  --border-strong: #3A4555;
+  --border: #262626;
+  --border-strong: #3F3F3F;
 
-  --accent: #3BC4A8;
-  --accent-soft: #102923;
-  --accent-fg: #0B0F14;
+  --accent: #FAFAFA;
+  --accent-soft: #1F1F1F;
+  --accent-fg: #0A0A0A;
 
-  --positive: #3DD68C;
-  --negative: #FF6675;
-  --warn: #FFB257;
-  --info: #5B8DEF;
+  --positive: #4ADE80;
+  --negative: #F87171;
+  --warn: #FBBF24;
+  --info: #60A5FA;
 }
