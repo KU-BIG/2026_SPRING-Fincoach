@@ -1,36 +1,150 @@
-import { Card, CardLabel } from "@/components/Card";
+import { useState } from "react";
+import { Card } from "@/components/Card";
 
-const topics = [
-  { keyword: "인플레이션", summary: "물가 상승이 자산에 미치는 영향" },
-  { keyword: "PER", summary: "주가수익비율로 보는 종목 평가" },
-  { keyword: "반도체 사이클", summary: "메모리 가격과 시장 흐름" },
-  { keyword: "금리", summary: "금리 변화가 포트폴리오에 미치는 영향" },
-  { keyword: "환율", summary: "원/달러 변동과 해외 종목" },
-  { keyword: "백테스트", summary: "과거 데이터로 전략 점검" },
+type Concept = {
+  key: string;
+  name: string;
+  category: "기초" | "종목 분석" | "리스크" | "거시";
+  related?: string;
+  body: { title: string; text: string }[];
+};
+
+const concepts: Concept[] = [
+  {
+    key: "per",
+    name: "PER",
+    category: "종목 분석",
+    related: "삼성전자 12.5배",
+    body: [
+      { title: "개념", text: "주가수익비율. 주가를 EPS로 나눈 값. 한 주가 1년치 이익의 몇 배에 거래되는지." },
+      { title: "지금 시장에서는", text: "반도체주는 사이클상 이익 변동이 커서 단순 비교가 어렵습니다. 동종업계 평균과 함께 보세요." },
+      { title: "코치가 짚는 것", text: "보유 종목의 PER만 보지 말고, ROE·매출 성장과 같이 봐야 의미가 살아납니다." },
+    ],
+  },
+  {
+    key: "inflation",
+    name: "인플레이션",
+    category: "거시",
+    body: [
+      { title: "개념", text: "물가 상승. 같은 돈으로 살 수 있는 게 줄어드는 현상." },
+      { title: "지금 시장에서는", text: "금리 인상 사이클이 끝나는지가 핵심 이슈. 인플레 둔화가 확인되면 성장주에 우호적." },
+      { title: "코치가 짚는 것", text: "현금 비중이 높은 포트폴리오는 인플레이션에 가장 약합니다. 실물 자산이나 배당주 비중을 점검하세요." },
+    ],
+  },
+  {
+    key: "rate",
+    name: "금리",
+    category: "거시",
+    body: [
+      { title: "개념", text: "돈을 빌리는 가격. 중앙은행이 정책금리를 조정해 시중 자금 흐름을 조절." },
+      { title: "지금 시장에서는", text: "고금리 환경은 성장주에 부담, 배당주·금융주에 우호적입니다." },
+      { title: "코치가 짚는 것", text: "포트폴리오가 성장주 한쪽으로 쏠려있다면 금리 민감도 점검이 필요합니다." },
+    ],
+  },
+  {
+    key: "semiconductor",
+    name: "반도체 사이클",
+    category: "종목 분석",
+    related: "SK하이닉스",
+    body: [
+      { title: "개념", text: "메모리 가격이 수년 단위로 호황과 침체를 반복하는 패턴. 공급·수요·재고가 핵심 변수." },
+      { title: "지금 시장에서는", text: "AI 수요로 HBM 공급이 빠듯합니다. 메모리 가격 반등 신호가 누적되는 중." },
+      { title: "코치가 짚는 것", text: "반도체주는 실적보다 사이클 위치가 먼저입니다. 재고 사이클 지표를 같이 보세요." },
+    ],
+  },
+  {
+    key: "fx",
+    name: "환율",
+    category: "리스크",
+    body: [
+      { title: "개념", text: "원/달러 환율. 1달러를 사기 위해 필요한 원화 금액." },
+      { title: "지금 시장에서는", text: "원화 약세는 해외 종목 평가액을 끌어올리지만, 환차익은 미실현이라 환차손 위험도 같이 옵니다." },
+      { title: "코치가 짚는 것", text: "해외 비중이 크면 환율 시나리오를 같이 보세요. 헤지가 필요한 수준인지 점검 가능합니다." },
+    ],
+  },
+  {
+    key: "backtest",
+    name: "백테스트",
+    category: "리스크",
+    body: [
+      { title: "개념", text: "현재 전략을 과거 데이터에 대입해 수익률·낙폭·변동성을 추정." },
+      { title: "지금 시장에서는", text: "최근 5년은 저금리·고성장 구간이 길어 결과가 과장될 수 있어요. 최소 10년 단위로 보세요." },
+      { title: "코치가 짚는 것", text: "백테스트 결과는 보장이 아닙니다. 최대 낙폭(MDD)을 받아들일 수 있는지가 더 중요해요." },
+    ],
+  },
 ];
 
-export default function Learn() {
-  return (
-    <div className="space-y-6">
-      <section>
-        <h1 className="text-2xl font-semibold">학습</h1>
-        <p className="mt-1 text-sm text-fg-secondary">
-          개념 → 현재 시장 사례 → 투자자 대응 3단 구조로 설명. (수빈 모듈에서 LLM 연결 예정)
-        </p>
-      </section>
+const categories: Concept["category"][] = ["기초", "종목 분석", "리스크", "거시"];
 
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-3">
-        {topics.map((t) => (
-          <Card
-            key={t.keyword}
-            className="cursor-pointer transition hover:border-border-strong hover:shadow-hover"
-          >
-            <CardLabel>키워드</CardLabel>
-            <h3 className="mt-2 text-lg font-semibold">{t.keyword}</h3>
-            <p className="mt-2 text-sm text-fg-secondary">{t.summary}</p>
-          </Card>
-        ))}
-      </div>
+export default function Learn() {
+  const [activeKey, setActiveKey] = useState(concepts[0].key);
+  const active = concepts.find((c) => c.key === activeKey) ?? concepts[0];
+
+  return (
+    <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+      <aside className="lg:col-span-3">
+        <div className="space-y-5">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-fg-muted">지금 짚어볼 것</p>
+            <h2 className="mt-2 text-lg font-semibold leading-snug">
+              포트폴리오에 영향 있는 개념부터
+            </h2>
+            <p className="mt-1 text-xs text-fg-muted">
+              보유 종목과 연관된 개념을 우선 표시합니다.
+            </p>
+          </div>
+          {categories.map((cat) => {
+            const items = concepts.filter((c) => c.category === cat);
+            if (items.length === 0) return null;
+            return (
+              <div key={cat}>
+                <p className="text-xs font-medium text-fg-secondary">{cat}</p>
+                <ul className="mt-2 space-y-px">
+                  {items.map((c) => (
+                    <li key={c.key}>
+                      <button
+                        onClick={() => setActiveKey(c.key)}
+                        className={
+                          "w-full rounded-sm px-2 py-1.5 text-left text-sm transition " +
+                          (c.key === activeKey
+                            ? "bg-accent-soft text-accent"
+                            : "text-fg-primary hover:bg-bg-muted")
+                        }
+                      >
+                        <span>{c.name}</span>
+                        {c.related && (
+                          <span className="ml-2 text-xs text-fg-muted">{c.related}</span>
+                        )}
+                      </button>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            );
+          })}
+        </div>
+      </aside>
+
+      <main className="lg:col-span-9">
+        <Card className="!p-7">
+          <p className="text-xs uppercase tracking-wide text-fg-muted">{active.category}</p>
+          <h1 className="mt-1 text-2xl font-semibold">{active.name}</h1>
+          {active.related && (
+            <p className="mt-1 text-sm text-fg-secondary">관련: {active.related}</p>
+          )}
+          <div className="mt-7 space-y-7">
+            {active.body.map((section, i) => (
+              <div key={i}>
+                <h3 className="text-sm font-semibold text-accent">{section.title}</h3>
+                <p className="mt-2 text-[15px] leading-7 text-fg-primary">{section.text}</p>
+              </div>
+            ))}
+          </div>
+        </Card>
+        <p className="mt-3 text-xs text-fg-muted">
+          위 설명은 정보 제공 목적이며 투자 권유가 아닙니다.
+        </p>
+      </main>
     </div>
   );
 }

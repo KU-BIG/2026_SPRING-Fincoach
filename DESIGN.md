@@ -1,57 +1,63 @@
 # FinCoach Design System
 
-벤치마킹: 토스(친근감, 한국어 톤), Coinbase(흰 베이스, 청록), Linear(타이포), Robinhood(차트), 카카오뱅크(둥근 모서리). 한 곳 그대로 베끼지 않고 조합.
+## 결 (방향)
 
-## 방향
+**Mercury(mercury.com) 차분한 신뢰감 + 네이버 정보 밀도 + 학습 도구 메타포의 혼합.**
 
-- 금융 = 신뢰. 다크네온 부적합
-- 학습/코칭 = 텍스트 위주, 차분한 톤
-- 한국어 우선, 한국 핀테크 톤
-- 데이터 영역만 밀도 있게, 나머지 여백 충분히
+- 토스 결을 그대로 따라하지 않음 (블루도, 일러스트 캐릭터도 차용 X)
+- Stripe 클론 같은 글로벌 핀테크 표준 톤도 피함
+- 카드 그리드 + 4탭 SaaS 표준에서 벗어나 정보가 살아있게
+
+## 원칙
+
+- **금융 = 신뢰**: 다크네온 X, 둥근 모서리 8~12px (토스 16px보다 보수적)
+- **학습 + 코치**: 텍스트 위주, 사람처럼 짚어주는 카피 (코치 인격 살리기)
+- **한국어 우선**: Pretendard, 한국 핀테크 데이터 밀도
+- **데이터 영역만 밀도 있게**: 나머지는 숨 쉬게, 표/숫자 영역은 빽빽하게
 
 ## 컬러
 
 ### Light (디폴트)
 
 ```css
---bg-base:     #FAFBFC;   /* 본문 배경 (회색 약간 섞인 흰) */
---bg-surface:  #FFFFFF;   /* 카드 */
---bg-muted:    #F3F5F7;   /* 보조 영역 */
+--bg-base:     #FAFBFC;
+--bg-surface:  #FFFFFF;
+--bg-muted:    #F3F5F7;
 
---fg-primary:  #0F1419;   /* 본문 */
---fg-secondary:#525965;   /* 보조 텍스트 */
---fg-muted:    #8B919C;   /* 라벨, 캡션 */
+--fg-primary:  #0F1419;
+--fg-secondary:#525965;
+--fg-muted:    #8B919C;
 
 --border:      #E4E7EB;
 --border-strong:#CDD2D9;
 
---accent:      #0E8270;   /* FinCoach Teal - 신뢰+성장 */
---accent-soft: #DCEFEA;   /* 액센트 배경 */
+--accent:      #0E8270;   /* Teal - 신뢰+성장. 토스블루 회피 */
+--accent-soft: #DCEFEA;
 --accent-fg:   #FFFFFF;
 
---positive:    #00875F;   /* 수익 */
---negative:    #D7263D;   /* 손실 */
---warn:        #B26A00;   /* 주의 */
---info:        #155EEF;   /* 정보 */
+--positive:    #00875F;
+--negative:    #D7263D;
+--warn:        #B26A00;
+--info:        #155EEF;
 ```
 
-### Dark
+### Dark (Mercury 결로 더 깊게)
 
 ```css
---bg-base:     #0E1116;
---bg-surface:  #161B22;
---bg-muted:    #1F242C;
+--bg-base:     #0B0F14;   /* 짙은 네이비. 검정에 가깝지만 따뜻 */
+--bg-surface:  #131922;
+--bg-muted:    #1B2330;
 
---fg-primary:  #E6E8EB;
---fg-secondary:#A1A8B3;
---fg-muted:    #6C737F;
+--fg-primary:  #E8ECF1;
+--fg-secondary:#A5ADBA;
+--fg-muted:    #6A7280;
 
---border:      #2A2F38;
---border-strong:#3A4150;
+--border:      #232C3A;
+--border-strong:#3A4555;
 
 --accent:      #3BC4A8;
---accent-soft: #14302B;
---accent-fg:   #0E1116;
+--accent-soft: #102923;
+--accent-fg:   #0B0F14;
 
 --positive:    #3DD68C;
 --negative:    #FF6675;
@@ -61,21 +67,17 @@
 
 ### 사용 룰
 
-- 토스블루(#0064FF) 사용 금지 (그대로 차용)
+- 토스블루(#0064FF) 사용 금지
 - Tailwind 기본 팔레트(orange-500 등) 사용 금지
 - 다크모드 네온 그라데이션 금지
-- 수익/손실: positive/negative 토큰만 사용 (한국 관습: 빨간색=상승 가능하나 본 디자인은 글로벌 관습 따라 빨강=하락)
+- 수익/손실: positive/negative 토큰만. 빨강=하락 (글로벌 관습)
+- 사이드 컬러 띠 금지 (좌측 3px accent border 같은 거 어디에도 X)
 
 ## 타이포
 
-### 폰트
-
 - **본문/한국어**: Pretendard Variable
-- **영문/숫자**: Inter Variable
-- **숫자만(테이블, 가격)**: Inter Tabular (`font-variant-numeric: tabular-nums`)
+- **숫자**: Inter Variable + `font-variant-numeric: tabular-nums`
 - 모노스페이스 전면 금지 (AI 슬롭)
-
-### 스케일
 
 | 토큰 | 크기 | 줄간격 | 용도 |
 |------|------|--------|------|
@@ -86,161 +88,126 @@
 | `body-lg`  | 16/26 | 1.55 | 본문 강조 |
 | `body`     | 14/22 | 1.55 | 본문 |
 | `caption`  | 12/18 | 1.50 | 라벨/메타 |
-| `mono-num` | 14/22 | tabular | 가격/수치 |
 
-### 두께
+두께: 본문 400 / 강조 500 / 제목 600 / 히어로 700
 
-- 본문: 400 / 강조: 500 / 제목: 600 / 히어로: 700
-- 한국어는 600 이상 가독성 검증 필수
+## 간격 / 모서리
 
-## 간격
+- 8px 베이스 (디테일은 4px 허용)
+- 모서리: xs 6px / sm 8px / md 10px / lg 14px
+- 그림자는 라이트 모드만 (다크는 보더로 대체)
 
-8px 베이스. 1.5x 비율 (디테일은 4px 허용).
-
-```
---space-1: 4px    --space-2: 8px
---space-3: 12px   --space-4: 16px
---space-5: 24px   --space-6: 32px
---space-7: 48px   --space-8: 64px
-```
-
-## 모서리
-
-```
---radius-xs: 6px   /* 칩, 작은 버튼 */
---radius-sm: 8px   /* 인풋 */
---radius-md: 10px  /* 버튼, 카드 */
---radius-lg: 14px  /* 큰 카드, 모달 */
---radius-full: 9999px
-```
-
-## 그림자
-
-라이트 모드만 사용. 다크는 borders로 대체.
-
-```
---shadow-card:  0 1px 2px rgba(15,20,25,0.04), 0 1px 3px rgba(15,20,25,0.06)
---shadow-hover: 0 2px 4px rgba(15,20,25,0.06), 0 6px 18px rgba(15,20,25,0.08)
---shadow-modal: 0 12px 32px rgba(15,20,25,0.18)
-```
-
-## 컴포넌트 원칙
+## 컴포넌트
 
 ### 카드
 - 보더 1px + 약한 그림자
-- 사이드 컬러 띠 금지 (좌측 3px accent border 같은 거)
-- 강조는 보더 색 전체 변경 또는 `--accent-soft` 배경
+- 강조는 보더 색 전체 변경 또는 `--accent-soft` 배경 (사이드 띠 X)
 
 ### 버튼
-- Primary: `--accent` 배경, `--accent-fg`
-- Secondary: 보더 + 본문색
+- Primary: `--accent` 배경
+- Secondary: 보더만
 - Ghost: 보더 없음, hover 시 `--bg-muted`
-- Disabled: opacity 0.5, cursor not-allowed
 
 ### 인풋
-- 라운드 8px
-- focus 시 `--accent` 보더 + 약한 `--accent-soft` ring
+- focus 시 `--accent` 보더 + 약한 ring
 - 에러 시 `--negative` 보더
 
 ### 차트
-- 라인 두께 1.5~2px
-- 그리드 라인은 `--border` (옅게)
-- 수익 라인 `--positive`, 비교 벤치마크는 회색
-- squiggly 데코 차트 금지 (실데이터만)
-
-### Toast/Alert
-- 상단 우측 슬라이드 인
-- 종류별 색: info/positive/negative/warn
+- 라인 1.5~2px, 그리드 옅게
+- 수익 `--positive`, 벤치마크 회색
+- squiggly 데코 금지 (실데이터만)
 
 ## 모션
 
-- Default duration: 180ms
-- Easing: `cubic-bezier(0.2, 0, 0.1, 1)` (커스텀)
-- Hover transitions: opacity/transform만, 색은 즉시
-- Page transition 금지 (어지러움)
+- 180ms / `cubic-bezier(0.2, 0, 0.1, 1)`
+- Hover는 opacity/transform만, 색은 즉시
+- 페이지 transition 금지
 
-## 다크모드 전환
+## 카피 톤 (코치 인격)
 
-- 우상단 토글
-- localStorage 저장
-- `prefers-color-scheme` 초기값
-- 토글 시 즉시 적용 (transition 없음)
+핀테크 표준 SaaS 카피 (`"오늘의 키워드"`, `"포트폴리오 요약"`)에서 벗어나 **사람처럼 짚어주는 톤**.
 
-## 한국어 톤
+좋은 예:
+- ❌ "오늘의 시장 브리핑" → ✅ "오늘 시장에서 짚어볼 것"
+- ❌ "포트폴리오 요약" → ✅ "지금 내 포트폴리오"
+- ❌ "오늘의 키워드" → ✅ "지금 시장이 주목하는"
+- ❌ "학습" → ✅ "이번 주 배워볼 것" 또는 "개념 짚기"
+- ❌ "차트 자리" placeholder → ✅ 빈 상태 메시지로 ("아직 표시할 데이터가 없어요")
 
-- 단정형 + 짧게 ("확인 가능"이 아니라 "확인할 수 있습니다")
-- 숫자는 항상 천단위 콤마 + 단위 명시
+규칙:
+- 단정형 짧게 + 구어체 약간
+- 숫자는 천단위 콤마 + 단위 명시
 - 손익은 +/- + 색
-- 모호 단어 X ("스마트", "AI 기반", "혁신적")
-- 학습 코너는 더 따뜻한 톤 OK
+- 모호 단어 금지 ("스마트", "AI 기반", "혁신적")
+- "오늘의 X" 패턴 피하기 (너무 SaaS-templated)
 
-## 아이콘
+## 페이지 구성
 
-- Lucide Icons (Tailwind 호환, 가벼움)
-- 24px 기본
-- stroke-width 1.5
-
-## 페이지 구성 (디폴트 시안)
-
-### 메인 (대시보드)
+### Dashboard (높은 정보 밀도)
 ```
-[헤더: 로고  대시보드  포트폴리오  Q&A  학습 | 다크토글 프로필]
-[히어로 카드: 오늘의 시장 브리핑 한 문장 + 키 인사이트 3]
-[그리드: 포트폴리오 요약(좌2/3) | TOP 키워드(우1/3)]
-[차트: 누적 수익 + 벤치마크]
-[하단: 추천 뉴스 + 학습 카드]
+[히어로: 한 줄 인사 + 시장 한 줄 요약 + 사용자 이름]
+[상단 4지표 가로 띠: 평가금액 / 손익 / 수익률 / 종목수]
+[메인 좌2: 보유 종목 표 (정보 밀도 높게)]
+[메인 우1: 시장이 주목하는 키워드 (rank로)]
+[하단 좌1: 오늘 시장에서 짚어볼 것 (텍스트 + 핵심 3가지)]
+[하단 우1: 코치가 짚는 것 — AI 코멘트 (해당 데이터 기반)]
 ```
 
-### 챗 (Q&A)
+### Chat (Q&A)
 ```
-[좌: 대화 리스트 + 새 채팅]
-[우: 본문 + 입력창. 시장 컨텍스트 자동 주입]
-```
-
-### 포트폴리오
-```
-[요약 표 + 원형차트 4종]
-[종목별 상세 카드: 차트 + 매수평단가 + 뉴스 + 인사이트]
+[좌: 세션 리스트 (실 데이터 없으면 빈 상태 "첫 대화를 시작해보세요")]
+[우: 채팅 본문 + 입력. 시장 컨텍스트 자동 주입]
 ```
 
-### 학습
+빈 상태 카피: "아직 대화가 없어요. 시장 개념이나 내 포트폴리오에 대해 물어보세요."
+
+### Portfolio (정보 밀도)
 ```
-[키워드 카드 그리드: 인플레이션, PER, 반도체 등]
-[개념 → 시장사례 → 투자자 대응 3단 답변]
+[상단: 평가금액 큰 숫자 + 손익 / 수익률]
+[중간: 보유 종목 상세 표 (모든 필드)]
+[하단: 종목별 카드 — 미니 차트 + 매수평단 + 최근 변동 + 코치 코멘트]
 ```
+
+### 학습 (키워드 카드 그리드 폐기 → 목차 + 진도)
+```
+[히어로: "지금 내가 짚어야 할 개념" (포트폴리오와 연관된 키워드 1-2개 강조)]
+[섹션: 카테고리 (시장 기초 / 종목 분석 / 리스크 / 거시) — 가로 탭 또는 좌측 메뉴]
+[본문: 선택된 개념의 3단 구조 (개념 → 현재 시장 사례 → 투자자 대응)]
+```
+
+키워드 카드 그리드 (3-col)는 슬롭이라 폐기. 대신 책의 목차/진도 메타포.
 
 ## 절대 금지 (AI 슬롭 클리셰)
 
-- 다크 + 네온 그라데이션 (오렌지/퍼플/시안)
-- Tailwind 기본 팔레트 그대로 (orange-500 등)
+- 다크 + 네온 그라데이션
+- Tailwind 기본 팔레트 그대로
 - 전면 모노스페이스
-- 언더스코어 prefix 섹션명 (`_METRICS`, `_PROJECT`)
+- 언더스코어 prefix 섹션명
 - 의미 없는 squiggly 차트 데코
-- 가짜 메트릭 (1.2K USERS, 99.9% UPTIME)
-- 가짜 버전 번호 (v1.0.0) 푸터
-- "BUILT WITH X, CODED WITH Y" 푸터
-- 좌측 3px accent border (사이드 컬러 띠)
-- 모듈/카드/리스트 어디에도 사이드 컬러 띠 금지
-- "Transform Your X with AI" 류 vague 카피
-- 자기참조 카피 ("AI가 설계한 디자인입니다")
-- 동사 3개 나열 (GENERATE / OPTIMIZE / EVOLVE)
-- 와이어프레임/그리드 큐브 히어로
+- 가짜 메트릭, 가짜 버전, BUILT WITH 푸터
+- 사이드 컬러 띠 (어디에도 X)
+- "Transform Your X with AI" 류
+- 자기참조 카피, 동사 3개 나열
+- 와이어프레임 큐브 히어로
+- 키워드 카드 3-col 그리드 패턴 (Notion 클론 톤)
+- 가짜 채팅 사이드바 항목 (mock으로 채워두기)
+- "오늘의 X" / "X 요약" 같은 generic SaaS 헤더
 
 ## 참고했지만 차용하지 않는 것
 
 | 참고 | 어떻게 |
 |------|--------|
-| 토스 | 친근감/한국어 톤, but 블루는 비사용 |
-| 카카오뱅크 | 둥근 모서리 정도, 옐로우는 비사용 |
-| Coinbase | 흰 베이스 + 청록 액센트 아이디어 |
-| Linear | 타이포 위계, but 모노스페이스 비사용 |
-| 무신사 | 카드 깔끔한 정렬, but 모노톤 비사용 |
-| Robinhood | 차분한 차트 스타일, but green-only 비사용 |
-| Upbit | 데이터 밀도, but 빨강/파랑 강대비 비사용 |
+| **Mercury** | 짙은 네이비 다크 모드, 차분한 신뢰감, 카드 그림자 적게 |
+| **네이버** | 정보 밀도 높은 그리드, 한국형 표 |
+| **토스** | 친근 단문 카피 일부 — 블루/일러스트는 비사용 |
+| **Stripe** | 타이포 위계, 글로벌 핀테크 신뢰감 톤 — 보라 #635BFF는 비사용 |
+| **카카오뱅크** | 둥근 모서리 정도 — 옐로우 비사용 |
+| **Robinhood** | 차분한 차트 스타일 — green-only 비사용 |
 
-## DESIGN.md 변경 절차
+## 변경 절차
 
-이 파일은 디자인 토큰의 source of truth. 변경 시:
-1. 토큰 값 변경 → `web/src/styles/tokens.css` 자동 갱신
-2. PR에 시각 비교 스크린샷 첨부
-3. 큰 변경(컬러 시스템, 타이포 스케일)은 ADR
+이 파일은 디자인 토큰의 source of truth.
+
+1. 토큰 값 변경 → `web/src/styles/tokens.css` 동기화
+2. 페이지 구조 변경 시 PR에 시각 비교 스크린샷
+3. 컬러 시스템·타이포 스케일급 변경은 ADR

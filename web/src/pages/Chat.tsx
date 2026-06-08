@@ -65,21 +65,29 @@ export default function Chat() {
   return (
     <div className="grid grid-cols-1 gap-5 lg:grid-cols-4">
       <Card className="lg:col-span-1">
-        <h3 className="mb-3 text-sm font-semibold">대화</h3>
-        <button
-          onClick={() => setMessages([{
-            role: "assistant",
-            content: "안녕하세요. FinCoach 학습 도우미입니다. 시장 개념, 포트폴리오, 종목에 대해 물어보세요. 매수/매도 직접 추천은 하지 않습니다.",
-          }])}
-          className="w-full rounded-sm bg-accent px-3 py-2 text-sm text-accent-fg transition hover:opacity-90"
-        >
-          + 새 대화
-        </button>
-        <ul className="mt-4 space-y-1 text-sm">
-          <li className="rounded-sm bg-bg-muted px-2 py-1.5">오늘 시장 브리핑</li>
-          <li className="px-2 py-1.5 text-fg-secondary">PER이 뭐예요?</li>
-          <li className="px-2 py-1.5 text-fg-secondary">반도체 섹터 비중</li>
-        </ul>
+        <div className="space-y-5">
+          <div>
+            <p className="text-xs uppercase tracking-wide text-fg-muted">코치에게 물어보기</p>
+            <h3 className="mt-1 text-base font-semibold">대화</h3>
+          </div>
+          <button
+            onClick={() => setMessages([{
+              role: "assistant",
+              content: "안녕하세요. FinCoach 학습 도우미입니다. 시장 개념, 포트폴리오, 종목에 대해 물어보세요. 매수/매도 직접 추천은 하지 않습니다.",
+            }])}
+            className="w-full rounded-sm bg-accent px-3 py-2 text-sm text-accent-fg transition hover:opacity-90"
+          >
+            새 대화 시작
+          </button>
+          <div>
+            <p className="text-xs font-medium text-fg-secondary">이런 질문은 어떨까요</p>
+            <ul className="mt-2 space-y-1 text-sm text-fg-secondary">
+              <li className="cursor-pointer rounded-sm px-2 py-1.5 transition hover:bg-bg-muted" onClick={() => setInput("PER이 높으면 무슨 의미인가요?")}>PER이 높으면 무슨 의미인가요?</li>
+              <li className="cursor-pointer rounded-sm px-2 py-1.5 transition hover:bg-bg-muted" onClick={() => setInput("내 포트폴리오의 리스크는 뭐예요?")}>내 포트폴리오의 리스크는 뭐예요?</li>
+              <li className="cursor-pointer rounded-sm px-2 py-1.5 transition hover:bg-bg-muted" onClick={() => setInput("반도체 섹터 비중을 더 늘려도 될까요?")}>반도체 섹터 비중을 더 늘려도 될까요?</li>
+            </ul>
+          </div>
+        </div>
       </Card>
 
       <Card className="flex h-[70vh] flex-col lg:col-span-3">
