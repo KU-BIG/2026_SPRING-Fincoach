@@ -4,12 +4,12 @@ import { api, type ChatMessage } from "@/lib/api";
 type Msg = ChatMessage;
 
 const GREETING =
-  "안녕하세요. 시장 개념, 포트폴리오, 종목에 대해 편하게 물어보세요. 매수/매도 직접 추천은 하지 않아요.";
+  "안녕하세요. 시장 개념, 보유 포트폴리오, 종목에 관한 질문을 받습니다. 매수 또는 매도에 대한 직접 추천은 제공하지 않습니다.";
 
 const SAMPLES = [
-  "PER이 높으면 무슨 의미예요?",
-  "내 포트폴리오의 리스크는 뭐예요?",
-  "반도체 섹터 비중을 더 늘려도 될까요?",
+  "PER이 높다는 것은 어떤 의미인가요?",
+  "현재 포트폴리오의 주요 리스크는 무엇인가요?",
+  "반도체 섹터 비중을 확대해도 괜찮을까요?",
 ];
 
 export default function Chat() {
@@ -53,7 +53,7 @@ export default function Chat() {
         const next = [...cur];
         next[assistantIdx] = {
           role: "assistant",
-          content: "서버에 연결할 수 없어요. 잠시 후 다시 시도해 주세요.",
+          content: "서버에 연결할 수 없습니다. 잠시 후 다시 시도해 주세요.",
         };
         return next;
       });
@@ -75,7 +75,7 @@ export default function Chat() {
             >
               새 대화
             </button>
-            <p className="caption mt-5">자주 묻는 질문</p>
+            <p className="caption mt-5">추천 질문</p>
             <ul className="mt-2 space-y-1">
               {SAMPLES.map((s) => (
                 <li key={s}>
@@ -112,7 +112,7 @@ export default function Chat() {
             {loading && messages[messages.length - 1]?.content === "" && (
               <div className="flex justify-start">
                 <div className="rounded-lg bg-bg-muted px-4 py-2.5 text-sm text-fg-muted">
-                  입력 중…
+                  응답 생성 중
                 </div>
               </div>
             )}
@@ -138,7 +138,7 @@ export default function Chat() {
             </button>
           </div>
           <p className="mt-2 text-xs text-fg-muted">
-            정보 제공 도구이며 매수/매도를 추천하지 않습니다.
+            본 응답은 정보 제공 목적이며, 투자 권유에 해당하지 않습니다.
           </p>
         </section>
       </div>

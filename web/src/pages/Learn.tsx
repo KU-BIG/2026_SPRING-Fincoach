@@ -15,9 +15,9 @@ const concepts: Concept[] = [
     category: "종목 분석",
     related: "삼성전자 12.5배",
     body: [
-      { title: "이게 뭐예요", text: "주가수익비율. 주가를 EPS(주당순이익)로 나눈 값으로, 한 주가 1년치 이익의 몇 배에 거래되는지를 뜻해요." },
-      { title: "지금 시장에서는", text: "반도체주는 사이클상 이익 변동이 커서 단순 비교가 어려워요. 동종업계 평균과 함께 보는 게 좋아요." },
-      { title: "내 포트폴리오엔", text: "보유 종목의 PER만 보지 말고, ROE와 매출 성장과 같이 봐야 의미가 살아나요." },
+      { title: "정의", text: "주가수익비율(Price Earnings Ratio). 주가를 주당순이익(EPS)으로 나눈 값으로, 한 주가 1년치 이익의 몇 배에 거래되는지를 나타냅니다." },
+      { title: "현재 시장 흐름", text: "반도체주는 사이클상 이익 변동이 커서 단순 비교가 어렵습니다. 동종 업계 평균과 함께 보는 것이 합리적입니다." },
+      { title: "포트폴리오 적용", text: "보유 종목의 PER은 단독으로 판단하지 말고, ROE와 매출 성장률과 함께 해석해야 합니다." },
     ],
   },
   {
@@ -25,9 +25,9 @@ const concepts: Concept[] = [
     name: "인플레이션",
     category: "거시 경제",
     body: [
-      { title: "이게 뭐예요", text: "물가가 오르는 현상. 같은 돈으로 살 수 있는 게 줄어들어요." },
-      { title: "지금 시장에서는", text: "금리 인상 사이클이 끝나는지가 핵심 이슈예요. 인플레가 둔화되면 성장주에 우호적." },
-      { title: "내 포트폴리오엔", text: "현금 비중이 높으면 인플레이션에 가장 약해요. 실물 자산이나 배당주 비중을 점검해 보세요." },
+      { title: "정의", text: "물가가 지속적으로 상승하는 현상. 화폐의 실질 구매력이 감소합니다." },
+      { title: "현재 시장 흐름", text: "금리 인상 사이클의 종료 여부가 핵심 변수입니다. 물가 둔화가 확인되면 성장주에 우호적인 환경이 형성됩니다." },
+      { title: "포트폴리오 적용", text: "현금 비중이 높은 포트폴리오는 인플레이션에 가장 취약합니다. 실물 자산 또는 배당주 비중을 점검할 필요가 있습니다." },
     ],
   },
   {
@@ -35,9 +35,9 @@ const concepts: Concept[] = [
     name: "금리",
     category: "거시 경제",
     body: [
-      { title: "이게 뭐예요", text: "돈을 빌리는 가격. 중앙은행이 정책금리를 조정해 시중 자금 흐름을 조절해요." },
-      { title: "지금 시장에서는", text: "고금리 환경은 성장주에 부담, 배당주와 금융주에 우호적이에요." },
-      { title: "내 포트폴리오엔", text: "성장주에 쏠려있다면 금리 민감도 점검이 필요해요." },
+      { title: "정의", text: "자금 차입에 대한 가격. 중앙은행이 정책금리를 조정해 시중 유동성을 통제합니다." },
+      { title: "현재 시장 흐름", text: "고금리 환경은 성장주에 부담을 주는 반면, 배당주와 금융주에는 우호적으로 작용합니다." },
+      { title: "포트폴리오 적용", text: "성장주 비중이 높다면 금리 민감도 점검이 필요합니다." },
     ],
   },
   {
@@ -46,9 +46,9 @@ const concepts: Concept[] = [
     category: "종목 분석",
     related: "SK하이닉스",
     body: [
-      { title: "이게 뭐예요", text: "메모리 가격이 수년 단위로 호황과 침체를 반복하는 패턴. 공급·수요·재고가 핵심 변수." },
-      { title: "지금 시장에서는", text: "AI 수요로 HBM 공급이 빠듯해요. 메모리 가격 반등 신호가 누적되는 중." },
-      { title: "내 포트폴리오엔", text: "반도체주는 실적보다 사이클 위치가 먼저예요. 재고 사이클 지표를 같이 보세요." },
+      { title: "정의", text: "메모리 반도체 가격이 수년 단위로 호황과 침체를 반복하는 패턴. 공급, 수요, 재고가 핵심 변수입니다." },
+      { title: "현재 시장 흐름", text: "AI 수요로 HBM(고대역폭 메모리) 공급이 빠듯합니다. 메모리 가격 반등 신호가 누적되는 국면입니다." },
+      { title: "포트폴리오 적용", text: "반도체주는 단기 실적보다 사이클 위치가 우선합니다. 재고 사이클 지표를 함께 확인해야 합니다." },
     ],
   },
   {
@@ -56,9 +56,9 @@ const concepts: Concept[] = [
     name: "환율",
     category: "리스크",
     body: [
-      { title: "이게 뭐예요", text: "원/달러 환율. 1달러를 사기 위해 필요한 원화 금액이에요." },
-      { title: "지금 시장에서는", text: "원화 약세는 해외 종목 평가액을 끌어올리지만, 환차익은 미실현이라 환차손 위험도 같이 와요." },
-      { title: "내 포트폴리오엔", text: "해외 비중이 크면 환율 시나리오를 같이 보세요. 헤지가 필요한 수준인지 점검할 수 있어요." },
+      { title: "정의", text: "원/달러 환율. 1달러를 매입하기 위해 필요한 원화 금액입니다." },
+      { title: "현재 시장 흐름", text: "원화 약세는 해외 종목의 평가액을 끌어올리지만, 환차익은 미실현 상태이며 환차손 위험이 동반됩니다." },
+      { title: "포트폴리오 적용", text: "해외 비중이 크다면 환율 시나리오를 함께 검토하고, 헤지 필요성을 점검해야 합니다." },
     ],
   },
   {
@@ -66,9 +66,9 @@ const concepts: Concept[] = [
     name: "백테스트",
     category: "리스크",
     body: [
-      { title: "이게 뭐예요", text: "현재 전략을 과거 데이터에 대입해 수익률·낙폭·변동성을 추정하는 방법." },
-      { title: "지금 시장에서는", text: "최근 5년은 저금리·고성장 구간이 길어서 결과가 과장될 수 있어요. 최소 10년 단위로 보세요." },
-      { title: "내 포트폴리오엔", text: "백테스트 결과는 보장이 아니에요. 최대 낙폭(MDD)을 받아들일 수 있는지가 더 중요해요." },
+      { title: "정의", text: "현재 투자 전략을 과거 데이터에 적용해 수익률, 최대 낙폭, 변동성을 추정하는 방법론입니다." },
+      { title: "현재 시장 흐름", text: "최근 5년은 저금리, 고성장 구간이 길어 결과가 과장될 가능성이 있습니다. 최소 10년 단위 검증이 권장됩니다." },
+      { title: "포트폴리오 적용", text: "백테스트 결과는 미래 성과를 보장하지 않습니다. 최대 낙폭(MDD)을 감내할 수 있는지가 우선 판단 기준입니다." },
     ],
   },
 ];
@@ -81,13 +81,13 @@ export default function Learn() {
 
   return (
     <div className="space-y-4">
-      <h1 className="headline text-xl">용어 사전</h1>
+      <h1 className="headline text-xl">금융 용어</h1>
 
       <div className="grid grid-cols-12 gap-4">
         <aside className="col-span-12 lg:col-span-3">
           <div className="rounded-lg border border-border bg-bg-surface p-5">
             <p className="text-sm font-medium text-fg-primary">전체 용어</p>
-            <p className="mt-1 text-xs text-fg-muted">관련 종목이 있으면 표시돼요</p>
+            <p className="mt-1 text-xs text-fg-muted">관련 종목이 있는 경우 표시됩니다</p>
             <div className="mt-4 space-y-4">
               {categories.map((cat) => {
                 const items = concepts.filter((c) => c.category === cat);
@@ -127,7 +127,7 @@ export default function Learn() {
             <p className="caption">{active.category}</p>
             <h2 className="headline mt-1 text-2xl">{active.name}</h2>
             {active.related && (
-              <p className="mt-1 text-sm text-fg-secondary">관련: {active.related}</p>
+              <p className="mt-1 text-sm text-fg-secondary">관련 종목: {active.related}</p>
             )}
             <div className="mt-6 space-y-6">
               {active.body.map((section, i) => (
@@ -139,7 +139,7 @@ export default function Learn() {
             </div>
           </article>
           <p className="mt-3 text-xs text-fg-muted">
-            정보 제공 목적이며 투자 권유가 아닙니다.
+            본 자료는 정보 제공 목적이며, 투자 권유에 해당하지 않습니다.
           </p>
         </main>
       </div>

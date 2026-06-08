@@ -30,10 +30,10 @@ export default function Dashboard() {
         )}
       </div>
 
-      {/* 상단: 내 자산 큰 박스 + 오늘 시장 */}
+      {/* 상단: 평가금액 + 시장 요약 */}
       <div className="grid grid-cols-12 gap-4">
         <section className="col-span-12 rounded-lg border border-border bg-bg-surface p-6 lg:col-span-7">
-          <p className="caption">내 자산</p>
+          <p className="caption">총 평가금액</p>
           <p className="num mt-2 text-3xl font-bold sm:text-4xl">
             {totalKrw}
             <span className="ml-1 text-base font-medium text-fg-secondary">원</span>
@@ -47,12 +47,12 @@ export default function Dashboard() {
         </section>
 
         <section className="col-span-12 rounded-lg border border-border bg-bg-surface p-6 lg:col-span-5">
-          <p className="caption">오늘 시장</p>
+          <p className="caption">시장 요약</p>
           <p className="mt-2 text-xs text-fg-muted">
             {market?.market_date ?? ""}
           </p>
           <p className="mt-1 text-[15px] leading-6 text-fg-primary">
-            {market?.daily_market_summary ?? "시장 데이터를 가져오는 중"}
+            {market?.daily_market_summary ?? "시장 데이터를 가져오는 중입니다."}
           </p>
         </section>
       </div>
@@ -61,7 +61,7 @@ export default function Dashboard() {
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Tile label="평가금액" value={`${totalKrw}원`} />
         <Tile
-          label="총 손익"
+          label="평가 손익"
           value={pf ? `${pnlSign}${krw(pf.total_pnl_krw)}원` : "—"}
           valueClass={pf ? pnlColor(pf.total_pnl_krw) : ""}
         />
@@ -73,7 +73,7 @@ export default function Dashboard() {
         <Tile label="보유 종목" value={pf ? `${pf.positions.length}개` : "—"} />
       </div>
 
-      {/* 보유 종목 표 + 시장 트렌드 */}
+      {/* 보유 종목 + 주요 키워드 */}
       <div className="grid grid-cols-12 gap-4">
         <section className="col-span-12 rounded-lg border border-border bg-bg-base p-6 lg:col-span-7">
           <div className="mb-4 flex items-baseline justify-between">
@@ -108,8 +108,8 @@ export default function Dashboard() {
         </section>
 
         <section className="col-span-12 rounded-lg border border-border bg-bg-base p-6 lg:col-span-5">
-          <h2 className="subhead text-base">시장 트렌드</h2>
-          <p className="mt-1 text-xs text-fg-muted">최근 거론 키워드</p>
+          <h2 className="subhead text-base">주요 키워드</h2>
+          <p className="mt-1 text-xs text-fg-muted">시장 거론 빈도 기준</p>
           <ol className="mt-4 space-y-1">
             {market?.trending_keywords.map((k, i) => (
               <li
@@ -130,19 +130,19 @@ export default function Dashboard() {
         </section>
       </div>
 
-      {/* AI 코치 분석 */}
+      {/* 포트폴리오 인사이트 */}
       <section className="rounded-lg border border-border bg-bg-base p-6">
         <div className="flex items-baseline justify-between">
-          <h2 className="subhead text-base">AI 코치 분석</h2>
-          <span className="text-xs text-fg-muted">자동 생성</span>
+          <h2 className="subhead text-base">포트폴리오 인사이트</h2>
+          <span className="text-xs text-fg-muted">AI 자동 분석</span>
         </div>
         <p className="mt-3 text-[15px] leading-7 text-fg-primary">
           {pf && top
-            ? `현재 비중이 가장 큰 종목은 ${top.name}입니다. 한 종목 비중이 30%를 넘으면 집중 위험을 점검할 시점이에요.`
-            : "포트폴리오가 들어오면 여기에 분석을 표시합니다."}
+            ? `최대 비중 종목은 ${top.name}입니다. 단일 종목 비중이 30%를 상회할 경우 집중 위험에 대한 점검이 필요합니다.`
+            : "포트폴리오가 입력되면 자동 분석이 표시됩니다."}
         </p>
         <p className="mt-3 text-xs text-fg-muted">
-          정보 제공 목적이며 투자 권유가 아닙니다.
+          본 분석은 정보 제공 목적이며, 투자 권유에 해당하지 않습니다.
         </p>
       </section>
     </div>

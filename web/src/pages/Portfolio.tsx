@@ -17,7 +17,7 @@ export default function Portfolio() {
   return (
     <div className="space-y-4">
       <div className="flex items-baseline justify-between">
-        <h1 className="headline text-xl">내 자산</h1>
+        <h1 className="headline text-xl">포트폴리오</h1>
         {pf.source === "mock" && (
           <span className="rounded-sm border border-warn px-2 py-0.5 text-[10px] font-medium text-warn">
             데모 데이터
@@ -51,7 +51,7 @@ export default function Portfolio() {
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-border text-left text-xs text-fg-muted">
-              <th className="pb-2 font-medium">종목</th>
+              <th className="pb-2 font-medium">종목명</th>
               <th className="pb-2 text-right font-medium">티커</th>
               <th className="pb-2 text-right font-medium">비중</th>
               <th className="pb-2 text-right font-medium">수익률</th>

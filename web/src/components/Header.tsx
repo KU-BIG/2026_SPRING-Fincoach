@@ -4,9 +4,9 @@ import { cn } from "@/lib/cn";
 
 const nav = [
   { to: "/", label: "홈" },
-  { to: "/portfolio", label: "내 자산" },
+  { to: "/portfolio", label: "포트폴리오" },
   { to: "/chat", label: "AI 코치" },
-  { to: "/learn", label: "용어 사전" },
+  { to: "/learn", label: "금융 용어" },
 ];
 
 export default function Header() {
