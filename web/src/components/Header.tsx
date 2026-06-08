@@ -5,39 +5,41 @@ import { cn } from "@/lib/cn";
 const nav = [
   { to: "/", label: "대시보드" },
   { to: "/portfolio", label: "포트폴리오" },
-  { to: "/chat", label: "Q&A" },
+  { to: "/chat", label: "코치" },
   { to: "/learn", label: "학습" },
 ];
 
 export default function Header() {
   return (
-    <header className="sticky top-0 z-10 border-b border-border bg-bg-base/90 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
-        <div className="flex items-center gap-8">
-          <NavLink to="/" className="text-base font-semibold tracking-tight">
-            FinCoach
+    <header className="border-b border-border-strong bg-bg-base">
+      <div className="mx-auto max-w-6xl px-8">
+        {/* 매거진 마스트헤드 */}
+        <div className="flex h-14 items-center justify-between">
+          <NavLink to="/" className="flex items-baseline gap-2">
+            <span className="serif text-xl font-bold tracking-tight">FinCoach</span>
+            <span className="caption hidden sm:inline">금융 학습 매거진</span>
           </NavLink>
-          <nav className="flex items-center gap-1">
-            {nav.map((n) => (
-              <NavLink
-                key={n.to}
-                to={n.to}
-                end={n.to === "/"}
-                className={({ isActive }) =>
-                  cn(
-                    "rounded-sm px-3 py-1.5 text-sm transition",
-                    isActive
-                      ? "bg-bg-muted text-fg-primary"
-                      : "text-fg-secondary hover:bg-bg-muted hover:text-fg-primary",
-                  )
-                }
-              >
-                {n.label}
-              </NavLink>
-            ))}
-          </nav>
+          <ThemeToggle />
         </div>
-        <ThemeToggle />
+        <nav className="flex h-10 items-end gap-7 border-t border-border pt-2">
+          {nav.map((n) => (
+            <NavLink
+              key={n.to}
+              to={n.to}
+              end={n.to === "/"}
+              className={({ isActive }) =>
+                cn(
+                  "serif relative pb-2 text-[15px] transition",
+                  isActive
+                    ? "font-medium text-fg-primary after:absolute after:inset-x-0 after:bottom-[-1px] after:h-[2px] after:bg-accent"
+                    : "font-normal text-fg-secondary hover:text-fg-primary",
+                )
+              }
+            >
+              {n.label}
+            </NavLink>
+          ))}
+        </nav>
       </div>
     </header>
   );

@@ -1,30 +1,31 @@
-/* FinCoach Design Tokens. Single source of truth: /DESIGN.md */
+/* FinCoach Design Tokens. Single source of truth: /DESIGN.md
+   결: 금융 매거진 (베이지 + burgundy + 세리프 헤드) */
 
 :root {
-  --bg-base: #FAFBFC;
-  --bg-surface: #FFFFFF;
-  --bg-muted: #F3F5F7;
+  --bg-base: #F6F1E8;
+  --bg-surface: #FBF8F2;
+  --bg-muted: #ECE5D5;
 
-  --fg-primary: #0F1419;
-  --fg-secondary: #525965;
-  --fg-muted: #8B919C;
+  --fg-primary: #1F1612;
+  --fg-secondary: #5A4F46;
+  --fg-muted: #948578;
 
-  --border: #E4E7EB;
-  --border-strong: #CDD2D9;
+  --border: #D9CFC0;
+  --border-strong: #B8AB97;
 
-  --accent: #0E8270;
-  --accent-soft: #DCEFEA;
-  --accent-fg: #FFFFFF;
+  --accent: #7A1F1F;
+  --accent-soft: #F3E5E0;
+  --accent-fg: #FBF8F2;
 
-  --positive: #00875F;
-  --negative: #D7263D;
-  --warn: #B26A00;
-  --info: #155EEF;
+  --positive: #1F6F4D;
+  --negative: #A41E22;
+  --warn: #A87528;
+  --info: #2E4D7B;
 
-  --radius-xs: 6px;
-  --radius-sm: 8px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
+  --radius-xs: 2px;
+  --radius-sm: 3px;
+  --radius-md: 4px;
+  --radius-lg: 6px;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -37,23 +38,23 @@
 }
 
 .dark {
-  --bg-base: #0B0F14;
-  --bg-surface: #131922;
-  --bg-muted: #1B2330;
+  --bg-base: #171310;
+  --bg-surface: #211A15;
+  --bg-muted: #2A2118;
 
-  --fg-primary: #E8ECF1;
-  --fg-secondary: #A5ADBA;
-  --fg-muted: #6A7280;
+  --fg-primary: #F0E8DA;
+  --fg-secondary: #B8AC9A;
+  --fg-muted: #756A5E;
 
-  --border: #232C3A;
-  --border-strong: #3A4555;
+  --border: #3A2F25;
+  --border-strong: #54473B;
 
-  --accent: #3BC4A8;
-  --accent-soft: #102923;
-  --accent-fg: #0B0F14;
+  --accent: #E8B4B4;
+  --accent-soft: #2E1818;
+  --accent-fg: #171310;
 
-  --positive: #3DD68C;
-  --negative: #FF6675;
-  --warn: #FFB257;
-  --info: #5B8DEF;
+  --positive: #5BC48F;
+  --negative: #E87878;
+  --warn: #E0B266;
+  --info: #7BA0D9;
 }

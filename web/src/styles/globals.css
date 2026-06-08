@@ -10,7 +10,7 @@ body,
 }
 
 body {
-  font-family: Inter, "Pretendard Variable", Pretendard, system-ui, sans-serif;
+  font-family: "Pretendard Variable", Pretendard, Inter, system-ui, sans-serif;
   background: var(--bg-base);
   color: var(--fg-primary);
   -webkit-font-smoothing: antialiased;
@@ -18,9 +18,32 @@ body {
   font-feature-settings: "ss01", "ss03";
 }
 
+.serif {
+  font-family: "Noto Serif KR", "Source Serif Pro", Georgia, serif;
+  font-feature-settings: "kern" 1;
+  letter-spacing: -0.01em;
+}
+
 .num {
   font-family: Inter, system-ui, sans-serif;
   font-variant-numeric: tabular-nums;
+  letter-spacing: -0.01em;
+}
+
+.caption {
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.rule {
+  border-top: 1px solid var(--border);
+}
+
+.rule-strong {
+  border-top: 1px solid var(--border-strong);
 }
 
 ::selection {

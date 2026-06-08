@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { Card } from "@/components/Card";
 
 type Concept = {
   key: string;
@@ -81,37 +80,33 @@ export default function Learn() {
   const active = concepts.find((c) => c.key === activeKey) ?? concepts[0];
 
   return (
-    <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+    <div className="grid grid-cols-1 gap-10 lg:grid-cols-12">
       <aside className="lg:col-span-3">
-        <div className="space-y-5">
-          <div>
-            <p className="text-xs uppercase tracking-wide text-fg-muted">지금 짚어볼 것</p>
-            <h2 className="mt-2 text-lg font-semibold leading-snug">
-              포트폴리오에 영향 있는 개념부터
-            </h2>
-            <p className="mt-1 text-xs text-fg-muted">
-              보유 종목과 연관된 개념을 우선 표시합니다.
-            </p>
-          </div>
+        <p className="caption">학습</p>
+        <h2 className="serif mt-1 text-xl font-semibold leading-snug">개념 짚기</h2>
+        <p className="mt-2 text-sm text-fg-secondary">
+          포트폴리오와 연관된 개념을 우선으로 정리합니다.
+        </p>
+        <div className="mt-8 space-y-6">
           {categories.map((cat) => {
             const items = concepts.filter((c) => c.category === cat);
             if (items.length === 0) return null;
             return (
               <div key={cat}>
-                <p className="text-xs font-medium text-fg-secondary">{cat}</p>
+                <p className="caption">{cat}</p>
                 <ul className="mt-2 space-y-px">
                   {items.map((c) => (
                     <li key={c.key}>
                       <button
                         onClick={() => setActiveKey(c.key)}
                         className={
-                          "w-full rounded-sm px-2 py-1.5 text-left text-sm transition " +
+                          "block w-full py-1.5 text-left text-[15px] transition " +
                           (c.key === activeKey
-                            ? "bg-accent-soft text-accent"
-                            : "text-fg-primary hover:bg-bg-muted")
+                            ? "font-medium text-accent"
+                            : "text-fg-primary hover:text-accent")
                         }
                       >
-                        <span>{c.name}</span>
+                        {c.name}
                         {c.related && (
                           <span className="ml-2 text-xs text-fg-muted">{c.related}</span>
                         )}
@@ -125,26 +120,30 @@ export default function Learn() {
         </div>
       </aside>
 
-      <main className="lg:col-span-9">
-        <Card className="!p-7">
-          <p className="text-xs uppercase tracking-wide text-fg-muted">{active.category}</p>
-          <h1 className="mt-1 text-2xl font-semibold">{active.name}</h1>
-          {active.related && (
-            <p className="mt-1 text-sm text-fg-secondary">관련: {active.related}</p>
-          )}
-          <div className="mt-7 space-y-7">
-            {active.body.map((section, i) => (
-              <div key={i}>
-                <h3 className="text-sm font-semibold text-accent">{section.title}</h3>
-                <p className="mt-2 text-[15px] leading-7 text-fg-primary">{section.text}</p>
-              </div>
-            ))}
-          </div>
-        </Card>
-        <p className="mt-3 text-xs text-fg-muted">
-          위 설명은 정보 제공 목적이며 투자 권유가 아닙니다.
+      <article className="lg:col-span-9">
+        <p className="caption">{active.category}</p>
+        <h1 className="serif mt-2 text-[44px] font-semibold leading-[1.1]">
+          {active.name}
+        </h1>
+        {active.related && (
+          <p className="mt-3 text-sm text-fg-secondary">관련: {active.related}</p>
+        )}
+
+        <div className="mt-10 space-y-10">
+          {active.body.map((section, i) => (
+            <section key={i}>
+              <p className="caption text-accent">{section.title}</p>
+              <p className="mt-2 max-w-[65ch] text-[17px] leading-[1.85] text-fg-primary">
+                {section.text}
+              </p>
+            </section>
+          ))}
+        </div>
+
+        <p className="caption mt-12 border-t border-border pt-4">
+          정보 제공 · 투자 권유 아님
         </p>
-      </main>
+      </article>
     </div>
   );
 }

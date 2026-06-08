@@ -7,6 +7,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ["Pretendard Variable", "Pretendard", "Inter", "system-ui", "sans-serif"],
+        serif: ["\"Noto Serif KR\"", "Source Serif Pro", "Georgia", "serif"],
         num: ["Inter", "system-ui", "sans-serif"],
       },
       colors: {
@@ -35,15 +36,15 @@ export default {
         info: "var(--info)",
       },
       borderRadius: {
-        xs: "6px",
-        sm: "8px",
-        md: "10px",
-        lg: "14px",
+        xs: "2px",
+        sm: "3px",
+        md: "4px",
+        lg: "6px",
       },
       boxShadow: {
-        card: "0 1px 2px rgba(15,20,25,0.04), 0 1px 3px rgba(15,20,25,0.06)",
-        hover: "0 2px 4px rgba(15,20,25,0.06), 0 6px 18px rgba(15,20,25,0.08)",
-        modal: "0 12px 32px rgba(15,20,25,0.18)",
+        card: "none",
+        hover: "0 1px 2px rgba(31,22,18,0.06)",
+        modal: "0 8px 24px rgba(31,22,18,0.18)",
       },
       transitionTimingFunction: {
         fc: "cubic-bezier(0.2, 0, 0.1, 1)",
