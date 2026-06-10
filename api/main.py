@@ -15,7 +15,7 @@ import os
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api import chat, health
+from api import chat, health, portfolio
 
 
 def _allowed_origins() -> list[str]:
@@ -38,7 +38,7 @@ app.add_middleware(
 
 app.include_router(health.router)
 app.include_router(chat.router)
+app.include_router(portfolio.router)
 
 # owner별 라우터는 본인 PR에서 추가
 # app.include_router(market.router)
-# app.include_router(portfolio.router)

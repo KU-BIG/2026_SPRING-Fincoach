@@ -1,4 +1,4 @@
-"""Chat 엔드포인트 테스트 (LLM 호출은 mock 처리)."""
+"""API 엔드포인트 테스트 (LLM 호출은 mock 처리)."""
 
 import json as _json
 from unittest.mock import patch
@@ -9,6 +9,40 @@ from api.main import app
 from shared.disclaimers import QA_DISCLAIMER
 
 client = TestClient(app)
+
+
+# ── /api/portfolio/summary ────────────────────────────────────────────────────
+
+
+def test_portfolio_summary_200_and_keys():
+    res = client.get("/api/portfolio/summary")
+    assert res.status_code == 200
+    data = res.json()
+    assert "total_value_krw" in data
+    assert "total_pnl_krw" in data
+    assert "pnl_pct" in data
+    assert "positions" in data
+    assert isinstance(data["positions"], list)
+
+
+def test_portfolio_summary_numeric_types():
+    data = client.get("/api/portfolio/summary").json()
+    assert isinstance(data["total_value_krw"], (int, float))
+    assert isinstance(data["total_pnl_krw"], (int, float))
+    assert isinstance(data["pnl_pct"], (int, float))
+
+
+def test_portfolio_summary_positions_shape():
+    """positions 각 항목이 웹(api.ts)이 기대하는 키를 갖는지 검증."""
+    data = client.get("/api/portfolio/summary").json()
+    for pos in data["positions"]:
+        assert "ticker" in pos
+        assert "name" in pos
+        assert "weight" in pos
+        assert "pnl_pct" in pos
+
+
+# ── /api/chat ─────────────────────────────────────────────────────────────────
 
 
 def test_chat_no_api_key_returns_503():
