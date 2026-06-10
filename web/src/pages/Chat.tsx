@@ -12,15 +12,37 @@ const SAMPLES = [
   "반도체 섹터 비중을 확대해도 괜찮을까요?",
 ];
 
+const STORAGE_KEY = "fincoach-chat-history";
+const MAX_MESSAGES = 100;
+
+function loadHistory(): Msg[] {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [{ role: "assistant", content: GREETING }];
+    const parsed = JSON.parse(raw) as Msg[];
+    return parsed.length > 0 ? parsed : [{ role: "assistant", content: GREETING }];
+  } catch {
+    return [{ role: "assistant", content: GREETING }];
+  }
+}
+
 export default function Chat() {
   const bottomRef = useRef<HTMLDivElement | null>(null);
-  const [messages, setMessages] = useState<Msg[]>([{ role: "assistant", content: GREETING }]);
+  const [messages, setMessages] = useState<Msg[]>(loadHistory);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ block: "end" });
   }, [messages, loading]);
+
+  useEffect(() => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(messages.slice(-MAX_MESSAGES)));
+    } catch {
+      // 쿼터 초과 또는 프라이빗 모드 등 write 실패는 무시
+    }
+  }, [messages]);
 
   async function send() {
     const question = input.trim();
@@ -70,7 +92,10 @@ export default function Chat() {
         <aside className="col-span-12 lg:col-span-3">
           <div className="rounded-lg border border-border bg-bg-surface p-5">
             <button
-              onClick={() => setMessages([{ role: "assistant", content: GREETING }])}
+              onClick={() => {
+                setMessages([{ role: "assistant", content: GREETING }]);
+                try { localStorage.removeItem(STORAGE_KEY); } catch { /* 쿼터/프라이빗 모드 무시 */ }
+              }}
               className="w-full rounded-md bg-accent px-4 py-2 text-sm font-medium text-accent-fg transition hover:opacity-90"
             >
               새 대화
