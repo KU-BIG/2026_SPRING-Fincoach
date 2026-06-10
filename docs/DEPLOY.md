@@ -47,9 +47,21 @@ uvicorn api.main:app --reload --host 0.0.0.0 --port 8000
 
 헬스체크: `http://localhost:8000/api/health` → `{"status":"ok"}`
 
-### 2.2 Cloudflare Tunnel (데모 시연)
+### 2.2 Cloudflare Quick Tunnel (도메인 없이 데모)
 
-도메인이 Cloudflare에 있으면 별도 서버 없이 로컬 백엔드를 인터넷에 노출 가능.
+도메인 연결 없이 한 줄로 공개 URL을 발급. 인증 불필요. 데모 시연에 충분.
+
+```bash
+./scripts/demo-up.sh
+```
+
+스크립트가 uvicorn + cloudflared quick tunnel을 동시에 띄우고, 발급된 `*.trycloudflare.com` URL을 출력함. 그 URL을 Cloudflare Pages > Settings > Environment variables > Production 의 `VITE_API_BASE` 에 붙이고 재배포하면 끝.
+
+`Ctrl+C` 시 둘 다 종료. URL은 매 실행마다 바뀌므로 재배포 필요.
+
+### 2.3 Cloudflare Tunnel (도메인 있을 때)
+
+도메인이 Cloudflare에 있으면 고정 hostname(예: `api.{도메인}`)으로 노출 가능.
 
 #### 설치
 
@@ -106,7 +118,7 @@ cloudflared tunnel run fincoach-api
 
 이제 `https://api.{도메인}/api/health` 접속 가능.
 
-### 2.3 백엔드 환경변수 (운영용)
+### 2.4 백엔드 환경변수 (운영용)
 
 `.env`에 추가:
 
