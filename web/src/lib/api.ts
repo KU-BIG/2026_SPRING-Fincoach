@@ -18,6 +18,14 @@ type PortfolioSummaryPayload = {
   positions: { ticker: string; name: string; weight: number; pnl_pct: number }[];
 };
 
+type PortfolioAnalysisPayload = {
+  summary: string;
+  characteristics: string[];
+  strengths: string[];
+  risks: string[];
+  suggestions: string[];
+};
+
 export type ChatMessage = { role: "user" | "assistant"; content: string };
 
 type ChatPayload = { question: string; history: ChatMessage[] };
@@ -32,6 +40,7 @@ type WithSource<T> = T & { source: DataSource };
 
 type MarketSummary = WithSource<MarketSummaryPayload>;
 type PortfolioSummary = WithSource<PortfolioSummaryPayload>;
+type PortfolioAnalysis = WithSource<PortfolioAnalysisPayload>;
 
 async function jsonFetch<T>(path: string, init?: RequestInit): Promise<T> {
   const res = await fetch(`${BASE}${path}`, init);
@@ -54,6 +63,14 @@ export const api = {
       return { ...data, source: "api" };
     } catch {
       return mockPortfolioSummary();
+    }
+  },
+  async portfolioAnalysis(): Promise<PortfolioAnalysis> {
+    try {
+      const data = await jsonFetch<PortfolioAnalysisPayload>("/portfolio/analysis");
+      return { ...data, source: "api" };
+    } catch {
+      return mockPortfolioAnalysis();
     }
   },
 
@@ -127,6 +144,35 @@ function mockPortfolioSummary(): PortfolioSummary {
       { ticker: "035720.KS", name: "카카오", weight: 15, pnl_pct: -2.4 },
       { ticker: "NVDA", name: "NVIDIA", weight: 18, pnl_pct: 12.7 },
       { ticker: "035420.KS", name: "NAVER", weight: 13, pnl_pct: -1.1 },
+    ],
+  };
+}
+
+function mockPortfolioAnalysis(): PortfolioAnalysis {
+  return {
+    source: "mock",
+    summary:
+      "국내 대형주와 미국 빅테크가 혼합된 성장주 중심 포트폴리오. 반도체 사이클과 환율이 핵심 변수.",
+    characteristics: [
+      "성장주 비중 약 70%",
+      "반도체·AI 노출 50% 이상",
+      "국내 60% / 해외 40% 분포",
+      "환율 민감도 높음",
+    ],
+    strengths: [
+      "AI 수요 수혜 종목에 집중",
+      "분기 실적 우상향 사이클 종목 비중",
+      "달러 자산으로 환율 하방 부분 헷지",
+    ],
+    risks: [
+      "삼성전자 단일 종목 비중 32%로 집중 위험",
+      "반도체 사이클 하강 시 동조 하락 가능",
+      "원화 강세 전환 시 해외 평가액 압축",
+    ],
+    suggestions: [
+      "반도체 외 섹터(소비재·헬스케어 등) 비중 검토",
+      "방어주·배당주 일부 편입 검토",
+      "환율 시나리오별 익스포저 점검",
     ],
   };
 }
