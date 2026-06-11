@@ -76,6 +76,15 @@
       animation: wordIn 700ms cubic-bezier(0.2,0.7,0.2,1) forwards;
     }
     @keyframes wordIn { to { opacity: 1; transform: translateY(0); } }
+    /* hero가 다시 보일 때마다 word 애니메이션 재실행 */
+    .hero-headline.replay .word { animation: wordIn 700ms cubic-bezier(0.2,0.7,0.2,1) forwards; }
+    .hero-headline .word { animation-fill-mode: both; }
+    /* headline 자체 매우 미세한 floating (subtle continuous) */
+    .hero-headline { animation: headlineFloat 9s ease-in-out infinite; }
+    @keyframes headlineFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2px); }
+    }
 
     .hero-sub { margin: 32px auto 0; font-size: 18px; line-height: 1.6; color: var(--fg-secondary); max-width: 560px; }
     .hero-sub, .hero-cta {
@@ -192,9 +201,9 @@
     .ft-title { font-size: 44px; letter-spacing: -0.038em; line-height: 1.08; font-weight: 800; }
     @media (max-width: 900px) { .ft-title { font-size: 32px; } }
     .ft-desc { margin-top: 18px; font-size: 16px; line-height: 1.7; color: var(--fg-secondary); max-width: 460px; }
-    .ft-list { margin-top: 24px; display: grid; gap: 10px; }
-    .ft-list li { list-style: none; display: flex; align-items: start; gap: 12px; font-size: 14px; color: var(--fg-secondary); }
-    .ft-list li svg { flex-shrink: 0; margin-top: 3px; }
+    .ft-list { margin-top: 24px; display: grid; gap: 12px; }
+    .ft-list li { list-style: none; display: flex; align-items: start; gap: 12px; font-size: 16px; color: var(--fg-secondary); line-height: 1.55; }
+    .ft-list li svg { flex-shrink: 0; margin-top: 5px; }
     .ft-link { margin-top: 28px; display: inline-flex; align-items: center; gap: 6px; color: var(--fg-primary); font-weight: 600; font-size: 14px; transition: gap 150ms, opacity 150ms; }
     .ft-link:hover { gap: 10px; opacity: 0.8; }
 
@@ -282,6 +291,11 @@
       pointer-events: none; z-index: -1;
       -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
       mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+    }
+    .cta-section::after {
+      content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 120px;
+      background: linear-gradient(to bottom, var(--bg-base) 0%, rgba(0,0,0,0.7) 40%, transparent 100%);
+      pointer-events: none; z-index: 1;
     }
     .cta-section h2 { font-size: 60px; letter-spacing: -0.045em; line-height: 1.06; max-width: 800px; margin: 0 auto; font-weight: 800; }
     @media (max-width: 720px) { .cta-section h2 { font-size: 36px; } }
@@ -671,7 +685,7 @@
             return;
           }
           target.innerHTML += tokens[i++];
-          setTimeout(tick, 55 + Math.random() * 65);
+          setTimeout(tick, 38 + Math.random() * 42);
         };
         tick();
       }
