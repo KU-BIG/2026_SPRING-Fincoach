@@ -602,7 +602,7 @@
               </div>
             </div>
           </td>
-          <td style="padding-right: 4px; text-align: right;"><div style="width: 88px; height: 32px; display: inline-block; vertical-align: middle;">${buildMiniChart(series, color, 88, 32, { pad: 2, strokeWidth: 1.5, showAvg: false })}</div></td>
+          <td style="padding-right: 4px; text-align: right;"><div style="width: 88px; height: 32px; display: inline-block; vertical-align: middle;">${buildMiniChart(series, color, 88, 32, { pad: 2, strokeWidth: 1.5, showAvg: true, avgAlpha: 0.32, avgDash: "2 2" })}</div></td>
           <td style="text-align:right;">
             <div style="display: inline-flex; align-items: center; gap: 6px; color: ${color}; font-size: 16px;">
               ${arrow}<span class="num" style="font-weight: 700;">${sign}${s.pnl.toFixed(2)}%</span>
@@ -935,10 +935,17 @@
           ` : ""}
           <circle class="chart-end-halo" cx="${endX}" cy="${endY}" r="9" />
           <circle class="chart-end-dot" cx="${endX}" cy="${endY}" r="4" />
-          ${endLabel ? `
-            <rect x="${endX - 4}" y="${endY - 22}" width="48" height="16" rx="4" fill="#F04452" />
-            <text x="${endX + 20}" y="${endY - 10}" text-anchor="middle" style="font-family: Inter; font-size: 10px; font-weight: 700; fill: #000;">${compact(endVal)}</text>
-          ` : ""}
+          ${endLabel ? (() => {
+            const labelW = 56, labelH = 18, gap = 10;
+            const fitRight = endX + gap + labelW <= W - padding.r;
+            const rectX = fitRight ? endX + gap : endX - gap - labelW;
+            const textX = rectX + labelW / 2;
+            const textY = endY + 4;
+            return `
+              <rect x="${rectX}" y="${endY - labelH / 2}" width="${labelW}" height="${labelH}" rx="5" fill="#F04452" />
+              <text x="${textX}" y="${textY}" text-anchor="middle" style="font-family: Inter; font-size: 11px; font-weight: 700; fill: #000;">${compact(endVal)}</text>
+            `;
+          })() : ""}
           <line class="chart-crosshair" x1="0" x2="0" y1="${padding.t}" y2="${showVolume ? volBaseY : (padding.t + innerH)}" id="${gid}-cx" />
           <circle class="chart-cursor-dot" cx="0" cy="0" r="4" id="${gid}-cd" />
         </svg>
