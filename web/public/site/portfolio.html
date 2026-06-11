@@ -150,7 +150,9 @@
     .brand-mark.google { background: #FFFFFF; color: #4285F4; }
     .brand-mark.google .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/google.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/google.svg); }
     .brand-mark.coupang { background: #FF3A45; color: #FFFFFF; }
-    .brand-mark.coupang .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/coupang.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/coupang.svg); }
+    .brand-mark.coupang .logo { display: none; }
+    .brand-mark.coupang::after { content: "C"; font-family: Inter, system-ui, sans-serif; font-weight: 900; font-size: 14px; letter-spacing: -0.04em; color: #FFFFFF; }
+    .kpi-stocks .brand-mark.coupang::after { font-size: 16px; }
     .brand-mark.coinbase { background: #0052FF; color: #FFFFFF; }
     .brand-mark.coinbase .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/coinbase.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/coinbase.svg); }
     /* KPI 미니 */
@@ -428,18 +430,11 @@
       const gid = "rg" + idx;
       const endX = pts[pts.length-1][0], endY = pts[pts.length-1][1];
 
+      // 면적 빼고 라인만 얇게 — 전문적, 절제
       host.innerHTML = `
         <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%; height:${H}px;">
-          <defs>
-            <linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stop-color="${color}" stop-opacity="0.6"/>
-              <stop offset="100%" stop-color="${color}" stop-opacity="0.02"/>
-            </linearGradient>
-          </defs>
-          <path d="${ap}" fill="url(#${gid})"/>
-          <path d="${lp}" fill="none" stroke="${color}" stroke-width="2.4"/>
-          <circle cx="${endX}" cy="${endY}" r="3.2" fill="${color}"/>
-          <circle cx="${endX}" cy="${endY}" r="7" fill="${color}" opacity="0.32"/>
+          <path d="${lp}" fill="none" stroke="${color}" stroke-width="1.6"/>
+          <circle cx="${endX}" cy="${endY}" r="2.4" fill="${color}"/>
         </svg>
       `;
     });

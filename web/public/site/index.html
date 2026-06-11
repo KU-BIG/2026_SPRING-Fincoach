@@ -130,23 +130,17 @@
     .ft-card.green-glow { --ft-glow: rgba(17,255,153,0.14); }
     .ft-card.yellow-glow { --ft-glow: rgba(255,197,61,0.16); }
 
-    .ft-visual-illust {
-      position: absolute; right: -20px; top: -20px; bottom: -20px; left: -20px;
-      background-size: cover; background-position: center;
-      opacity: 0.20; filter: saturate(1.1);
-      pointer-events: none;
-      mask-image: radial-gradient(ellipse at 70% 30%, black 0%, transparent 70%);
-      -webkit-mask-image: radial-gradient(ellipse at 70% 30%, black 0%, transparent 70%);
-      z-index: 0;
-    }
+    /* 일러스트는 카드 모서리 floating만 (콘텐츠 가리지 않게) */
     .ft-card > * { position: relative; z-index: 1; }
     .ft-stack { position: relative; }
     .ft-illust-float {
-      position: absolute; right: -40px; top: -40px;
-      width: 200px; height: 200px;
-      background-size: contain; background-repeat: no-repeat;
-      filter: drop-shadow(0 16px 40px rgba(0,0,0,0.6));
+      position: absolute; right: -24px; top: -32px;
+      width: 130px; height: 130px;
+      background-size: contain; background-repeat: no-repeat; background-position: center;
       pointer-events: none; z-index: 2;
+      opacity: 0.78;
+      mix-blend-mode: screen;
+      filter: drop-shadow(0 10px 28px rgba(0,0,0,0.5));
     }
     @media (max-width: 900px) { .ft-illust-float { display: none; } }
 
@@ -321,7 +315,6 @@
       <div class="ft-visual ft-stack">
         <div class="ft-illust-float" style="background-image: url('./assets/portfolio-illust.png');"></div>
         <div class="ft-card blue-glow">
-          <div class="ft-visual-illust" style="background-image: url('./assets/portfolio-illust.png');"></div>
           <div class="ftc-port-head"><div class="ttl">보유 종목</div><div class="ag">5개 · 30일</div></div>
           <div class="ftc-port-rows" id="featPort"></div>
         </div>
@@ -343,7 +336,6 @@
       <div class="ft-visual ft-stack">
         <div class="ft-illust-float" style="background-image: url('./assets/chat-illust.png'); right: auto; left: -40px;"></div>
         <div class="ft-card green-glow">
-          <div class="ft-visual-illust" style="background-image: url('./assets/chat-illust.png');"></div>
           <div class="chat-demo">
             <div class="bubble user">PER이 높으면 무슨 의미예요?</div>
             <div class="bubble coach"><b>PER(주가수익비율)</b>은 주가를 EPS로 나눈 값으로, 한 주가 1년치 이익의 몇 배에 거래되는지 보여줘요. 보유 중인 NVIDIA의 PER이 시장 평균보다 높은 건 미래 성장 기대가 큰 영향이에요.</div>
@@ -369,7 +361,6 @@
       <div class="ft-visual ft-stack">
         <div class="ft-illust-float" style="background-image: url('./assets/glossary-illust.png');"></div>
         <div class="ft-card yellow-glow">
-          <div class="ft-visual-illust" style="background-image: url('./assets/glossary-illust.png');"></div>
           <div class="term-grid">
             <div class="term-card"><div class="cat">종목 분석</div><div class="nm">PER</div><div class="ds">주가가 1년치 이익의 몇 배에 거래되는지.</div></div>
             <div class="term-card"><div class="cat">거시 경제</div><div class="nm">인플레이션</div><div class="ds">물가가 지속적으로 상승하는 현상.</div></div>
