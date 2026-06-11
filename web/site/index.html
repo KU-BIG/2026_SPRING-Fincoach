@@ -165,22 +165,10 @@
       background: radial-gradient(600px 300px at 80% 0%, var(--ft-glow, rgba(147,197,253,0.10)), transparent 70%);
       pointer-events: none;
     }
-    /* 카드 우측 상단에 illust를 background로 부드럽게 (radial mask로 가장자리 자연 페이드) */
-    .ft-card::after {
-      content: ""; position: absolute; top: 14px; right: 14px;
-      width: 140px; height: 140px;
-      background: var(--ft-illust, none) center/contain no-repeat;
-      opacity: 0.42;
-      mix-blend-mode: screen;
-      -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 35%, transparent 80%);
-      mask-image: radial-gradient(circle at 50% 50%, #000 35%, transparent 80%);
-      pointer-events: none;
-      filter: drop-shadow(0 6px 18px rgba(0,0,0,0.35));
-    }
-    .ft-card.blue-glow { --ft-glow: rgba(59,158,255,0.18); --ft-illust: url("./assets/portfolio-illust.png"); }
-    .ft-card.green-glow { --ft-glow: rgba(240,68,82,0.14); --ft-illust: url("./assets/chat-illust.png"); }
-    .ft-card.yellow-glow { --ft-glow: rgba(255,197,61,0.16); --ft-illust: url("./assets/glossary-illust.png"); }
-    @media (max-width: 900px) { .ft-card::after { display: none; } }
+    /* Cursor/Sanity 패턴 — illust overlay 제거. 카드 콘텐츠가 dominate (사용자 어색 피드백) */
+    .ft-card.blue-glow { --ft-glow: rgba(59,158,255,0.18); }
+    .ft-card.green-glow { --ft-glow: rgba(240,68,82,0.14); }
+    .ft-card.yellow-glow { --ft-glow: rgba(255,197,61,0.16); }
 
     .ft-card > * { position: relative; z-index: 1; }
     .ft-stack { position: relative; }
@@ -640,7 +628,7 @@
             return;
           }
           target.innerHTML += tokens[i++];
-          setTimeout(tick, 22 + Math.random() * 28);
+          setTimeout(tick, 55 + Math.random() * 65);
         };
         tick();
       }
