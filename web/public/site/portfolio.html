@@ -143,12 +143,30 @@
     .brand-mark.kakao .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/kakao.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/kakao.svg); }
     .brand-mark.naver { background: #03C75A; color: #FFFFFF; }
     .brand-mark.naver .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/naver.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/naver.svg); }
+    .brand-mark.microsoft { background: #00A4EF; color: #FFFFFF; }
+    .brand-mark.microsoft .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/microsoft.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/microsoft.svg); }
+    .brand-mark.tesla { background: #E82127; color: #FFFFFF; }
+    .brand-mark.tesla .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/tesla.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/tesla.svg); }
+    .brand-mark.google { background: #FFFFFF; color: #4285F4; }
+    .brand-mark.google .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/google.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/google.svg); }
+    .brand-mark.coupang { background: #FF3A45; color: #FFFFFF; }
+    .brand-mark.coupang .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/coupang.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/coupang.svg); }
+    .brand-mark.coinbase { background: #0052FF; color: #FFFFFF; }
+    .brand-mark.coinbase .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/coinbase.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/coinbase.svg); }
     /* KPI 미니 */
     .kpi-stocks .brand-mark { width: 32px; height: 32px; border-radius: 8px; }
     .kpi-stocks .brand-mark .logo { width: 18px; height: 18px; }
+    .more-mark {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px dashed var(--frost);
+      display: grid; place-items: center;
+      font-family: "JetBrains Mono", monospace; font-size: 11px; font-weight: 600;
+      color: var(--fg-secondary);
+    }
     .stock-row .nm { font-weight: 600; font-size: 14px; }
     .stock-row .tk { font-size: 11px; color: var(--fg-muted); margin-top: 2px; font-family: "JetBrains Mono", monospace; }
-    .row-spark { height: 36px; width: 100%; display: block; }
+    .row-spark { height: 48px; width: 100%; display: block; }
     .row-spark-host { position: relative; width: 100%; }
 
     .donut-card { padding: 22px; }
@@ -247,19 +265,19 @@
       </div>
       <div class="card kpi c-3 reveal" style="transition-delay:240ms">
         <div class="lbl">보유 종목</div>
-        <div class="val num">5개</div>
-        <div class="sub">국내 3 · 해외 2</div>
+        <div class="val num">10개</div>
+        <div class="sub">국내 3 · 해외 7 · 6 섹터</div>
         <div class="kpi-stocks">
           <div class="brand-mark samsung" title="삼성전자"><span class="logo"></span></div>
           <div class="brand-mark apple" title="Apple"><span class="logo"></span></div>
           <div class="brand-mark nvidia" title="NVIDIA"><span class="logo"></span></div>
-          <div class="brand-mark kakao" title="카카오"><span class="logo"></span></div>
-          <div class="brand-mark naver" title="NAVER"><span class="logo"></span></div>
+          <div class="brand-mark microsoft" title="Microsoft"><span class="logo"></span></div>
+          <div class="more-mark" title="외 6개">+6</div>
         </div>
         <div class="kpi-split">
-          <span>국내 60%</span>
-          <div class="kpi-split-bar"><div class="dom" style="width: 60%;"></div><div class="ovr" style="width: 40%;"></div></div>
-          <span>해외 40%</span>
+          <span>국내 38%</span>
+          <div class="kpi-split-bar"><div class="dom" style="width: 38%;"></div><div class="ovr" style="width: 62%;"></div></div>
+          <span>해외 62%</span>
         </div>
       </div>
     </div>
@@ -289,23 +307,10 @@
     <div class="grid grid-12" style="margin-top: 14px;">
       <section class="card c-5 donut-card reveal">
         <div class="subhead" style="font-size: 17px;">비중 분포</div>
-        <div style="font-size: 12px; color: var(--fg-muted); margin-top: 4px;">국내 60% · 해외 40%</div>
+        <div style="font-size: 12px; color: var(--fg-muted); margin-top: 4px;">10개 종목 · 6 섹터</div>
         <div class="donut-wrap">
-          <svg class="donut" viewBox="0 0 36 36">
-            <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="rgba(255,255,255,0.06)" stroke-width="3.4"/>
-            <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#3B9EFF" stroke-width="3.4" stroke-dasharray="32 68" stroke-dashoffset="25" transform="rotate(-90 18 18)"/>
-            <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#60A5FA" stroke-width="3.4" stroke-dasharray="22 78" stroke-dashoffset="-7" transform="rotate(-90 18 18)"/>
-            <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#93C5FD" stroke-width="3.4" stroke-dasharray="18 82" stroke-dashoffset="-29" transform="rotate(-90 18 18)"/>
-            <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#5E6164" stroke-width="3.4" stroke-dasharray="15 85" stroke-dashoffset="-47" transform="rotate(-90 18 18)"/>
-            <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#3D4F6B" stroke-width="3.4" stroke-dasharray="13 87" stroke-dashoffset="-62" transform="rotate(-90 18 18)"/>
-          </svg>
-          <div class="legend">
-            <div class="legend-row"><span class="swatch" style="background:#3B9EFF"></span>삼성전자<span class="right num">32%</span></div>
-            <div class="legend-row"><span class="swatch" style="background:#60A5FA"></span>Apple<span class="right num">22%</span></div>
-            <div class="legend-row"><span class="swatch" style="background:#93C5FD"></span>NVIDIA<span class="right num">18%</span></div>
-            <div class="legend-row"><span class="swatch" style="background:#5E6164"></span>카카오<span class="right num">15%</span></div>
-            <div class="legend-row"><span class="swatch" style="background:#3D4F6B"></span>NAVER<span class="right num">13%</span></div>
-          </div>
+          <svg class="donut" viewBox="0 0 36 36" id="donutChart"></svg>
+          <div class="legend" id="donutLegend"></div>
         </div>
       </section>
 
@@ -366,19 +371,29 @@
   <script>
     const krw = (n) => n.toLocaleString();
     const stocks = [
-      { name: "삼성전자", ticker: "005930.KS", weight: 32, value: 3952000, pnl: 5.2, brand: "samsung" },
-      { name: "Apple", ticker: "AAPL", weight: 22, value: 2717000, pnl: 3.1, brand: "apple" },
-      { name: "NVIDIA", ticker: "NVDA", weight: 18, value: 2223000, pnl: 12.7, brand: "nvidia" },
-      { name: "카카오", ticker: "035720.KS", weight: 15, value: 1852500, pnl: -2.4, brand: "kakao" },
-      { name: "NAVER", ticker: "035420.KS", weight: 13, value: 1605500, pnl: -1.1, brand: "naver" },
+      { name: "삼성전자", ticker: "005930.KS", weight: 22, value: 2717000, pnl: 5.2, brand: "samsung", sector: "반도체" },
+      { name: "Apple", ticker: "AAPL", weight: 16, value: 1976000, pnl: 3.1, brand: "apple", sector: "빅테크" },
+      { name: "NVIDIA", ticker: "NVDA", weight: 14, value: 1729000, pnl: 12.7, brand: "nvidia", sector: "반도체" },
+      { name: "Microsoft", ticker: "MSFT", weight: 10, value: 1235000, pnl: 4.8, brand: "microsoft", sector: "빅테크" },
+      { name: "카카오", ticker: "035720.KS", weight: 9, value: 1111500, pnl: -2.4, brand: "kakao", sector: "한국 플랫폼" },
+      { name: "Tesla", ticker: "TSLA", weight: 8, value: 988000, pnl: 7.1, brand: "tesla", sector: "EV" },
+      { name: "NAVER", ticker: "035420.KS", weight: 7, value: 864500, pnl: -1.1, brand: "naver", sector: "한국 플랫폼" },
+      { name: "Google", ticker: "GOOGL", weight: 6, value: 741000, pnl: 2.6, brand: "google", sector: "빅테크" },
+      { name: "쿠팡", ticker: "CPNG", weight: 6, value: 741000, pnl: -0.5, brand: "coupang", sector: "한국 이커머스" },
+      { name: "Coinbase", ticker: "COIN", weight: 2, value: 247000, pnl: 18.4, brand: "coinbase", sector: "가상자산" },
     ];
     // 종목별 30일 mock 추이 (퍼센트 변화)
     const stockSeries = {
       "005930.KS": [0,0.3,0.8,0.5,1.1,1.4,0.9,1.6,2.2,2.0,2.5,3.0,2.8,3.4,3.9,3.6,4.2,3.8,4.0,4.4,4.1,4.6,5.0,4.7,4.9,5.3,5.0,5.1,5.4,5.2],
       "AAPL":      [0,0.1,0.4,0.2,0.5,0.8,0.6,1.0,1.4,1.2,1.6,1.9,1.7,2.0,2.3,2.1,2.5,2.4,2.7,2.9,2.6,2.8,3.0,2.8,2.9,3.0,2.9,3.0,3.1,3.1],
       "NVDA":      [0,0.8,1.6,2.4,3.0,3.8,4.6,5.4,6.0,6.8,7.4,8.2,8.8,9.4,10.0,10.4,10.8,11.0,11.4,11.8,11.6,12.0,12.2,12.4,12.5,12.6,12.6,12.7,12.7,12.7],
+      "MSFT":      [0,0.2,0.6,0.4,0.9,1.3,1.0,1.6,2.0,1.8,2.2,2.6,2.4,2.8,3.2,3.0,3.4,3.6,3.9,4.2,3.9,4.2,4.5,4.3,4.5,4.7,4.6,4.7,4.8,4.8],
       "035720.KS": [0,-0.2,-0.5,-0.3,-0.8,-1.0,-0.7,-1.2,-1.5,-1.3,-1.6,-1.9,-1.7,-2.0,-2.2,-1.9,-2.1,-2.0,-2.3,-2.4,-2.2,-2.3,-2.4,-2.3,-2.4,-2.4,-2.4,-2.4,-2.4,-2.4],
+      "TSLA":      [0,0.6,1.0,0.4,1.4,2.0,1.4,2.4,3.2,2.8,3.6,4.4,3.8,4.6,5.2,4.8,5.6,5.4,6.0,6.6,6.0,6.6,6.8,6.4,6.8,7.0,6.8,7.0,7.1,7.1],
       "035420.KS": [0,-0.1,0.1,-0.2,-0.4,-0.2,-0.5,-0.7,-0.5,-0.8,-1.0,-0.8,-1.1,-1.2,-1.0,-1.2,-1.3,-1.1,-1.3,-1.4,-1.2,-1.3,-1.4,-1.2,-1.3,-1.3,-1.2,-1.2,-1.1,-1.1],
+      "GOOGL":     [0,0.1,0.3,0.2,0.5,0.7,0.5,0.9,1.2,1.0,1.3,1.6,1.4,1.7,2.0,1.8,2.1,2.0,2.3,2.5,2.3,2.5,2.6,2.4,2.5,2.6,2.5,2.6,2.6,2.6],
+      "CPNG":      [0,-0.1,0.0,-0.2,-0.4,-0.1,-0.3,-0.5,-0.3,-0.6,-0.7,-0.4,-0.6,-0.8,-0.5,-0.7,-0.8,-0.4,-0.6,-0.7,-0.4,-0.5,-0.6,-0.3,-0.5,-0.6,-0.4,-0.5,-0.5,-0.5],
+      "COIN":      [0,1.2,2.6,1.8,3.6,5.2,4.0,6.4,8.4,7.2,9.6,12.0,10.4,12.8,15.0,13.4,15.8,14.6,16.6,17.8,16.4,18.0,18.4,17.4,18.0,18.4,18.0,18.2,18.4,18.4],
     };
 
     document.getElementById("stockTable").innerHTML = stocks.map((s, idx) => {
@@ -394,13 +409,13 @@
         </tr>`;
     }).join("");
 
-    // 종목별 row: 30일 라인 + 면적 + 끝 마커
+    // 종목별 row: 30일 라인 + 면적 + 끝 마커 (또렷하게)
     stocks.forEach((s, idx) => {
       const series = stockSeries[s.ticker] || [];
       const host = document.getElementById("rs" + idx);
       if (!host || series.length === 0) return;
 
-      const W = 220, H = 40, pad = 4;
+      const W = 240, H = 48, pad = 4;
       const max = Math.max(...series);
       const min = Math.min(...series);
       const range = (max - min) || 1;
@@ -417,14 +432,14 @@
         <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%; height:${H}px;">
           <defs>
             <linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1">
-              <stop offset="0%" stop-color="${color}" stop-opacity="0.45"/>
-              <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+              <stop offset="0%" stop-color="${color}" stop-opacity="0.6"/>
+              <stop offset="100%" stop-color="${color}" stop-opacity="0.02"/>
             </linearGradient>
           </defs>
           <path d="${ap}" fill="url(#${gid})"/>
-          <path d="${lp}" fill="none" stroke="${color}" stroke-width="2"/>
-          <circle cx="${endX}" cy="${endY}" r="2.6" fill="${color}"/>
-          <circle cx="${endX}" cy="${endY}" r="5.5" fill="${color}" opacity="0.3"/>
+          <path d="${lp}" fill="none" stroke="${color}" stroke-width="2.4"/>
+          <circle cx="${endX}" cy="${endY}" r="3.2" fill="${color}"/>
+          <circle cx="${endX}" cy="${endY}" r="7" fill="${color}" opacity="0.32"/>
         </svg>
       `;
     });
@@ -560,6 +575,37 @@
         bench: Math.round(benchBase * (1 + benchSeed[i] / 100)),
       };
     });
+
+    // ========= 도넛 차트 (비중 분포) =========
+    (function () {
+      const donut = document.getElementById("donutChart");
+      const legend = document.getElementById("donutLegend");
+      if (!donut || !legend) return;
+      // brand color 사용
+      const palette = {
+        samsung: "#1428A0", apple: "#F0F0F0", nvidia: "#76B900",
+        microsoft: "#00A4EF", kakao: "#FEE500", tesla: "#E82127",
+        naver: "#03C75A", google: "#4285F4", coupang: "#FF3A45", coinbase: "#0052FF",
+      };
+      let offset = 25;
+      const C = 100;
+      const arcs = stocks.map((s) => {
+        const len = s.weight;
+        const gap = 0.4;
+        const arc = `<circle cx="18" cy="18" r="15.915" fill="transparent" stroke="${palette[s.brand]}" stroke-width="3.6" stroke-dasharray="${(len - gap).toFixed(2)} ${(C - len + gap).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}" transform="rotate(-90 18 18)"/>`;
+        offset += len;
+        return arc;
+      });
+      donut.innerHTML = `
+        <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="rgba(255,255,255,0.06)" stroke-width="3.6"/>
+        ${arcs.join("")}
+        <text x="18" y="17" text-anchor="middle" style="font-family: Inter; font-size: 3.5px; font-weight: 700; fill: var(--fg-primary);">10</text>
+        <text x="18" y="21.2" text-anchor="middle" style="font-family: 'JetBrains Mono'; font-size: 1.7px; fill: var(--fg-muted); letter-spacing: 0.08em;">STOCKS</text>
+      `;
+      legend.innerHTML = stocks.map((s) => `
+        <div class="legend-row"><span class="swatch" style="background:${palette[s.brand]}"></span>${s.name}<span class="right num">${s.weight}%</span></div>
+      `).join("");
+    })();
 
     // 헤더 통계
     const values = data.map(d => d.value);
