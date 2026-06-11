@@ -297,6 +297,8 @@
     }
 
     .donut-card { padding: 22px; }
+    .stock-table-card { padding: 26px; }
+    @media (max-width: 640px) { .stock-table-card { padding: 14px; } }
     .donut-wrap { display: grid; grid-template-columns: 180px 1fr; gap: 28px; align-items: center; margin-top: 18px; }
     @media (max-width: 540px) { .donut-wrap { grid-template-columns: 1fr; } }
     .donut { width: 180px; height: 180px; }
@@ -411,7 +413,7 @@
 
     <!-- 보유 종목 표 -->
     <div class="grid grid-12" style="margin-top: 14px;">
-      <section class="card c-12 reveal" style="padding: 26px;">
+      <section class="card c-12 reveal stock-table-card">
         <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px;">
           <div>
             <div class="subhead" style="font-size: 17px;">보유 종목 상세</div>
@@ -448,7 +450,7 @@
         </div>
       </section>
 
-      <section class="card c-7 reveal" style="transition-delay:100ms; padding: 22px;">
+      <section class="card c-7 reveal" style="transition-delay:100ms;">
         <div style="display:flex; align-items:baseline; justify-content:space-between;">
           <div><div class="subhead" style="font-size: 17px;">최근 30일 평가액</div><div style="font-size: 12px; color: var(--fg-muted); margin-top: 4px;">일일 종가 + 거래량</div></div>
           <div style="display: flex; gap: 4px;">
