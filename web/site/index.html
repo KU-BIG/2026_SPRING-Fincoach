@@ -211,6 +211,10 @@
     @media (max-width: 900px) { .feature { grid-template-columns: 1fr; gap: 40px; padding: 32px 0; } }
     .feature.reverse > .ft-text { order: 2; }
     .feature.reverse > .ft-visual { order: 1; }
+    @media (max-width: 900px) {
+      .feature > .ft-text { order: 1 !important; }
+      .feature > .ft-visual { order: 2 !important; }
+    }
 
     .ft-mark {
       display: inline-flex; align-items: center; gap: 14px;
