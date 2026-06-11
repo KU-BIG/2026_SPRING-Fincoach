@@ -150,7 +150,7 @@ main { max-width: 1180px; margin: 0 auto; padding: 0 28px; }
 /* TABLE */
 table { width: 100%; font-size: 14px; }
 thead th { font-weight: 500; color: var(--fg-muted); font-size: 12px; padding: 0 0 12px; text-align: left; border-bottom: 1px solid var(--frost); }
-tbody td { padding: 14px 0; border-bottom: 1px solid var(--frost-alt); }
+tbody td { padding: 10px 0; border-bottom: 1px solid var(--frost-alt); }
 tbody tr:last-child td { border-bottom: none; }
 .ticker { font-size: 11px; color: var(--fg-muted); margin-top: 2px; font-family: "JetBrains Mono", monospace; }
 
