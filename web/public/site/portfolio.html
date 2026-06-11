@@ -151,7 +151,7 @@
     .brand-mark.google .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/google.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/google.svg); }
     .brand-mark.coupang { background: #FF3A45; color: #FFFFFF; }
     .brand-mark.coupang .logo { display: none; }
-    .brand-mark.coupang::after { content: "C"; font-family: Inter, system-ui, sans-serif; font-weight: 900; font-size: 14px; letter-spacing: -0.04em; color: #FFFFFF; }
+    .brand-mark.coupang::after { content: "쿠"; font-family: "Pretendard Variable", Pretendard, sans-serif; font-weight: 900; font-size: 14px; letter-spacing: -0.03em; color: #FFFFFF; }
     .kpi-stocks .brand-mark.coupang::after { font-size: 16px; }
     .brand-mark.coinbase { background: #0052FF; color: #FFFFFF; }
     .brand-mark.coinbase .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/coinbase.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/coinbase.svg); }
@@ -466,29 +466,48 @@
       { name: "쿠팡", ticker: "CPNG", weight: 6, value: 741000, pnl: -0.5, brand: "coupang", sector: "한국 이커머스" },
       { name: "Coinbase", ticker: "COIN", weight: 2, value: 247000, pnl: 18.4, brand: "coinbase", sector: "가상자산" },
     ];
-    // 종목별 30일 mock 추이 (퍼센트 변화)
+    // ========= 실제 주식 결 random walk 시리즈 생성 =========
+    // seed 기반 deterministic random (mulberry32)
+    function seededRand(seed) {
+      return function () {
+        seed |= 0; seed = (seed + 0x6D2B79F5) | 0;
+        let t = Math.imul(seed ^ (seed >>> 15), 1 | seed);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+      };
+    }
+    function genStockSeries(targetPct, days, vol, seed) {
+      const r = seededRand(seed);
+      const drift = targetPct / (days - 1);
+      const out = [0];
+      for (let i = 1; i < days; i++) {
+        // 일별 변동: 트렌드 + 노이즈 (±vol%) + 가끔 점프
+        const noise = (r() - 0.5) * 2 * vol;
+        const jump = r() > 0.92 ? (r() - 0.5) * 3 * vol : 0;
+        out.push(out[i-1] + drift + noise + jump);
+      }
+      // 마지막 값이 정확히 targetPct가 되도록 보정
+      const last = out[out.length-1];
+      const adjust = (targetPct - last) / (days - 1);
+      return out.map((v, i) => +(v + adjust * i).toFixed(3));
+    }
+
     const stockSeries = {
-      "005930.KS": [0,0.3,0.8,0.5,1.1,1.4,0.9,1.6,2.2,2.0,2.5,3.0,2.8,3.4,3.9,3.6,4.2,3.8,4.0,4.4,4.1,4.6,5.0,4.7,4.9,5.3,5.0,5.1,5.4,5.2],
-      "AAPL":      [0,0.1,0.4,0.2,0.5,0.8,0.6,1.0,1.4,1.2,1.6,1.9,1.7,2.0,2.3,2.1,2.5,2.4,2.7,2.9,2.6,2.8,3.0,2.8,2.9,3.0,2.9,3.0,3.1,3.1],
-      "NVDA":      [0,0.8,1.6,2.4,3.0,3.8,4.6,5.4,6.0,6.8,7.4,8.2,8.8,9.4,10.0,10.4,10.8,11.0,11.4,11.8,11.6,12.0,12.2,12.4,12.5,12.6,12.6,12.7,12.7,12.7],
-      "MSFT":      [0,0.2,0.6,0.4,0.9,1.3,1.0,1.6,2.0,1.8,2.2,2.6,2.4,2.8,3.2,3.0,3.4,3.6,3.9,4.2,3.9,4.2,4.5,4.3,4.5,4.7,4.6,4.7,4.8,4.8],
-      "035720.KS": [0,-0.2,-0.5,-0.3,-0.8,-1.0,-0.7,-1.2,-1.5,-1.3,-1.6,-1.9,-1.7,-2.0,-2.2,-1.9,-2.1,-2.0,-2.3,-2.4,-2.2,-2.3,-2.4,-2.3,-2.4,-2.4,-2.4,-2.4,-2.4,-2.4],
-      "TSLA":      [0,0.6,1.0,0.4,1.4,2.0,1.4,2.4,3.2,2.8,3.6,4.4,3.8,4.6,5.2,4.8,5.6,5.4,6.0,6.6,6.0,6.6,6.8,6.4,6.8,7.0,6.8,7.0,7.1,7.1],
-      "035420.KS": [0,-0.1,0.1,-0.2,-0.4,-0.2,-0.5,-0.7,-0.5,-0.8,-1.0,-0.8,-1.1,-1.2,-1.0,-1.2,-1.3,-1.1,-1.3,-1.4,-1.2,-1.3,-1.4,-1.2,-1.3,-1.3,-1.2,-1.2,-1.1,-1.1],
-      "GOOGL":     [0,0.1,0.3,0.2,0.5,0.7,0.5,0.9,1.2,1.0,1.3,1.6,1.4,1.7,2.0,1.8,2.1,2.0,2.3,2.5,2.3,2.5,2.6,2.4,2.5,2.6,2.5,2.6,2.6,2.6],
-      "CPNG":      [0,-0.1,0.0,-0.2,-0.4,-0.1,-0.3,-0.5,-0.3,-0.6,-0.7,-0.4,-0.6,-0.8,-0.5,-0.7,-0.8,-0.4,-0.6,-0.7,-0.4,-0.5,-0.6,-0.3,-0.5,-0.6,-0.4,-0.5,-0.5,-0.5],
-      "COIN":      [0,1.2,2.6,1.8,3.6,5.2,4.0,6.4,8.4,7.2,9.6,12.0,10.4,12.8,15.0,13.4,15.8,14.6,16.6,17.8,16.4,18.0,18.4,17.4,18.0,18.4,18.0,18.2,18.4,18.4],
+      "005930.KS": genStockSeries(5.2, 30, 0.55, 11),
+      "AAPL":      genStockSeries(3.1, 30, 0.45, 22),
+      "NVDA":      genStockSeries(12.7, 30, 1.20, 33),
+      "MSFT":      genStockSeries(4.8, 30, 0.50, 44),
+      "035720.KS": genStockSeries(-2.4, 30, 0.55, 55),
+      "TSLA":      genStockSeries(7.1, 30, 1.40, 66),
+      "035420.KS": genStockSeries(-1.1, 30, 0.45, 77),
+      "GOOGL":     genStockSeries(2.6, 30, 0.45, 88),
+      "CPNG":      genStockSeries(-0.5, 30, 0.65, 99),
+      "COIN":      genStockSeries(18.4, 30, 1.80, 110),
     };
 
-    // ========= 보유 종목 표 (mini sparkline + 점선 매수평단) =========
-    function buildStockRow(s) {
-      const series = stockSeries[s.ticker] || [];
-      const cls = s.pnl >= 0 ? "pos" : "neg";
-      const sign = s.pnl >= 0 ? "+" : "";
-      const color = s.pnl >= 0 ? "#11FF99" : "#FF2047";
-
-      // 작은 sparkline (라인 + 면적 + 점선 매수평단)
-      const W = 160, H = 40, pad = 3;
+    // ========= sparkline 빌더 (라인 + 면적 + 점선 매수평단) =========
+    function buildMiniChart(series, color, W, H, opts = {}) {
+      const pad = opts.pad || 2;
       const max = Math.max(...series), min = Math.min(...series);
       const range = (max - min) || 1;
       const xStep = (W - pad * 2) / (series.length - 1);
@@ -496,38 +515,50 @@
       const pts = series.map((v, i) => [pad + i * xStep, ys[i]]);
       const lp = pts.map((p, i) => (i === 0 ? "M" : "L") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
       const ap = lp + ` L${pts[pts.length-1][0]},${H-pad} L${pts[0][0]},${H-pad} Z`;
-      const buyAvgVal = series[Math.floor(series.length * 0.15)];
-      const buyY = pad + (H - pad * 2) * (1 - (buyAvgVal - min) / range);
+      const buyIdx = Math.floor(series.length * 0.12);
+      const buyY = pad + (H - pad * 2) * (1 - (series[buyIdx] - min) / range);
       const endX = pts[pts.length-1][0], endY = pts[pts.length-1][1];
-      const gid = "sg" + s.ticker.replace(/[^a-z0-9]/gi, "");
+      const gid = "g" + Math.random().toString(36).slice(2, 9);
+      const strokeW = opts.strokeWidth || 1.3;
+      const showEndDot = opts.showEndDot !== false;
+      const showAvg = opts.showAvg !== false;
+      return `
+        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width: 100%; height: ${H}px; display: block;">
+          <defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity="${opts.fillOpacity || 0.16}"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
+          ${showAvg ? `<line x1="${pad}" x2="${W-pad}" y1="${buyY.toFixed(1)}" y2="${buyY.toFixed(1)}" stroke="rgba(255,255,255,0.22)" stroke-dasharray="2 2" stroke-width="0.6"/>` : ""}
+          <path d="${ap}" fill="url(#${gid})"/>
+          <path d="${lp}" fill="none" stroke="${color}" stroke-width="${strokeW}" stroke-linejoin="round"/>
+          ${showEndDot ? `<circle cx="${endX}" cy="${endY}" r="1.8" fill="${color}"/>` : ""}
+        </svg>
+      `;
+    }
+
+    // ========= 보유 종목 표 (sparkline + 클릭 펼침) =========
+    function buildStockRow(s, idx) {
+      const series = stockSeries[s.ticker] || [];
+      const cls = s.pnl >= 0 ? "pos" : "neg";
+      const sign = s.pnl >= 0 ? "+" : "";
+      const color = s.pnl >= 0 ? "#11FF99" : "#FF2047";
       const buyPrice = Math.round(s.value / (1 + s.pnl/100));
 
       const arrowUp = `<svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M3 10L7 4L11 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
       const arrowDn = `<svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M3 4L7 10L11 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
       const arrow = s.pnl >= 0 ? arrowUp : arrowDn;
+      const caret = `<svg class="row-caret" viewBox="0 0 14 14" fill="none"><path d="M3 5L7 9L11 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
 
       return `
-        <tr>
-          <td>
+        <tr class="stock-tr" data-idx="${idx}">
+          <td style="width: 200px;">
             <div class="stock-row">
               <div class="brand-mark ${s.brand}"><span class="logo"></span></div>
               <div>
-                <div class="nm">${s.name}</div>
+                <div class="nm">${s.name} ${caret}</div>
                 <div class="tk">${s.ticker} · ${s.sector || ""}</div>
               </div>
             </div>
           </td>
-          <td style="width: 180px;">
-            <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width: 100%; height: ${H}px; display: block;">
-              <defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity="0.32"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
-              <line x1="${pad}" x2="${W-pad}" y1="${buyY.toFixed(1)}" y2="${buyY.toFixed(1)}" stroke="rgba(255,255,255,0.32)" stroke-dasharray="3 3" stroke-width="1"/>
-              <path d="${ap}" fill="url(#${gid})"/>
-              <path d="${lp}" fill="none" stroke="${color}" stroke-width="1.8"/>
-              <circle cx="${endX}" cy="${endY}" r="2.4" fill="${color}"/>
-              <circle cx="${endX}" cy="${endY}" r="5" fill="${color}" opacity="0.3"/>
-            </svg>
-          </td>
-          <td style="text-align:right;">
+          <td style="width: 140px; padding-right: 0;">${buildMiniChart(series, color, 140, 32)}</td>
+          <td style="text-align:right; width: 130px;">
             <div style="display: inline-flex; align-items: center; gap: 5px; color: ${color};">
               ${arrow}<span class="num" style="font-weight: 700;">${sign}${s.pnl.toFixed(2)}%</span>
             </div>
@@ -536,9 +567,64 @@
           <td style="text-align:right;" class="num">${s.weight}%</td>
           <td style="text-align:right;" class="num">${krw(s.value)}원</td>
         </tr>
+        <tr class="expand-tr"><td colspan="5"><div class="expand-panel" id="ep${idx}"></div></td></tr>
       `;
     }
-    document.getElementById("stockTable").innerHTML = stocks.map(buildStockRow).join("");
+    document.getElementById("stockTable").innerHTML = stocks.map((s, i) => buildStockRow(s, i)).join("");
+
+    // 클릭 시 펼침 (토스증권 결 종목 상세)
+    function buildExpandPanel(s, idx) {
+      const series = stockSeries[s.ticker] || [];
+      const cls = s.pnl >= 0 ? "pos" : "neg";
+      const sign = s.pnl >= 0 ? "+" : "";
+      const color = s.pnl >= 0 ? "#11FF99" : "#FF2047";
+      const buyPrice = Math.round(s.value / (1 + s.pnl/100));
+      const last = series[series.length-1];
+      const day1Pct = (last - series[series.length-2]).toFixed(2);
+      const day7Pct = (last - series[series.length-8]).toFixed(2);
+      const day30Pct = s.pnl.toFixed(2);
+      const chip = (k, v) => {
+        const num = parseFloat(v);
+        const c = num >= 0 ? "pos" : "neg";
+        const sn = num >= 0 ? "+" : "";
+        return `<div class="expand-chip ${c}">${k} <span class="v">${sn}${v}%</span></div>`;
+      };
+      return `
+        <div class="expand-inner">
+          <div class="expand-chart">
+            <div style="display:flex; justify-content:space-between; align-items:baseline;">
+              <span class="lbl">30D 가격 추이</span>
+              <span class="lbl" style="color: ${color};">${sign}${s.pnl.toFixed(2)}%</span>
+            </div>
+            ${buildMiniChart(series, color, 480, 120, { pad: 6, strokeWidth: 1.8, fillOpacity: 0.4 })}
+            <div class="expand-chips" style="margin-top: 10px;">
+              ${chip("1D", day1Pct)}
+              ${chip("7D", day7Pct)}
+              ${chip("30D", day30Pct)}
+            </div>
+          </div>
+          <div class="expand-stats">
+            <div class="expand-stat"><span class="k">매수 평균가</span><span class="v num">${krw(buyPrice)}원</span></div>
+            <div class="expand-stat"><span class="k">현재 평가액</span><span class="v num">${krw(s.value)}원</span></div>
+            <div class="expand-stat"><span class="k">평가 손익</span><span class="v num ${cls}">${sign}${krw(s.value - buyPrice)}원</span></div>
+            <div class="expand-stat"><span class="k">섹터</span><span class="v" style="font-size:12px; font-weight:600;">${s.sector || "-"}</span></div>
+          </div>
+        </div>
+      `;
+    }
+    document.querySelectorAll(".stock-tr").forEach((tr) => {
+      tr.addEventListener("click", () => {
+        const idx = parseInt(tr.dataset.idx);
+        const panel = document.getElementById("ep" + idx);
+        const isOpen = tr.classList.toggle("open");
+        if (isOpen) {
+          if (!panel.innerHTML) panel.innerHTML = buildExpandPanel(stocks[idx], idx);
+          panel.classList.add("show");
+        } else {
+          panel.classList.remove("show");
+        }
+      });
+    });
 
     // 30일 sparkline 제거 (토스증권 결 - row-trend 텍스트만)
 
