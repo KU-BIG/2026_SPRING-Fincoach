@@ -62,24 +62,31 @@
   document.querySelectorAll("[data-counter]").forEach((el) => cio.observe(el));
 })();
 
-/* hero headline 재진입 시 word stagger 재실행 */
+/* hero headline 재진입 + 매 7초 word stagger 재실행 */
 (function () {
   const headline = document.querySelector(".hero-headline");
   if (!headline) return;
   const words = headline.querySelectorAll(".word");
+  let inView = false;
+  let timer = null;
   function replay() {
     words.forEach((w) => {
       w.style.animation = "none";
-      // reflow trigger
-      // eslint-disable-next-line no-unused-expressions
-      w.offsetWidth;
+      void w.offsetWidth;
       w.style.animation = "";
     });
+  }
+  function loop() {
+    if (timer) clearInterval(timer);
+    if (!inView) return;
+    timer = setInterval(() => { if (inView) replay(); }, 7000);
   }
   const io = new IntersectionObserver(
     (entries) => {
       entries.forEach((e) => {
-        if (e.isIntersecting) replay();
+        inView = e.isIntersecting;
+        if (inView) { replay(); loop(); }
+        else if (timer) { clearInterval(timer); timer = null; }
       });
     },
     { threshold: 0.4 }
