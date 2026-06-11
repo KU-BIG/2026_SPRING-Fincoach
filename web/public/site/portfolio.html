@@ -206,14 +206,14 @@
       <div class="card kpi c-3 reveal" style="transition-delay:80ms">
         <div class="lbl">평가 손익</div>
         <div class="val num pos">+480,000원</div>
-        <div class="sub">7일 누적 +1.8%</div>
-        <div class="kpi-visual"><div class="chart-host" id="pnlSpark" style="height: 44px;"></div></div>
+        <div class="sub">7일 일별 + 누적</div>
+        <div class="kpi-visual"><div class="chart-host" id="pnlCombo" style="height: 56px;"></div></div>
       </div>
       <div class="card kpi c-3 reveal" style="transition-delay:160ms">
         <div class="lbl">수익률</div>
         <div class="val num pos">+4.05%</div>
-        <div class="sub">한 달 누적 (vs KOSPI +1.2%)</div>
-        <div class="kpi-visual"><div class="chart-host" id="retSpark" style="height: 44px;"></div></div>
+        <div class="sub">vs KOSPI +1.20% · 8주 BEST</div>
+        <div class="kpi-visual"><div class="chart-host" id="retGauge" style="height: 56px;"></div></div>
       </div>
       <div class="card kpi c-3 reveal" style="transition-delay:240ms">
         <div class="lbl">보유 종목</div>
@@ -364,29 +364,41 @@
         </tr>`;
     }).join("");
 
-    // 종목별 row sparkline (area + line + end marker)
+    // 종목별 row sparkline (area + line + 고/저 마커 + 끝)
     stocks.forEach((s, idx) => {
       const series = stockSeries[s.ticker] || [];
       const host = document.getElementById("rs" + idx);
       if (!host || series.length === 0) return;
-      const W = 200, H = 36, pad = 3;
-      const max = Math.max(...series, 0.5);
-      const min = Math.min(...series, -0.5);
-      const range = max - min || 1;
+      const W = 220, H = 40, pad = 4;
+      const max = Math.max(...series);
+      const min = Math.min(...series);
+      const range = (max - min) || 1;
       const xStep = (W - pad * 2) / (series.length - 1);
       const ys = series.map(v => pad + (H - pad * 2) * (1 - (v - min) / range));
       const pts = series.map((v, i) => [pad + i * xStep, ys[i]]);
-      const linePath = pts.map((p, i) => (i === 0 ? "M" : "L") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
-      const areaPath = linePath + ` L${pts[pts.length-1][0]},${H-pad} L${pts[0][0]},${H-pad} Z`;
+      const lp = pts.map((p, i) => (i === 0 ? "M" : "L") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
+      const ap = lp + ` L${pts[pts.length-1][0]},${H-pad} L${pts[0][0]},${H-pad} Z`;
       const color = s.pnl >= 0 ? "#11FF99" : "#FF2047";
       const gid = "rg" + idx;
+      const maxIdx = series.indexOf(max);
+      const minIdx = series.indexOf(min);
+      const endX = pts[pts.length-1][0], endY = pts[pts.length-1][1];
+
       host.innerHTML = `
         <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%; height:${H}px;">
-          <defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity="0.28"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
-          <path d="${areaPath}" fill="url(#${gid})"/>
-          <path d="${linePath}" fill="none" stroke="${color}" stroke-width="1.6"/>
-          <circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="2.4" fill="${color}"/>
-          <circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="5" fill="${color}" opacity="0.25"/>
+          <defs>
+            <linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1">
+              <stop offset="0%" stop-color="${color}" stop-opacity="0.55"/>
+              <stop offset="100%" stop-color="${color}" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <line x1="${pad}" x2="${W-pad}" y1="${H/2}" y2="${H/2}" stroke="rgba(255,255,255,0.04)" stroke-dasharray="2 3"/>
+          <path d="${ap}" fill="url(#${gid})"/>
+          <path d="${lp}" fill="none" stroke="${color}" stroke-width="1.8"/>
+          <circle cx="${pts[maxIdx][0]}" cy="${pts[maxIdx][1]}" r="2.2" fill="#FFFFFF" stroke="${color}" stroke-width="1.2"/>
+          <circle cx="${pts[minIdx][0]}" cy="${pts[minIdx][1]}" r="2.2" fill="${color}" opacity="0.6"/>
+          <circle cx="${endX}" cy="${endY}" r="3" fill="${color}"/>
+          <circle cx="${endX}" cy="${endY}" r="6" fill="${color}" opacity="0.28"/>
         </svg>
       `;
     });
@@ -406,34 +418,92 @@
       <div class="bar ${b.up ? "up" : "dn"}" style="height: ${Math.max(8, (Math.abs(b.v)/maxBar) * 40)}px;" title="${b.up ? "+" : ""}${b.v}%"></div>
     `).join("");
 
-    // ========= KPI 2/3: 작은 라인 차트 =========
-    function miniLine(host, series, color) {
-      const W = 200, H = 44, pad = 4;
-      const max = Math.max(...series), min = Math.min(...series);
-      const range = max - min || 1;
-      const xStep = (W - pad * 2) / (series.length - 1);
-      const ys = series.map(v => pad + (H - pad * 2) * (1 - (v - min) / range));
-      const pts = series.map((v, i) => [pad + i * xStep, ys[i]]);
-      const lp = pts.map((p, i) => (i === 0 ? "M" : "L") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
-      const ap = lp + ` L${pts[pts.length-1][0]},${H-pad} L${pts[0][0]},${H-pad} Z`;
-      const gid = "mg" + Math.random().toString(36).slice(2, 7);
+    // ========= KPI 2: 평가 손익 — 일별 막대 + 누적 라인 콤보 =========
+    (function () {
+      const host = document.getElementById("pnlCombo");
+      if (!host) return;
+      const daily = [60, -30, 90, 120, -40, 80, 200]; // 천원 단위
+      const cum = daily.reduce((a, v, i) => { a.push((a[i-1] || 0) + v); return a; }, []);
+      const W = 220, H = 56, pad = 4;
+      const xStep = (W - pad * 2) / daily.length;
+      const dailyMax = Math.max(...daily.map(Math.abs));
+      const cumMax = Math.max(...cum), cumMin = Math.min(...cum, 0);
+      const cumRange = (cumMax - cumMin) || 1;
+      // 막대 (각 일자)
+      const bars = daily.map((v, i) => {
+        const x = pad + i * xStep + 2;
+        const w = xStep - 4;
+        const h = Math.max(2, (Math.abs(v) / dailyMax) * (H * 0.4));
+        const baseY = H * 0.55;
+        const y = v >= 0 ? baseY - h : baseY;
+        const fill = v >= 0 ? "rgba(17,255,153,0.45)" : "rgba(255,32,71,0.45)";
+        return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${h.toFixed(1)}" rx="1.5" fill="${fill}"/>`;
+      }).join("");
+      // 누적 라인 (오버레이)
+      const cumPts = cum.map((v, i) => {
+        const x = pad + i * xStep + xStep / 2;
+        const y = pad + (H - pad * 2) * (1 - (v - cumMin) / cumRange);
+        return [x, y];
+      });
+      const cumPath = cumPts.map((p, i) => (i === 0 ? "M" : "L") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
+      const endX = cumPts[cumPts.length-1][0], endY = cumPts[cumPts.length-1][1];
+
       host.innerHTML = `
         <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%; height:${H}px;">
-          <defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity="0.28"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
-          <line x1="${pad}" x2="${W-pad}" y1="${H/2}" y2="${H/2}" stroke="rgba(255,255,255,0.06)" stroke-dasharray="2 3"/>
-          <path d="${ap}" fill="url(#${gid})"/>
-          <path d="${lp}" fill="none" stroke="${color}" stroke-width="1.8"/>
-          <circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="2.6" fill="${color}"/>
-          <circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="6" fill="${color}" opacity="0.25"/>
+          <line x1="${pad}" x2="${W-pad}" y1="${H*0.55}" y2="${H*0.55}" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>
+          ${bars}
+          <path d="${cumPath}" fill="none" stroke="#11FF99" stroke-width="1.8"/>
+          <circle cx="${endX}" cy="${endY}" r="3" fill="#11FF99"/>
+          <circle cx="${endX}" cy="${endY}" r="6" fill="#11FF99" opacity="0.28"/>
         </svg>
       `;
-    }
-    miniLine(document.getElementById("pnlSpark"),
-      [120000, 180000, 240000, 290000, 310000, 380000, 420000, 460000, 480000],
-      "#11FF99");
-    miniLine(document.getElementById("retSpark"),
-      [1.2, 1.6, 2.0, 2.5, 2.8, 3.2, 3.6, 3.9, 4.05],
-      "#11FF99");
+    })();
+
+    // ========= KPI 3: 수익률 — 반원 게이지 + 벤치마크 마커 =========
+    (function () {
+      const host = document.getElementById("retGauge");
+      if (!host) return;
+      const my = 4.05;
+      const bench = 1.20;
+      const minR = -5, maxR = 10;
+      const valToAngle = (v) => Math.PI * (1 - (v - minR) / (maxR - minR)); // π → 0
+      const W = 220, H = 56, cx = W / 2, cy = H * 0.92, r = 48;
+
+      // arc path util
+      const pt = (a) => [cx + r * Math.cos(a), cy - r * Math.sin(a)];
+      const arc = (a1, a2, sweep = 0) => {
+        const [x1, y1] = pt(a1), [x2, y2] = pt(a2);
+        const large = Math.abs(a2 - a1) > Math.PI ? 1 : 0;
+        return `M${x1.toFixed(1)},${y1.toFixed(1)} A${r},${r} 0 ${large} ${sweep} ${x2.toFixed(1)},${y2.toFixed(1)}`;
+      };
+
+      // 배경 트랙 (반원)
+      const bgPath = arc(Math.PI, 0, 1);
+      // 값 채움 (시작 π, 끝 valToAngle(my))
+      const valPath = arc(Math.PI, valToAngle(my), 1);
+
+      // 벤치 마커 위치
+      const ba = valToAngle(bench);
+      const [bx, by] = pt(ba);
+
+      host.innerHTML = `
+        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%; height:${H}px;">
+          <defs>
+            <linearGradient id="gaugeG" x1="0" x2="1" y1="0" y2="0">
+              <stop offset="0%" stop-color="#FF2047"/>
+              <stop offset="50%" stop-color="#FFC53D"/>
+              <stop offset="100%" stop-color="#11FF99"/>
+            </linearGradient>
+          </defs>
+          <path d="${bgPath}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6" stroke-linecap="round"/>
+          <path d="${valPath}" fill="none" stroke="url(#gaugeG)" stroke-width="6" stroke-linecap="round"/>
+          <line x1="${bx.toFixed(1)}" y1="${(by - 7).toFixed(1)}" x2="${bx.toFixed(1)}" y2="${(by + 4).toFixed(1)}" stroke="rgba(255,255,255,0.6)" stroke-width="1.4" stroke-dasharray="2 2"/>
+          <text x="${bx.toFixed(1)}" y="${(by - 10).toFixed(1)}" text-anchor="middle" style="font-family: 'JetBrains Mono'; font-size: 8px; fill: rgba(255,255,255,0.5);">KOSPI</text>
+          <text x="${pt(valToAngle(minR))[0].toFixed(1)}" y="${(cy + 12).toFixed(1)}" text-anchor="middle" style="font-family: 'JetBrains Mono'; font-size: 8px; fill: var(--fg-muted);">${minR}%</text>
+          <text x="${pt(valToAngle(maxR))[0].toFixed(1)}" y="${(cy + 12).toFixed(1)}" text-anchor="middle" style="font-family: 'JetBrains Mono'; font-size: 8px; fill: var(--fg-muted);">+${maxR}%</text>
+        </svg>
+      `;
+    })();
 
     // ========= 차트 데이터 =========
     // 30일 평가액 (단위: 원) + 벤치마크 (KOSPI 상대) — 마지막 일은 오늘
