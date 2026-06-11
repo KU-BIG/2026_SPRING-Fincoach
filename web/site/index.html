@@ -111,39 +111,99 @@
     }
     .hero-cta { margin-top: 36px; display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 
-    /* PRODUCT PREVIEW */
+    /* PRODUCT PREVIEW
+       카드 외부 4면 페이드:
+       - 카드 표면(.product-preview::before)을 한 단계 밝은 패널로 그리고,
+         mask-image로 상하좌우 ~96px 영역을 transparent로 페이드.
+       - 콘텐츠(.pp-body)는 .product-preview의 직계 자식이라 mask 영향 없음.
+       - hero 배경(#000)이 페이드된 가장자리 너머로 자연스럽게 비친다.
+       - 페이드 너머 가장자리에 살짝 글로우를 둬 카드가 공중에 떠 보이게.
+       - 기존 inner fade div(.pp-fade-*)는 콘텐츠를 가렸기 때문에 비활성화. */
     .product-preview {
+      position: relative;
       margin: 64px auto 0;
       max-width: 1080px;
+      /* 자체 배경/보더 없음 — 표면은 ::before로 그림 */
+      background: transparent;
+      border: none;
       border-radius: 18px;
-      /* 카드 자체를 한 단계 더 밝게 — 그래야 검은색 fade가 시각적으로 인식됨 */
-      background:
-        linear-gradient(135deg, rgba(59,158,255,0.08) 0%, rgba(255,255,255,0.06) 50%, rgba(240,68,82,0.06) 100%),
-        var(--bg-elevated);
-      border: 1px solid var(--frost);
-      position: relative;
-      overflow: hidden;
       isolation: isolate;
     }
-    /* 4면 fade — 카드 배경이 #0E0F11 (elevated)로 더 밝아져서 black overlay가 시각적으로 인지됨 */
-    .product-preview .pp-fade-top {
-      position: absolute; top: 0; left: 0; right: 0; height: 110px;
-      z-index: 5; pointer-events: none;
-      background: linear-gradient(to bottom, var(--bg-base) 0%, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0.4) 65%, transparent 100%);
+    .product-preview::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      background:
+        /* 컬러 hint는 살짝 살리되 너무 강하지 않게 */
+        linear-gradient(135deg, rgba(59,158,255,0.10) 0%, rgba(255,255,255,0.06) 45%, rgba(240,68,82,0.10) 100%),
+        /* 카드 표면을 hero(#000)보다 명확히 밝게 */
+        #14161A;
+      border: 1px solid var(--frost);
+      /* 4면 페이드 마스크: 가장자리 ~96px를 transparent로
+         두 방향 grad를 mask-composite: intersect로 곱해 4면 동시 fade */
+      -webkit-mask-image:
+        linear-gradient(to right,
+          transparent 0,
+          #000 96px,
+          #000 calc(100% - 96px),
+          transparent 100%),
+        linear-gradient(to bottom,
+          transparent 0,
+          #000 96px,
+          #000 calc(100% - 96px),
+          transparent 100%);
+      -webkit-mask-composite: source-in;
+              mask-image:
+        linear-gradient(to right,
+          transparent 0,
+          #000 96px,
+          #000 calc(100% - 96px),
+          transparent 100%),
+        linear-gradient(to bottom,
+          transparent 0,
+          #000 96px,
+          #000 calc(100% - 96px),
+          transparent 100%);
+              mask-composite: intersect;
+      z-index: 0;
+      pointer-events: none;
     }
-    .product-preview .pp-fade-bottom {
-      position: absolute; bottom: 0; left: 0; right: 0; height: 110px;
-      z-index: 5; pointer-events: none;
-      background: linear-gradient(to top, var(--bg-base) 0%, rgba(0,0,0,0.85) 30%, rgba(0,0,0,0.4) 65%, transparent 100%);
-    }
+    /* 콘텐츠는 마스크 위에 위치 — 어떤 가장자리에서도 컨텐츠는 잘리지 않는다 */
+    .product-preview > * { position: relative; z-index: 1; }
+    /* 옛 inner fade div는 완전히 숨김 — 콘텐츠 가림 방지 */
+    .product-preview .pp-fade-top,
+    .product-preview .pp-fade-bottom,
     .product-preview .pp-fade-left,
-    .product-preview .pp-fade-right {
-      position: absolute; top: 0; bottom: 0; width: 90px;
-      z-index: 5; pointer-events: none;
+    .product-preview .pp-fade-right,
+    .product-preview .pp-fade-corners { display: none !important; }
+    /* 모바일 — fade 영역을 살짝 축소(카드가 좁아 fade가 콘텐츠 영역을 침범 안 하게) */
+    @media (max-width: 760px) {
+      .product-preview::before {
+        -webkit-mask-image:
+          linear-gradient(to right,
+            transparent 0,
+            #000 56px,
+            #000 calc(100% - 56px),
+            transparent 100%),
+          linear-gradient(to bottom,
+            transparent 0,
+            #000 72px,
+            #000 calc(100% - 72px),
+            transparent 100%);
+                mask-image:
+          linear-gradient(to right,
+            transparent 0,
+            #000 56px,
+            #000 calc(100% - 56px),
+            transparent 100%),
+          linear-gradient(to bottom,
+            transparent 0,
+            #000 72px,
+            #000 calc(100% - 72px),
+            transparent 100%);
+      }
     }
-    .product-preview .pp-fade-left { left: 0; background: linear-gradient(to right, var(--bg-base) 0%, rgba(0,0,0,0.8) 30%, rgba(0,0,0,0.35) 65%, transparent 100%); }
-    .product-preview .pp-fade-right { right: 0; background: linear-gradient(to left, var(--bg-base) 0%, rgba(0,0,0,0.8) 30%, rgba(0,0,0,0.35) 65%, transparent 100%); }
-    .product-preview .pp-fade-corners { display: none; }
     .pp-frame { padding: 14px 18px; border-bottom: 1px solid var(--frost); display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.02); }
     .pp-dots { display: flex; gap: 6px; }
     .pp-dots span { width: 10px; height: 10px; border-radius: 50%; background: var(--bg-elevated); border: 1px solid var(--frost); }

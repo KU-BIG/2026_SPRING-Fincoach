@@ -433,13 +433,18 @@
         </div>
         <table style="table-layout: fixed; width: 100%; max-width: 860px; margin: 0 auto;">
           <colgroup>
+            <!-- 데스크탑 col 폭(합 100):
+                 종목 26 / 추이 16 / 30D% 22 / 비중 10 / 평가액 26
+                 col 폭은 그대로 두되, "비중 → 평가액" 시각 간격은
+                 평가액 td 에 padding-right 를 더해 우측 여백을 흡수한다.
+                 그러면 "2,717,000원"이 좌측으로 당겨지고, 칸 폭(26%)은 유지. -->
             <col style="width: 26%"/>
             <col style="width: 16%"/>
             <col style="width: 22%"/>
             <col style="width: 10%"/>
             <col style="width: 26%"/>
           </colgroup>
-          <thead><tr><th>종목</th><th style="text-align:center;">30D 추이</th><th style="text-align:right;">30D %</th><th style="text-align:right;">비중</th><th style="text-align:right;">평가액</th></tr></thead>
+          <thead><tr><th>종목</th><th style="text-align:center;">30D 추이</th><th style="text-align:right;">30D %</th><th style="text-align:right; padding-right: 0;">비중</th><th style="text-align:right; padding-right: 64px;">평가액</th></tr></thead>
           <tbody id="stockTable"></tbody>
         </table>
       </section>
@@ -625,8 +630,8 @@
             </div>
             <div style="font-size: 11.5px; color: var(--fg-muted); margin-top: 3px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em;">매수 ${krw(buyPrice)}</div>
           </td>
-          <td style="text-align:right; padding: 0 10px; font-size: 15px;" class="num">${s.weight}%</td>
-          <td style="text-align:right; padding-left: 4px; font-size: 15.5px;" class="num">${krw(s.value)}원</td>
+          <td style="text-align:right; padding: 0 0 0 0; font-size: 15px;" class="num">${s.weight}%</td>
+          <td style="text-align:right; padding: 14px 64px 14px 4px; font-size: 15.5px;" class="num">${krw(s.value)}원</td>
         </tr>
         <tr class="expand-tr"><td colspan="5"><div class="expand-panel" id="ep${idx}"></div></td></tr>
       `;
