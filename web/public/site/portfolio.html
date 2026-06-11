@@ -96,8 +96,9 @@
 
     /* 보유 종목 미니 row */
     .kpi-stocks {
-      display: flex; gap: 6px; margin-top: 14px; align-items: center;
+      display: flex; gap: 5px; margin-top: 14px; align-items: center; flex-wrap: nowrap; min-width: 0;
     }
+    .kpi-stocks .brand-mark, .kpi-stocks .more-mark { flex-shrink: 0; }
     .kpi-stocks .ic {
       width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center;
       font-size: 10px; font-weight: 700;
@@ -158,13 +159,13 @@
     .brand-mark.coinbase { background: #0052FF; color: #FFFFFF; }
     .brand-mark.coinbase .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/coinbase.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/coinbase.svg); }
     /* KPI 미니 */
-    .kpi-stocks .brand-mark { width: 32px; height: 32px; border-radius: 8px; }
-    .kpi-stocks .brand-mark .logo { width: 18px; height: 18px; }
+    .kpi-stocks .brand-mark { width: 26px; height: 26px; border-radius: 7px; }
+    .kpi-stocks .brand-mark .logo { width: 14px; height: 14px; }
     .more-mark {
-      width: 32px; height: 32px; border-radius: 8px;
+      width: 26px; height: 26px; border-radius: 7px;
       background: rgba(255,255,255,0.05);
       border: 1px dashed var(--frost);
-      display: grid; place-items: center;
+      display: grid; place-items: center; font-size: 10px;
       font-family: "JetBrains Mono", monospace; font-size: 11px; font-weight: 600;
       color: var(--fg-secondary);
     }
@@ -982,6 +983,12 @@
         tt.style.left = ttLeft + "px";
         tt.style.top = ttTop + "px";
         tt.style.opacity = 1;
+        // 우측 가장자리에서 잘림 방지 — cursor가 차트 우측 절반이면 tooltip을 좌측으로 flip
+        const ttRect = tt.getBoundingClientRect();
+        const ttW = ttRect.width || 180;
+        if (ttLeft + ttW > rect.width - 8) {
+          tt.style.left = Math.max(8, (xx / W) * rect.width - ttW - 12) + "px";
+        }
       });
       svg.addEventListener("mouseleave", () => {
         cx.style.opacity = 0;
