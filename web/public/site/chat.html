@@ -1,0 +1,235 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>AI 코치 — FinCoach</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .chat-layout { display: grid; grid-template-columns: 280px 1fr; gap: 16px; margin-top: 8px; min-height: calc(100vh - 200px); }
+    @media (max-width: 900px) { .chat-layout { grid-template-columns: 1fr; } }
+
+    .sidebar { padding: 18px; height: fit-content; }
+    .new-chat {
+      width: 100%; padding: 10px 14px; background: var(--fg-primary); color: var(--bg-base);
+      border: none; border-radius: 9999px; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: background 150ms;
+    }
+    .new-chat:hover { background: #ffffff; }
+    .side-label { font-size: 11px; color: var(--fg-muted); letter-spacing: 0.08em; text-transform: uppercase; font-family: "JetBrains Mono", monospace; margin: 18px 0 8px; }
+    .side-list { display: grid; gap: 2px; }
+    .side-list a { padding: 8px 10px; font-size: 13px; color: var(--fg-secondary); border-radius: 8px; transition: background 150ms, color 150ms; }
+    .side-list a:hover { background: var(--bg-elevated); color: var(--fg-primary); }
+    .side-list a.active { background: var(--bg-elevated); color: var(--fg-primary); font-weight: 500; }
+    .sample-q { font-size: 12.5px; color: var(--fg-secondary); border-radius: 8px; padding: 8px 10px; border: 1px solid var(--frost-alt); margin-top: 6px; cursor: pointer; transition: background 150ms, border-color 150ms; }
+    .sample-q:hover { background: var(--bg-elevated); border-color: var(--frost); }
+
+    .chat-main { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+    .chat-top {
+      padding: 18px 24px;
+      border-bottom: 1px solid var(--frost);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .chat-top .info { display: flex; gap: 14px; align-items: center; }
+    .chat-top .av { width: 36px; height: 36px; border-radius: 9px; background: var(--green-soft); color: var(--green); display: grid; place-items: center; font-weight: 700; font-size: 14px; border: 1px solid rgba(17,255,153,0.3); }
+    .chat-top .ttl { font-size: 15px; font-weight: 700; }
+    .chat-top .sub { font-size: 11px; color: var(--fg-muted); margin-top: 2px; font-family: "JetBrains Mono", monospace; letter-spacing: 0.06em; }
+
+    .messages { flex: 1; padding: 24px 28px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; min-height: 400px; }
+    .bubble { max-width: 78%; padding: 13px 17px; border-radius: 16px; font-size: 14.5px; line-height: 1.7; }
+    .bubble.user { background: var(--fg-primary); color: var(--bg-base); align-self: flex-end; border-bottom-right-radius: 4px; font-weight: 500; }
+    .bubble.coach { background: var(--bg-elevated); border: 1px solid var(--frost); color: var(--fg-primary); align-self: flex-start; border-bottom-left-radius: 4px; }
+    .bubble.coach b { color: var(--green); font-weight: 700; }
+    .bubble .meta { font-size: 11px; color: var(--fg-muted); margin-top: 8px; font-family: "JetBrains Mono", monospace; }
+    .typing { display: inline-flex; gap: 4px; align-items: center; padding: 4px 0; }
+    .typing span { width: 6px; height: 6px; background: var(--fg-muted); border-radius: 999px; opacity: 0.5; animation: type 1.2s ease-in-out infinite; }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes type { 0%, 60%, 100% { opacity: 0.3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+
+    .input-bar {
+      padding: 16px 20px;
+      border-top: 1px solid var(--frost);
+      display: flex; gap: 10px; align-items: center;
+    }
+    .input-bar input {
+      flex: 1; background: var(--bg-elevated); color: var(--fg-primary);
+      border: 1px solid var(--frost); padding: 12px 16px; border-radius: 12px;
+      font-size: 14px; outline: none; transition: border-color 150ms;
+    }
+    .input-bar input:focus { border-color: rgba(17,255,153,0.5); }
+    .input-bar button {
+      padding: 12px 20px; background: var(--green); color: var(--bg-base);
+      border: none; border-radius: 12px; font-size: 14px; font-weight: 600;
+      cursor: pointer; transition: opacity 150ms;
+    }
+    .input-bar button:hover { opacity: 0.9; }
+
+    .disclaimer-bar { padding: 10px 24px; font-size: 11px; color: var(--fg-muted); background: var(--bg-elevated); border-top: 1px solid var(--frost-alt); }
+
+    .context-card {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 5px 10px;
+      background: var(--blue-soft); color: var(--blue);
+      border: 1px solid rgba(59,158,255,0.25); border-radius: 999px;
+      font-size: 11px; font-weight: 500; letter-spacing: 0.02em;
+      font-family: "JetBrains Mono", monospace; text-transform: uppercase;
+    }
+    .context-card .dot { width: 6px; height: 6px; background: var(--blue); border-radius: 999px; }
+  </style>
+</head>
+<body>
+  <div class="scroll-progress"><div class="bar"></div></div>
+
+  <header>
+    <div class="nav-wrap">
+      <div class="nav-left">
+        <a href="./index.html" class="brand"><div class="logo"></div>FinCoach</a>
+        <nav class="menu">
+          <a href="./index.html">홈</a>
+          <a href="./portfolio.html">포트폴리오</a>
+          <a href="./chat.html" class="active">AI 코치</a>
+          <a href="./learn.html">금융 용어</a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-ghost">로그인</button>
+        <a href="./portfolio.html" class="nav-cta">포트폴리오 보기</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-pad">
+    <div class="page-head reveal">
+      <div>
+        <div class="caption">AI COACH / SESSION</div>
+        <h1 style="margin-top: 6px;">코치에게 묻기</h1>
+      </div>
+      <span class="context-card"><span class="dot"></span>포트폴리오 컨텍스트 연결됨</span>
+    </div>
+
+    <div class="chat-layout">
+      <!-- SIDEBAR -->
+      <aside class="card sidebar reveal">
+        <button class="new-chat">+ 새 대화</button>
+
+        <div class="side-label">최근 대화</div>
+        <div class="side-list">
+          <a href="#" class="active">PER이 높으면 무슨 의미예요?</a>
+          <a href="#">반도체 사이클 어디쯤일까요?</a>
+          <a href="#">환율이 떨어지면 어떻게 되나요?</a>
+          <a href="#">NVIDIA 비중을 더 늘려도 될까요?</a>
+        </div>
+
+        <div class="side-label">자주 묻는 질문</div>
+        <div>
+          <div class="sample-q" onclick="addQuestion('PER이 높으면 무슨 의미예요?')">PER이 높으면 무슨 의미예요?</div>
+          <div class="sample-q" onclick="addQuestion('내 포트폴리오 리스크는 뭐예요?')">내 포트폴리오 리스크는 뭐예요?</div>
+          <div class="sample-q" onclick="addQuestion('반도체 비중을 늘려도 될까요?')">반도체 비중을 늘려도 될까요?</div>
+          <div class="sample-q" onclick="addQuestion('백테스트는 어떻게 보나요?')">백테스트는 어떻게 보나요?</div>
+        </div>
+      </aside>
+
+      <!-- MAIN CHAT -->
+      <section class="card chat-main reveal" style="transition-delay: 100ms;">
+        <div class="chat-top">
+          <div class="info">
+            <div class="av">FC</div>
+            <div>
+              <div class="ttl">FinCoach</div>
+              <div class="sub">AI · CLAUDE HAIKU 4.5 · KO</div>
+            </div>
+          </div>
+          <div style="display: flex; gap: 6px;">
+            <button class="nav-ghost" style="padding: 5px 12px; font-size: 12px;">대화 비우기</button>
+          </div>
+        </div>
+
+        <div class="messages" id="messages">
+          <div class="bubble user">PER이 높으면 무슨 의미예요?</div>
+          <div class="bubble coach">
+            <b>PER(주가수익비율)</b>은 주가를 EPS(주당순이익)으로 나눈 값으로, 한 주가 1년치 이익의 몇 배에 거래되는지 나타내요. 일반적으로 PER이 높다는 건 시장이 그 종목의 미래 성장을 크게 기대하고 있다는 신호예요.<br/><br/>
+            보유 중인 <b>NVIDIA</b>는 현재 PER이 시장 평균보다 높아요. AI 인프라 수요가 빠르게 늘면서 이익이 지속적으로 성장할 거란 기대가 반영된 결과예요.<br/><br/>
+            다만 PER만 보지 말고 <b>ROE, 매출 성장률, 동종 업계 평균</b>도 함께 비교하는 게 좋아요.
+            <div class="meta">FC · 9초 전</div>
+          </div>
+          <div class="bubble user">반도체 비중이 큰가요?</div>
+          <div class="bubble coach">
+            현재 보유 종목 중 반도체 관련주는 <b>삼성전자(32%)</b>와 <b>NVIDIA(18%)</b>로 합산 <b>50%</b>예요. 단일 섹터 비중으로는 다소 높은 편이에요.<br/><br/>
+            지금 반도체 사이클 회복 신호가 누적되는 국면이라 단기 기대는 있지만, 사이클이 하강 국면에 진입하면 두 종목이 동시에 흔들릴 위험이 있어요.
+            <div class="meta">FC · 4초 전</div>
+          </div>
+          <div class="bubble user">방어주 비중을 어떻게 늘릴까요?</div>
+          <div class="bubble coach">
+            <span class="typing"><span></span><span></span><span></span></span>
+          </div>
+        </div>
+
+        <div class="input-bar">
+          <input type="text" id="msgInput" placeholder="질문을 입력하세요" />
+          <button onclick="sendMessage()">보내기</button>
+        </div>
+        <div class="disclaimer-bar">
+          본 응답은 정보 제공 목적이며, 투자 권유에 해당하지 않습니다.
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="foot-row">
+      <div class="foot-col">
+        <a href="./index.html" class="brand" style="margin-bottom: 12px;"><div class="logo"></div>FinCoach</a>
+        <p>한국 주식과 미국 주식을 한 화면에. 정보 제공 도구이며, 매수와 매도는 추천하지 않습니다.</p>
+      </div>
+      <div class="foot-col"><h6>SERVICE</h6><a href="./index.html">홈</a><a href="./portfolio.html">포트폴리오</a><a href="./chat.html">AI 코치</a><a href="./learn.html">금융 용어</a></div>
+      <div class="foot-col"><h6>DATA</h6><a href="#">KRX 한국 주식</a><a href="#">yfinance 미국 주식</a><a href="#">RSS 뉴스</a></div>
+      <div class="foot-col"><h6>LEGAL</h6><a href="#">면책 조항</a><a href="#">서비스 약관</a><a href="#">개인정보 처리방침</a></div>
+    </div>
+    <div class="foot-bottom">
+      <span>본 서비스는 정보 제공 도구이며, 매수 또는 매도를 추천하지 않습니다.</span>
+      <span>© 2026 FinCoach · KUBIG conf3</span>
+    </div>
+  </footer>
+
+  <script src="./app.js"></script>
+  <script>
+    function addQuestion(q) {
+      document.getElementById("msgInput").value = q;
+      document.getElementById("msgInput").focus();
+    }
+    function sendMessage() {
+      const input = document.getElementById("msgInput");
+      const text = input.value.trim();
+      if (!text) return;
+      const msgs = document.getElementById("messages");
+      const bub = document.createElement("div");
+      bub.className = "bubble user";
+      bub.textContent = text;
+      // remove existing typing
+      const typing = msgs.querySelector(".bubble.coach .typing");
+      if (typing) typing.parentElement.remove();
+      msgs.appendChild(bub);
+      input.value = "";
+      // simulate response
+      setTimeout(() => {
+        const reply = document.createElement("div");
+        reply.className = "bubble coach";
+        reply.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
+        msgs.appendChild(reply);
+        msgs.scrollTop = msgs.scrollHeight;
+      }, 400);
+      msgs.scrollTop = msgs.scrollHeight;
+    }
+    document.getElementById("msgInput").addEventListener("keydown", (e) => {
+      if (e.key === "Enter") sendMessage();
+    });
+  </script>
+</body>
+</html>

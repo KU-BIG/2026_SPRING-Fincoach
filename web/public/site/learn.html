@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>금융 용어 — FinCoach</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .learn-layout { display: grid; grid-template-columns: 260px 1fr; gap: 16px; margin-top: 8px; }
+    @media (max-width: 900px) { .learn-layout { grid-template-columns: 1fr; } }
+
+    .toc { padding: 18px; height: fit-content; position: sticky; top: 80px; }
+    .toc h4 { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-muted); font-family: "JetBrains Mono", monospace; margin-bottom: 12px; }
+    .toc-section { margin-top: 18px; }
+    .toc-section:first-child { margin-top: 0; }
+    .toc-section h5 { font-size: 11px; color: var(--yellow); letter-spacing: 0.08em; text-transform: uppercase; font-family: "JetBrains Mono", monospace; margin-bottom: 8px; font-weight: 600; }
+    .toc-list { display: grid; gap: 1px; }
+    .toc-list a { padding: 7px 10px; font-size: 13px; color: var(--fg-secondary); border-radius: 8px; transition: background 150ms, color 150ms; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    .toc-list a:hover { background: var(--bg-elevated); color: var(--fg-primary); }
+    .toc-list a.active { background: var(--yellow-soft); color: var(--yellow); font-weight: 600; }
+    .toc-list a .rel { font-size: 10px; color: var(--fg-muted); font-family: "JetBrains Mono", monospace; }
+    .toc-list a.active .rel { color: var(--yellow); opacity: 0.7; }
+
+    .article { padding: 36px 40px; }
+    .article .cat { font-size: 11px; color: var(--yellow); letter-spacing: 0.08em; text-transform: uppercase; font-family: "JetBrains Mono", monospace; font-weight: 600; }
+    .article h2 { font-size: 56px; font-weight: 800; margin-top: 8px; letter-spacing: -0.04em; line-height: 1.05; }
+    .article .related { font-size: 13px; color: var(--fg-secondary); margin-top: 12px; display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; background: var(--yellow-soft); border: 1px solid rgba(255,197,61,0.25); border-radius: 999px; }
+    .article .body { margin-top: 32px; display: grid; gap: 32px; }
+    .article .body section { padding: 24px 26px; background: var(--bg-elevated); border: 1px solid var(--frost); border-radius: 14px; }
+    .article .body h3 { font-size: 12px; color: var(--yellow); letter-spacing: 0.08em; text-transform: uppercase; font-family: "JetBrains Mono", monospace; font-weight: 600; }
+    .article .body p { margin-top: 8px; font-size: 16px; line-height: 1.78; color: var(--fg-primary); }
+    .article .body p b { font-weight: 700; }
+    .article .nav-prev-next { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 40px; }
+    @media (max-width: 540px) { .article .nav-prev-next { grid-template-columns: 1fr; } }
+    .article .nav-prev-next a { padding: 16px 20px; border: 1px solid var(--frost); border-radius: 12px; transition: background 150ms; }
+    .article .nav-prev-next a:hover { background: var(--bg-elevated); }
+    .article .nav-prev-next .lbl { font-size: 10px; color: var(--fg-muted); letter-spacing: 0.08em; text-transform: uppercase; font-family: "JetBrains Mono", monospace; }
+    .article .nav-prev-next .nm { margin-top: 4px; font-size: 15px; font-weight: 600; }
+    .article .footer-disclaimer { margin-top: 24px; font-size: 11px; color: var(--fg-muted); }
+  </style>
+</head>
+<body>
+  <div class="scroll-progress"><div class="bar"></div></div>
+
+  <header>
+    <div class="nav-wrap">
+      <div class="nav-left">
+        <a href="./index.html" class="brand"><div class="logo"></div>FinCoach</a>
+        <nav class="menu">
+          <a href="./index.html">홈</a>
+          <a href="./portfolio.html">포트폴리오</a>
+          <a href="./chat.html">AI 코치</a>
+          <a href="./learn.html" class="active">금융 용어</a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-ghost">로그인</button>
+        <a href="./chat.html" class="nav-cta">코치에게 묻기</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-pad">
+    <div class="page-head reveal">
+      <div>
+        <div class="caption">GLOSSARY / READING</div>
+        <h1 style="margin-top: 6px;">금융 용어</h1>
+      </div>
+      <div style="font-size: 13px; color: var(--fg-muted);">총 6개 용어 · 4개 카테고리</div>
+    </div>
+
+    <div class="learn-layout">
+      <aside class="card toc reveal">
+        <h4>목차</h4>
+        <div class="toc-section">
+          <h5>종목 분석</h5>
+          <div class="toc-list">
+            <a href="#" class="active" data-key="per">PER<span class="rel">삼성전자 12.5배</span></a>
+            <a href="#" data-key="semi">반도체 사이클<span class="rel">SK하이닉스</span></a>
+          </div>
+        </div>
+        <div class="toc-section">
+          <h5>리스크</h5>
+          <div class="toc-list">
+            <a href="#" data-key="fx">환율</a>
+            <a href="#" data-key="backtest">백테스트</a>
+          </div>
+        </div>
+        <div class="toc-section">
+          <h5>거시 경제</h5>
+          <div class="toc-list">
+            <a href="#" data-key="inf">인플레이션</a>
+            <a href="#" data-key="rate">금리</a>
+          </div>
+        </div>
+      </aside>
+
+      <main class="card article reveal" style="transition-delay: 100ms;" id="article">
+        <div class="cat">종목 분석</div>
+        <h2>PER</h2>
+        <span class="related">관련 종목 · 삼성전자 12.5배</span>
+        <div class="body">
+          <section>
+            <h3>정의</h3>
+            <p>주가수익비율(Price Earnings Ratio). 주가를 주당순이익(EPS)으로 나눈 값으로, 한 주가 1년치 이익의 몇 배에 거래되는지를 나타냅니다.</p>
+          </section>
+          <section>
+            <h3>현재 시장 흐름</h3>
+            <p>반도체주는 사이클상 이익 변동이 커서 단순 비교가 어렵습니다. 동종 업계 평균과 함께 보는 것이 합리적입니다.</p>
+          </section>
+          <section>
+            <h3>포트폴리오 적용</h3>
+            <p>보유 종목의 PER은 단독으로 판단하지 말고, <b>ROE와 매출 성장률</b>과 함께 해석해야 합니다.</p>
+          </section>
+        </div>
+        <div class="nav-prev-next">
+          <a href="#"><div class="lbl">← 이전</div><div class="nm">목차로 돌아가기</div></a>
+          <a href="#" style="text-align: right;"><div class="lbl">다음 →</div><div class="nm">반도체 사이클</div></a>
+        </div>
+        <p class="footer-disclaimer">본 자료는 정보 제공 목적이며, 투자 권유에 해당하지 않습니다.</p>
+      </main>
+    </div>
+  </main>
+
+  <footer>
+    <div class="foot-row">
+      <div class="foot-col">
+        <a href="./index.html" class="brand" style="margin-bottom: 12px;"><div class="logo"></div>FinCoach</a>
+        <p>한국 주식과 미국 주식을 한 화면에. 정보 제공 도구이며, 매수와 매도는 추천하지 않습니다.</p>
+      </div>
+      <div class="foot-col"><h6>SERVICE</h6><a href="./index.html">홈</a><a href="./portfolio.html">포트폴리오</a><a href="./chat.html">AI 코치</a><a href="./learn.html">금융 용어</a></div>
+      <div class="foot-col"><h6>DATA</h6><a href="#">KRX 한국 주식</a><a href="#">yfinance 미국 주식</a><a href="#">RSS 뉴스</a></div>
+      <div class="foot-col"><h6>LEGAL</h6><a href="#">면책 조항</a><a href="#">서비스 약관</a><a href="#">개인정보 처리방침</a></div>
+    </div>
+    <div class="foot-bottom">
+      <span>본 서비스는 정보 제공 도구이며, 매수 또는 매도를 추천하지 않습니다.</span>
+      <span>© 2026 FinCoach · KUBIG conf3</span>
+    </div>
+  </footer>
+
+  <script src="./app.js"></script>
+  <script>
+    const terms = {
+      per: { cat: "종목 분석", nm: "PER", rel: "삼성전자 12.5배",
+        body: [
+          ["정의", "주가수익비율(Price Earnings Ratio). 주가를 주당순이익(EPS)으로 나눈 값으로, 한 주가 1년치 이익의 몇 배에 거래되는지를 나타냅니다."],
+          ["현재 시장 흐름", "반도체주는 사이클상 이익 변동이 커서 단순 비교가 어렵습니다. 동종 업계 평균과 함께 보는 것이 합리적입니다."],
+          ["포트폴리오 적용", "보유 종목의 PER은 단독으로 판단하지 말고, <b>ROE와 매출 성장률</b>과 함께 해석해야 합니다."]
+        ] },
+      semi: { cat: "종목 분석", nm: "반도체 사이클", rel: "SK하이닉스",
+        body: [
+          ["정의", "메모리 반도체 가격이 수년 단위로 호황과 침체를 반복하는 패턴. <b>공급, 수요, 재고</b>가 핵심 변수입니다."],
+          ["현재 시장 흐름", "AI 수요로 HBM(고대역폭 메모리) 공급이 빠듯합니다. 메모리 가격 반등 신호가 누적되는 국면입니다."],
+          ["포트폴리오 적용", "반도체주는 단기 실적보다 사이클 위치가 우선합니다. 재고 사이클 지표를 함께 확인해야 합니다."]
+        ] },
+      fx: { cat: "리스크", nm: "환율", rel: null,
+        body: [
+          ["정의", "원/달러 환율. 1달러를 매입하기 위해 필요한 원화 금액입니다."],
+          ["현재 시장 흐름", "원화 약세는 해외 종목의 평가액을 끌어올리지만, 환차익은 미실현 상태이며 환차손 위험이 동반됩니다."],
+          ["포트폴리오 적용", "해외 비중이 크다면 환율 시나리오를 함께 검토하고, 헤지 필요성을 점검해야 합니다."]
+        ] },
+      backtest: { cat: "리스크", nm: "백테스트", rel: null,
+        body: [
+          ["정의", "현재 투자 전략을 과거 데이터에 적용해 수익률·최대 낙폭·변동성을 추정하는 방법론입니다."],
+          ["현재 시장 흐름", "최근 5년은 저금리·고성장 구간이 길어 결과가 과장될 가능성이 있습니다. 최소 10년 단위 검증이 권장됩니다."],
+          ["포트폴리오 적용", "백테스트 결과는 미래 성과를 보장하지 않습니다. <b>최대 낙폭(MDD)</b>을 감내할 수 있는지가 우선 판단 기준입니다."]
+        ] },
+      inf: { cat: "거시 경제", nm: "인플레이션", rel: null,
+        body: [
+          ["정의", "물가가 지속적으로 상승하는 현상. 화폐의 실질 구매력이 감소합니다."],
+          ["현재 시장 흐름", "금리 인상 사이클의 종료 여부가 핵심 변수입니다. 물가 둔화가 확인되면 성장주에 우호적인 환경이 형성됩니다."],
+          ["포트폴리오 적용", "현금 비중이 높은 포트폴리오는 인플레이션에 가장 취약합니다. 실물 자산 또는 배당주 비중을 점검할 필요가 있습니다."]
+        ] },
+      rate: { cat: "거시 경제", nm: "금리", rel: null,
+        body: [
+          ["정의", "자금 차입에 대한 가격. 중앙은행이 정책금리를 조정해 시중 유동성을 통제합니다."],
+          ["현재 시장 흐름", "고금리 환경은 성장주에 부담을 주는 반면, 배당주와 금융주에는 우호적으로 작용합니다."],
+          ["포트폴리오 적용", "성장주 비중이 높다면 금리 민감도 점검이 필요합니다."]
+        ] },
+    };
+    const article = document.getElementById("article");
+    function render(key) {
+      const t = terms[key]; if (!t) return;
+      article.innerHTML = `
+        <div class="cat">${t.cat}</div>
+        <h2>${t.nm}</h2>
+        ${t.rel ? `<span class="related">관련 종목 · ${t.rel}</span>` : ""}
+        <div class="body">
+          ${t.body.map(([h, p]) => `<section><h3>${h}</h3><p>${p}</p></section>`).join("")}
+        </div>
+        <p class="footer-disclaimer" style="margin-top: 32px;">본 자료는 정보 제공 목적이며, 투자 권유에 해당하지 않습니다.</p>
+      `;
+      document.querySelectorAll(".toc-list a").forEach((a) => a.classList.toggle("active", a.dataset.key === key));
+    }
+    document.querySelectorAll(".toc-list a").forEach((a) => {
+      a.addEventListener("click", (e) => { e.preventDefault(); render(a.dataset.key); window.scrollTo({ top: 0, behavior: "smooth" }); });
+    });
+  </script>
+</body>
+</html>

@@ -8,3 +8,5 @@ dist-ssr
 .vite
 .eslintcache
 *.tsbuildinfo
+web/site/
+web/assets/

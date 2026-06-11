@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>포트폴리오 — FinCoach</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    .hero-card {
+      padding: 28px 32px; border-radius: 16px; border: 1px solid var(--frost);
+      background: var(--bg-surface);
+      position: relative; overflow: hidden;
+    }
+    .hero-card::before {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(700px 300px at 90% 0%, rgba(17,255,153,0.10), transparent 70%);
+      pointer-events: none;
+    }
+    .hero-card-inner { position: relative; display: grid; grid-template-columns: 1fr 1.2fr; gap: 32px; align-items: center; }
+    @media (max-width: 760px) { .hero-card-inner { grid-template-columns: 1fr; } }
+    .hero-card .label { font-size: 11px; color: var(--fg-muted); letter-spacing: 0.08em; text-transform: uppercase; font-family: "JetBrains Mono", monospace; }
+    .hero-card .big { font-size: 52px; font-weight: 800; margin-top: 8px; letter-spacing: -0.03em; line-height: 1.05; }
+    .hero-card .big small { font-size: 18px; font-weight: 500; color: var(--fg-secondary); margin-left: 4px; }
+    .hero-card .diff { font-size: 14px; font-weight: 500; margin-top: 6px; }
+    .hero-card .chart-wrap { width: 100%; height: 140px; }
+
+    .kpi { padding: 20px 22px; }
+    .kpi .lbl { font-size: 11px; color: var(--fg-muted); letter-spacing: 0.08em; text-transform: uppercase; font-family: "JetBrains Mono", monospace; }
+    .kpi .val { font-size: 22px; font-weight: 700; margin-top: 8px; letter-spacing: -0.02em; }
+    .kpi .sub { font-size: 12px; color: var(--fg-muted); margin-top: 4px; font-weight: 500; }
+    .kpi-spark { margin-top: 12px; height: 28px; width: 100%; }
+
+    .stock-row { display: flex; align-items: center; gap: 12px; }
+    .stock-row .ic { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .stock-row .nm { font-weight: 600; font-size: 14px; }
+    .stock-row .tk { font-size: 11px; color: var(--fg-muted); margin-top: 2px; font-family: "JetBrains Mono", monospace; }
+    .row-spark { height: 22px; width: 100%; }
+
+    .donut-card { padding: 22px; }
+    .donut-wrap { display: grid; grid-template-columns: 180px 1fr; gap: 28px; align-items: center; margin-top: 18px; }
+    @media (max-width: 540px) { .donut-wrap { grid-template-columns: 1fr; } }
+    .donut { width: 180px; height: 180px; }
+    .legend { display: grid; gap: 10px; }
+    .legend-row { display: flex; align-items: center; gap: 12px; font-size: 13px; font-weight: 500; }
+    .legend .swatch { width: 10px; height: 10px; border-radius: 3px; flex-shrink: 0; }
+    .legend .right { margin-left: auto; color: var(--fg-secondary); font-variant-numeric: tabular-nums; }
+
+    .toggle-btn { padding: 5px 11px; font-size: 11px; color: var(--fg-muted); background: transparent; border: 1px solid var(--frost); border-radius: 7px; font-family: "JetBrains Mono", monospace; cursor: pointer; transition: all 150ms; }
+    .toggle-btn:hover { color: var(--fg-primary); }
+    .toggle-btn.active { color: var(--green); background: var(--green-soft); border-color: rgba(17,255,153,0.25); font-weight: 600; }
+
+    .insight-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 18px; }
+    @media (max-width: 720px) { .insight-grid { grid-template-columns: 1fr; } }
+    .insight { padding: 18px; background: var(--bg-elevated); border-radius: 10px; border: 1px solid var(--frost); }
+    .insight .label { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-secondary); margin-bottom: 12px; font-family: "JetBrains Mono", monospace; }
+    .insight ul { list-style: none; display: grid; gap: 7px; }
+    .insight li { font-size: 13.5px; line-height: 1.65; color: var(--fg-secondary); padding-left: 12px; position: relative; }
+    .insight li::before { content: ""; position: absolute; left: 0; top: 9px; width: 4px; height: 4px; background: var(--fg-muted); border-radius: 999px; }
+  </style>
+</head>
+<body>
+  <div class="scroll-progress"><div class="bar"></div></div>
+
+  <header>
+    <div class="nav-wrap">
+      <div class="nav-left">
+        <a href="./index.html" class="brand"><div class="logo"></div>FinCoach</a>
+        <nav class="menu">
+          <a href="./index.html">홈</a>
+          <a href="./portfolio.html" class="active">포트폴리오</a>
+          <a href="./chat.html">AI 코치</a>
+          <a href="./learn.html">금융 용어</a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-ghost">로그인</button>
+        <a href="./chat.html" class="nav-cta">코치에게 묻기</a>
+      </div>
+    </div>
+  </header>
+
+  <main class="page-pad">
+    <div class="page-head reveal">
+      <div>
+        <div class="caption">PORTFOLIO / 2026.06.11</div>
+        <h1 style="margin-top: 6px;">내 포트폴리오</h1>
+      </div>
+      <div style="display: flex; gap: 6px;">
+        <button class="toggle-btn active">전체</button>
+        <button class="toggle-btn">국내</button>
+        <button class="toggle-btn">해외</button>
+      </div>
+    </div>
+
+    <!-- HERO CARD -->
+    <section class="hero-card reveal">
+      <div class="hero-card-inner">
+        <div>
+          <div class="label">총 평가금액</div>
+          <div class="big num"><span data-counter="12350000">0</span><small>원</small></div>
+          <div class="diff num pos">+480,000원 · +4.05% (오늘)</div>
+        </div>
+        <div>
+          <svg class="chart-wrap" viewBox="0 0 600 140" preserveAspectRatio="none">
+            <defs><linearGradient id="hbFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#11FF99" stop-opacity="0.22"/><stop offset="100%" stop-color="#11FF99" stop-opacity="0"/></linearGradient></defs>
+            <line x1="0" x2="600" y1="35" y2="35" stroke="rgba(255,255,255,0.04)" stroke-dasharray="2 4"/>
+            <line x1="0" x2="600" y1="70" y2="70" stroke="rgba(255,255,255,0.04)" stroke-dasharray="2 4"/>
+            <line x1="0" x2="600" y1="105" y2="105" stroke="rgba(255,255,255,0.04)" stroke-dasharray="2 4"/>
+            <path d="M0,110 C40,100 80,95 120,92 C160,88 200,80 240,82 C280,84 320,66 360,58 C400,50 440,55 480,38 C520,22 560,32 600,24 L600,140 L0,140 Z" fill="url(#hbFill)"/>
+            <path id="hbLine" d="M0,110 C40,100 80,95 120,92 C160,88 200,80 240,82 C280,84 320,66 360,58 C400,50 440,55 480,38 C520,22 560,32 600,24" fill="none" stroke="#11FF99" stroke-width="2.2"/>
+            <circle cx="600" cy="24" r="4" fill="#11FF99"/>
+            <circle cx="600" cy="24" r="9" fill="#11FF99" opacity="0.2"/>
+          </svg>
+        </div>
+      </div>
+    </section>
+
+    <!-- KPI -->
+    <div class="grid grid-12" style="margin-top: 14px;">
+      <div class="card kpi c-3 reveal"><div class="lbl">평가금액</div><div class="val num"><span data-counter="12350000">0</span></div><div class="sub">+480,000 오늘</div><svg class="kpi-spark" viewBox="0 0 100 28" preserveAspectRatio="none"><path d="M0,22 C12,20 22,16 36,14 C50,12 60,16 72,8 C84,3 90,6 100,4" fill="none" stroke="#11FF99" stroke-width="1.8"/></svg></div>
+      <div class="card kpi c-3 reveal" style="transition-delay:80ms"><div class="lbl">평가 손익</div><div class="val num pos">+480,000원</div><div class="sub">7일 +1.8%</div><svg class="kpi-spark" viewBox="0 0 100 28" preserveAspectRatio="none"><path d="M0,18 C14,22 28,16 42,12 C54,8 68,14 80,7 C90,2 96,5 100,4" fill="none" stroke="#11FF99" stroke-width="1.8"/></svg></div>
+      <div class="card kpi c-3 reveal" style="transition-delay:160ms"><div class="lbl">수익률</div><div class="val num pos">+4.05%</div><div class="sub">한 달 누적</div><svg class="kpi-spark" viewBox="0 0 100 28" preserveAspectRatio="none"><path d="M0,24 C10,20 24,16 38,12 C50,8 62,10 76,5 C86,2 94,4 100,2" fill="none" stroke="#11FF99" stroke-width="1.8"/></svg></div>
+      <div class="card kpi c-3 reveal" style="transition-delay:240ms"><div class="lbl">보유 종목</div><div class="val num">5개</div><div class="sub">국내 3 · 해외 2</div><svg class="kpi-spark" viewBox="0 0 100 28" preserveAspectRatio="none"><line x1="0" x2="100" y1="14" y2="14" stroke="rgba(255,255,255,0.12)" stroke-width="1" stroke-dasharray="3 4"/><circle cx="20" cy="14" r="3" fill="#3B9EFF"/><circle cx="40" cy="14" r="3" fill="#3B9EFF"/><circle cx="60" cy="14" r="3" fill="#3B9EFF"/><circle cx="80" cy="14" r="3" fill="#3B9EFF"/><circle cx="95" cy="14" r="3" fill="#3B9EFF"/></svg></div>
+    </div>
+
+    <!-- 보유 종목 표 -->
+    <div class="grid grid-12" style="margin-top: 14px;">
+      <section class="card c-12 reveal" style="padding: 26px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px;">
+          <div>
+            <div class="subhead" style="font-size: 17px;">보유 종목 상세</div>
+            <div style="font-size: 12px; color: var(--fg-muted); margin-top: 4px;">30일 가격 추이 · KRW 환산</div>
+          </div>
+          <div style="display: flex; gap: 4px;">
+            <button class="toggle-btn">이름</button>
+            <button class="toggle-btn active">수익률</button>
+            <button class="toggle-btn">비중</button>
+          </div>
+        </div>
+        <table>
+          <thead><tr><th>종목</th><th>30일</th><th style="text-align:right;">비중</th><th style="text-align:right;">평가금액</th><th style="text-align:right;">수익률</th></tr></thead>
+          <tbody id="stockTable"></tbody>
+        </table>
+      </section>
+    </div>
+
+    <!-- 도넛 + 라인 차트 -->
+    <div class="grid grid-12" style="margin-top: 14px;">
+      <section class="card c-5 donut-card reveal">
+        <div class="subhead" style="font-size: 17px;">비중 분포</div>
+        <div style="font-size: 12px; color: var(--fg-muted); margin-top: 4px;">국내 60% · 해외 40%</div>
+        <div class="donut-wrap">
+          <svg class="donut" viewBox="0 0 36 36">
+            <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="rgba(255,255,255,0.06)" stroke-width="3.4"/>
+            <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#3B9EFF" stroke-width="3.4" stroke-dasharray="32 68" stroke-dashoffset="25" transform="rotate(-90 18 18)"/>
+            <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#60A5FA" stroke-width="3.4" stroke-dasharray="22 78" stroke-dashoffset="-7" transform="rotate(-90 18 18)"/>
+            <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#93C5FD" stroke-width="3.4" stroke-dasharray="18 82" stroke-dashoffset="-29" transform="rotate(-90 18 18)"/>
+            <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#5E6164" stroke-width="3.4" stroke-dasharray="15 85" stroke-dashoffset="-47" transform="rotate(-90 18 18)"/>
+            <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="#3D4F6B" stroke-width="3.4" stroke-dasharray="13 87" stroke-dashoffset="-62" transform="rotate(-90 18 18)"/>
+          </svg>
+          <div class="legend">
+            <div class="legend-row"><span class="swatch" style="background:#3B9EFF"></span>삼성전자<span class="right num">32%</span></div>
+            <div class="legend-row"><span class="swatch" style="background:#60A5FA"></span>Apple<span class="right num">22%</span></div>
+            <div class="legend-row"><span class="swatch" style="background:#93C5FD"></span>NVIDIA<span class="right num">18%</span></div>
+            <div class="legend-row"><span class="swatch" style="background:#5E6164"></span>카카오<span class="right num">15%</span></div>
+            <div class="legend-row"><span class="swatch" style="background:#3D4F6B"></span>NAVER<span class="right num">13%</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card c-7 reveal" style="transition-delay:100ms; padding: 22px;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between;">
+          <div><div class="subhead" style="font-size: 17px;">최근 30일 평가액</div><div style="font-size: 12px; color: var(--fg-muted); margin-top: 4px;">일일 종가 기준</div></div>
+          <div style="display: flex; gap: 4px;">
+            <button class="toggle-btn">7일</button>
+            <button class="toggle-btn active">30일</button>
+            <button class="toggle-btn">90일</button>
+            <button class="toggle-btn">1년</button>
+          </div>
+        </div>
+        <svg viewBox="0 0 600 200" preserveAspectRatio="none" style="width: 100%; height: 220px; margin-top: 18px;">
+          <defs><linearGradient id="lFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#11FF99" stop-opacity="0.2"/><stop offset="100%" stop-color="#11FF99" stop-opacity="0"/></linearGradient></defs>
+          <line x1="0" x2="600" y1="50" y2="50" stroke="rgba(255,255,255,0.05)" stroke-dasharray="2 4"/>
+          <line x1="0" x2="600" y1="100" y2="100" stroke="rgba(255,255,255,0.05)" stroke-dasharray="2 4"/>
+          <line x1="0" x2="600" y1="150" y2="150" stroke="rgba(255,255,255,0.05)" stroke-dasharray="2 4"/>
+          <path d="M0,150 C40,140 80,135 120,130 C160,125 200,115 240,118 C280,121 320,95 360,82 C400,70 440,75 480,50 C520,30 560,45 600,35 L600,200 L0,200 Z" fill="url(#lFill)"/>
+          <path id="lLine" d="M0,150 C40,140 80,135 120,130 C160,125 200,115 240,118 C280,121 320,95 360,82 C400,70 440,75 480,50 C520,30 560,45 600,35" fill="none" stroke="#11FF99" stroke-width="2.4"/>
+          <circle cx="600" cy="35" r="4" fill="#11FF99"/>
+          <circle cx="600" cy="35" r="10" fill="#11FF99" opacity="0.22"/>
+        </svg>
+        <div style="display: flex; justify-content: space-between; margin-top: 8px; font-size: 11px; color: var(--fg-muted); font-weight: 500;">
+          <span class="num">05.12</span><span class="num">05.19</span><span class="num">05.26</span><span class="num">06.02</span><span class="num pos">+4.05%</span>
+        </div>
+      </section>
+    </div>
+
+    <!-- AI 분석 -->
+    <div class="grid grid-12" style="margin-top: 14px;">
+      <section class="card c-12 reveal" style="padding: 28px;">
+        <div style="display:flex; align-items:baseline; justify-content:space-between;">
+          <div><div class="subhead" style="font-size: 17px;">AI 분석</div><div style="font-size: 12px; color: var(--fg-muted); margin-top: 4px;">자동 생성 · 2026.06.11 09:00</div></div>
+          <a href="./chat.html" style="font-size: 13px; color: var(--green); font-weight: 600;">코치에게 자세히 묻기 →</a>
+        </div>
+        <p style="margin-top: 14px; font-size: 15px; line-height: 1.7;">국내 대형주와 미국 빅테크가 섞인 성장주 포트폴리오. 반도체 사이클과 환율이 핵심 변수.</p>
+        <div class="insight-grid">
+          <div class="insight"><div class="label">특성</div><ul><li>성장주 비중 약 70%</li><li>반도체·AI 노출 50%</li><li>국내 60% · 해외 40%</li></ul></div>
+          <div class="insight"><div class="label">강점</div><ul><li>AI 수요 수혜 종목 집중</li><li>분기 실적 우상향 사이클</li><li>달러 자산으로 환율 헷지</li></ul></div>
+          <div class="insight"><div class="label">리스크</div><ul><li>삼성전자 단일 비중 32%</li><li>반도체 사이클 동조 가능</li><li>원화 강세 시 평가액 압축</li></ul></div>
+          <div class="insight"><div class="label">점검 포인트</div><ul><li>반도체 외 섹터 비중 검토</li><li>방어주·배당주 일부 편입</li><li>환율 시나리오 점검</li></ul></div>
+        </div>
+        <p style="margin-top: 14px; font-size: 11px; color: var(--fg-muted);">정보 제공 목적이며, 투자 권유가 아닙니다.</p>
+      </section>
+    </div>
+  </main>
+
+  <footer>
+    <div class="foot-row">
+      <div class="foot-col">
+        <a href="./index.html" class="brand" style="margin-bottom: 12px;"><div class="logo"></div>FinCoach</a>
+        <p>한국 주식과 미국 주식을 한 화면에. 정보 제공 도구이며, 매수와 매도는 추천하지 않습니다.</p>
+      </div>
+      <div class="foot-col"><h6>SERVICE</h6><a href="./index.html">홈</a><a href="./portfolio.html">포트폴리오</a><a href="./chat.html">AI 코치</a><a href="./learn.html">금융 용어</a></div>
+      <div class="foot-col"><h6>DATA</h6><a href="#">KRX 한국 주식</a><a href="#">yfinance 미국 주식</a><a href="#">RSS 뉴스</a></div>
+      <div class="foot-col"><h6>LEGAL</h6><a href="#">면책 조항</a><a href="#">서비스 약관</a><a href="#">개인정보 처리방침</a></div>
+    </div>
+    <div class="foot-bottom">
+      <span>본 서비스는 정보 제공 도구이며, 매수 또는 매도를 추천하지 않습니다.</span>
+      <span>© 2026 FinCoach · KUBIG conf3</span>
+    </div>
+  </footer>
+
+  <script src="./app.js"></script>
+  <script>
+    const krw = (n) => n.toLocaleString();
+    const stocks = [
+      { name: "삼성전자", ticker: "005930.KS", weight: 32, value: 3952000, pnl: 5.2, spark: "M0,18 C8,16 16,14 24,12 C32,10 40,14 48,8 C56,4 64,6 72,5 C80,4 88,7 100,3", iconBg:"#152F4A", iconFg:"#3B9EFF", iconCh:"삼" },
+      { name: "Apple", ticker: "AAPL", weight: 22, value: 2717000, pnl: 3.1, spark: "M0,16 C10,14 20,12 30,10 C40,8 50,12 60,6 C70,4 80,8 90,5 C95,4 98,5 100,4", iconBg:"#1A1A1A", iconFg:"#F0F0F0", iconCh:"A" },
+      { name: "NVIDIA", ticker: "NVDA", weight: 18, value: 2223000, pnl: 12.7, spark: "M0,18 C10,16 20,12 30,10 C40,6 50,8 60,4 C70,2 80,3 90,1 C95,1 98,1 100,1", iconBg:"#0E3320", iconFg:"#11FF99", iconCh:"N" },
+      { name: "카카오", ticker: "035720.KS", weight: 15, value: 1852500, pnl: -2.4, spark: "M0,8 C10,12 20,10 30,14 C40,18 50,14 60,16 C70,18 80,16 90,18 C95,18 98,18 100,18", iconBg:"#3B280A", iconFg:"#FFC53D", iconCh:"카" },
+      { name: "NAVER", ticker: "035420.KS", weight: 13, value: 1605500, pnl: -1.1, spark: "M0,12 C10,14 20,12 30,15 C40,16 50,14 60,16 C70,14 80,15 90,14 C95,13 98,14 100,13", iconBg:"#0F3320", iconFg:"#11FF99", iconCh:"N" },
+    ];
+    document.getElementById("stockTable").innerHTML = stocks.map((s) => {
+      const cls = s.pnl >= 0 ? "pos" : "neg";
+      const sign = s.pnl >= 0 ? "+" : "";
+      const stroke = s.pnl >= 0 ? "#11FF99" : "#FF2047";
+      return `
+        <tr>
+          <td><div class="stock-row"><div class="ic" style="background:${s.iconBg}; color:${s.iconFg};">${s.iconCh}</div><div><div class="nm">${s.name}</div><div class="tk">${s.ticker}</div></div></div></td>
+          <td style="width: 140px;"><svg class="row-spark" viewBox="0 0 100 22" preserveAspectRatio="none"><path d="${s.spark}" fill="none" stroke="${stroke}" stroke-width="1.6"/></svg></td>
+          <td style="text-align:right;" class="num">${s.weight}%</td>
+          <td style="text-align:right;" class="num">${krw(s.value)}원</td>
+          <td style="text-align:right;" class="num ${cls}">${sign}${s.pnl.toFixed(2)}%</td>
+        </tr>`;
+    }).join("");
+
+    window.drawOnView(".hero-card", ["hbLine"]);
+    window.drawOnView('svg[viewBox="0 0 600 200"]', ["lLine"]);
+  </script>
+</body>
+</html>

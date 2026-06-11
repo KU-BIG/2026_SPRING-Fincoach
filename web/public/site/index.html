@@ -1,0 +1,463 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>FinCoach — 한국 주식과 미국 주식을 한 화면에</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
+  <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="./styles.css" />
+  <style>
+    section { padding: 96px 0; }
+    @media (max-width: 720px) { section { padding: 56px 0; } }
+
+    .hero { position: relative; padding-top: 96px; padding-bottom: 64px; text-align: center; }
+    .hero-glow {
+      position: absolute; top: -120px; left: 50%; transform: translateX(-50%);
+      width: 1600px; height: 900px;
+      background:
+        radial-gradient(closest-side, rgba(0,0,0,0) 30%, rgba(0,0,0,0.6) 90%),
+        url("./assets/hero-bg.png") center/cover no-repeat;
+      pointer-events: none; z-index: -1;
+      mask-image: radial-gradient(ellipse at center top, black 30%, transparent 80%);
+      -webkit-mask-image: radial-gradient(ellipse at center top, black 30%, transparent 80%);
+    }
+    .hero-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 5px 10px 5px 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--frost);
+      border-radius: 9999px;
+      font-size: 12px; color: var(--fg-secondary); font-weight: 500;
+      margin-bottom: 28px;
+    }
+    .hero-pill .dot { width: 6px; height: 6px; border-radius: 999px; background: var(--green); box-shadow: 0 0 8px var(--green); }
+    .hero-pill .sep { color: var(--fg-muted); }
+
+    .hero-headline {
+      font-size: 84px; line-height: 1.02; letter-spacing: -0.045em;
+      max-width: 920px; margin: 0 auto; font-weight: 800;
+    }
+    @media (max-width: 900px) { .hero-headline { font-size: 44px; } }
+    .hero-headline em {
+      font-style: normal; font-weight: 800;
+      background: linear-gradient(120deg, var(--blue) 0%, var(--green) 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+    }
+    .hero-sub { margin: 32px auto 0; font-size: 18px; line-height: 1.6; color: var(--fg-secondary); max-width: 560px; }
+    .hero-cta { margin-top: 36px; display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+    /* PRODUCT PREVIEW */
+    .product-preview {
+      margin: 64px auto 0;
+      max-width: 1080px;
+      border: 1px solid var(--frost);
+      border-radius: 18px;
+      background: var(--bg-surface);
+      overflow: hidden;
+      box-shadow: 0 0 0 1px var(--ring);
+    }
+    .pp-frame { padding: 14px 18px; border-bottom: 1px solid var(--frost); display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.02); }
+    .pp-dots { display: flex; gap: 6px; }
+    .pp-dots span { width: 10px; height: 10px; border-radius: 50%; background: var(--bg-elevated); border: 1px solid var(--frost); }
+    .pp-url {
+      flex: 1; text-align: center; font-size: 11px; color: var(--fg-muted);
+      background: var(--bg-base); padding: 5px 14px; border-radius: 999px;
+      border: 1px solid var(--frost); max-width: 360px; margin: 0 auto;
+      font-family: "JetBrains Mono", monospace;
+    }
+    .pp-body { padding: 24px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+    @media (max-width: 760px) { .pp-body { grid-template-columns: 1fr; } }
+    .pp-card { padding: 22px; background: var(--bg-elevated); border: 1px solid var(--frost); border-radius: 12px; }
+    .pp-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-muted); }
+    .pp-label .badge { margin-left: 8px; padding: 1px 7px; background: var(--green-soft); color: var(--green); border-radius: 999px; font-size: 10px; font-weight: 600; text-transform: none; border: 1px solid rgba(17,255,153,0.2); }
+    .pp-big { font-size: 36px; font-weight: 700; margin-top: 8px; letter-spacing: -0.025em; }
+    .pp-diff { font-size: 13px; font-weight: 500; margin-top: 4px; }
+    .pp-spark { margin-top: 14px; width: 100%; height: 80px; }
+    .pp-grid { display: grid; gap: 8px; }
+    .pp-stock { display: flex; align-items: center; justify-content: space-between; padding: 12px 14px; background: var(--bg-elevated); border: 1px solid var(--frost); border-radius: 10px; font-size: 13px; }
+    .pp-stock .left { display: flex; align-items: center; gap: 10px; }
+    .pp-stock .ic { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; font-size: 11px; font-weight: 700; flex-shrink: 0; }
+    .pp-stock .nm { font-weight: 600; font-size: 13px; }
+    .pp-stock .tk { font-size: 10px; color: var(--fg-muted); margin-top: 1px; font-family: "JetBrains Mono", monospace; }
+
+    /* Trust */
+    .trust-strip { text-align: center; padding: 32px 0 0; }
+    .trust-strip .label { font-size: 11px; color: var(--fg-muted); letter-spacing: 0.08em; text-transform: uppercase; font-weight: 500; }
+    .trust-strip .row { margin-top: 18px; display: flex; gap: 36px; justify-content: center; flex-wrap: wrap; opacity: 0.7; }
+    .trust-strip .src { font-size: 14px; font-weight: 600; color: var(--fg-secondary); }
+
+    /* Feature */
+    .feature { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; padding: 64px 0; }
+    @media (max-width: 900px) { .feature { grid-template-columns: 1fr; gap: 40px; padding: 32px 0; } }
+    .feature.reverse > .ft-text { order: 2; }
+    .feature.reverse > .ft-visual { order: 1; }
+
+    .ft-mark {
+      display: inline-flex; align-items: center; gap: 14px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px; font-weight: 500;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--fg-secondary); margin-bottom: 24px;
+    }
+    .ft-mark .num-tag { color: var(--fg-muted); }
+    .ft-mark .bar { display: inline-block; width: 24px; height: 1px; background: var(--frost); }
+    .ft-mark.blue .num-tag { color: var(--blue); }
+    .ft-mark.green .num-tag { color: var(--green); }
+    .ft-mark.yellow .num-tag { color: var(--yellow); }
+
+    .ft-title { font-size: 44px; letter-spacing: -0.038em; line-height: 1.08; font-weight: 800; }
+    @media (max-width: 900px) { .ft-title { font-size: 32px; } }
+    .ft-desc { margin-top: 18px; font-size: 16px; line-height: 1.7; color: var(--fg-secondary); max-width: 460px; }
+    .ft-list { margin-top: 24px; display: grid; gap: 10px; }
+    .ft-list li { list-style: none; display: flex; align-items: start; gap: 12px; font-size: 14px; color: var(--fg-secondary); }
+    .ft-list li svg { flex-shrink: 0; margin-top: 3px; }
+    .ft-link { margin-top: 28px; display: inline-flex; align-items: center; gap: 6px; color: var(--fg-primary); font-weight: 600; font-size: 14px; transition: gap 150ms, opacity 150ms; }
+    .ft-link:hover { gap: 10px; opacity: 0.8; }
+
+    .ft-visual { position: relative; }
+    .ft-card { position: relative; background: var(--bg-surface); border: 1px solid var(--frost); border-radius: 18px; padding: 24px; overflow: hidden; }
+    .ft-card::before {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(600px 300px at 80% 0%, var(--ft-glow, rgba(147,197,253,0.10)), transparent 70%);
+      pointer-events: none;
+    }
+    .ft-card.blue-glow { --ft-glow: rgba(59,158,255,0.18); }
+    .ft-card.green-glow { --ft-glow: rgba(17,255,153,0.14); }
+    .ft-card.yellow-glow { --ft-glow: rgba(255,197,61,0.16); }
+
+    .ft-visual-illust {
+      position: absolute; right: -20px; top: -20px; bottom: -20px; left: -20px;
+      background-size: cover; background-position: center;
+      opacity: 0.20; filter: saturate(1.1);
+      pointer-events: none;
+      mask-image: radial-gradient(ellipse at 70% 30%, black 0%, transparent 70%);
+      -webkit-mask-image: radial-gradient(ellipse at 70% 30%, black 0%, transparent 70%);
+      z-index: 0;
+    }
+    .ft-card > * { position: relative; z-index: 1; }
+    .ft-stack { position: relative; }
+    .ft-illust-float {
+      position: absolute; right: -40px; top: -40px;
+      width: 200px; height: 200px;
+      background-size: contain; background-repeat: no-repeat;
+      filter: drop-shadow(0 16px 40px rgba(0,0,0,0.6));
+      pointer-events: none; z-index: 2;
+    }
+    @media (max-width: 900px) { .ft-illust-float { display: none; } }
+
+    .ftc-port-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+    .ftc-port-head .ttl { font-size: 14px; font-weight: 600; }
+    .ftc-port-head .ag { font-size: 11px; color: var(--fg-muted); font-family: "JetBrains Mono", monospace; }
+    .ftc-port-rows { display: grid; gap: 8px; }
+    .ftc-port-row {
+      display: grid; grid-template-columns: 1fr 90px 55px 70px; gap: 12px; align-items: center;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.02);
+      border-radius: 10px; border: 1px solid var(--frost-alt);
+      font-size: 13px;
+    }
+    .ftc-port-row .stockcell { display: flex; align-items: center; gap: 10px; }
+    .ftc-port-row .ic { width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+    .ftc-port-row .nm { font-weight: 600; font-size: 13px; }
+    .ftc-port-row .tk { font-size: 10px; color: var(--fg-muted); margin-top: 1px; font-family: "JetBrains Mono", monospace; }
+    .ftc-port-row svg.miniSpark { width: 100%; height: 22px; }
+    .ftc-port-row .w { font-size: 12px; color: var(--fg-secondary); text-align: right; font-variant-numeric: tabular-nums; }
+    .ftc-port-row .pl { font-size: 12px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+
+    .chat-demo { display: grid; gap: 10px; }
+    .bubble { max-width: 86%; padding: 12px 16px; border-radius: 14px; font-size: 14px; line-height: 1.65; }
+    .bubble.user { background: var(--fg-primary); color: var(--bg-base); justify-self: end; border-bottom-right-radius: 4px; font-weight: 500; }
+    .bubble.coach { background: rgba(255,255,255,0.04); color: var(--fg-primary); justify-self: start; border-bottom-left-radius: 4px; border: 1px solid var(--frost); }
+    .bubble.coach b { color: var(--green); font-weight: 600; }
+    .typing { display: inline-flex; gap: 3px; align-items: center; }
+    .typing span { width: 5px; height: 5px; background: var(--fg-muted); border-radius: 999px; opacity: 0.5; animation: type 1.2s ease-in-out infinite; }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    @keyframes type { 0%, 60%, 100% { opacity: 0.3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+
+    .term-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 540px) { .term-grid { grid-template-columns: 1fr; } }
+    .term-card { padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--frost-alt); border-radius: 10px; }
+    .term-card .cat { font-size: 10px; color: var(--fg-muted); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; font-family: "JetBrains Mono", monospace; }
+    .term-card .nm { font-size: 18px; font-weight: 700; margin-top: 6px; letter-spacing: -0.02em; }
+    .term-card .ds { font-size: 12px; color: var(--fg-secondary); margin-top: 6px; line-height: 1.55; }
+
+    .how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 760px) { .how-grid { grid-template-columns: 1fr; } }
+    .how-card { padding: 28px; background: var(--bg-surface); border: 1px solid var(--frost); border-radius: 16px; transition: background 200ms; }
+    .how-card:hover { background: var(--bg-elevated); }
+    .how-card .step { display: inline-flex; align-items: center; padding: 2px 10px; background: rgba(255,255,255,0.04); border: 1px solid var(--frost); border-radius: 9999px; font-size: 11px; font-weight: 600; color: var(--fg-secondary); letter-spacing: 0.04em; margin-bottom: 18px; font-family: "JetBrains Mono", monospace; }
+    .how-card .ttl { font-size: 22px; font-weight: 700; letter-spacing: -0.018em; }
+    .how-card .ds { font-size: 14px; color: var(--fg-secondary); margin-top: 10px; line-height: 1.6; }
+
+    .sec-head { text-align: center; max-width: 720px; margin: 0 auto 56px; }
+    .sec-head .eyebrow { display: inline-block; font-size: 11px; font-weight: 600; color: var(--fg-secondary); letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--frost); border-radius: 9999px; margin-bottom: 18px; font-family: "JetBrains Mono", monospace; }
+    .sec-head h2 { font-size: 54px; letter-spacing: -0.045em; line-height: 1.06; font-weight: 800; }
+    @media (max-width: 720px) { .sec-head h2 { font-size: 36px; } }
+    .sec-head p { margin-top: 18px; font-size: 17px; color: var(--fg-secondary); line-height: 1.6; }
+
+    .faq-grid { display: grid; gap: 10px; max-width: 800px; margin: 0 auto; }
+    .faq-item { padding: 22px 24px; background: var(--bg-surface); border: 1px solid var(--frost); border-radius: 14px; transition: background 200ms; }
+    .faq-item:hover { background: var(--bg-elevated); }
+    .faq-q { font-size: 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+    .faq-q::after { content: "↗"; color: var(--fg-muted); font-weight: 400; }
+    .faq-a { margin-top: 10px; font-size: 14px; color: var(--fg-secondary); line-height: 1.65; }
+
+    .cta-section { text-align: center; padding: 120px 0; position: relative; }
+    .cta-section::before {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(900px 500px at 50% 50%, rgba(147,197,253,0.12), transparent 70%);
+      pointer-events: none; z-index: -1;
+    }
+    .cta-section h2 { font-size: 60px; letter-spacing: -0.045em; line-height: 1.06; max-width: 800px; margin: 0 auto; font-weight: 800; }
+    @media (max-width: 720px) { .cta-section h2 { font-size: 36px; } }
+    .cta-section p { margin: 22px auto 0; font-size: 17px; color: var(--fg-secondary); max-width: 520px; line-height: 1.6; }
+    .cta-section .actions { margin-top: 36px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <div class="scroll-progress"><div class="bar"></div></div>
+
+  <header>
+    <div class="nav-wrap">
+      <div class="nav-left">
+        <a href="./index.html" class="brand"><div class="logo"></div>FinCoach</a>
+        <nav class="menu">
+          <a href="./index.html" class="active">홈</a>
+          <a href="./portfolio.html">포트폴리오</a>
+          <a href="./chat.html">AI 코치</a>
+          <a href="./learn.html">금융 용어</a>
+        </nav>
+      </div>
+      <div class="nav-right">
+        <button class="nav-ghost">로그인</button>
+        <a href="./portfolio.html" class="nav-cta">시작하기</a>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero reveal">
+      <div class="hero-glow"></div>
+      <span class="hero-pill">
+        <span class="dot"></span>
+        정보 제공 도구
+        <span class="sep">·</span>
+        매수 매도 추천 없음
+      </span>
+      <h1 class="hero-headline">
+        보유 종목과 시장을<br/>
+        <em>같이</em> 읽어드립니다.
+      </h1>
+      <p class="hero-sub">
+        한국·미국 주식을 한 화면에. 비중과 수익률, 오늘의 시장 흐름까지 본 다음 AI 코치에게 바로 물어볼 수 있어요.
+      </p>
+      <div class="hero-cta">
+        <a href="./portfolio.html" class="btn-white">무료로 시작</a>
+        <a href="./portfolio.html" class="btn-frost">데모 보기</a>
+      </div>
+
+      <div class="product-preview">
+        <div class="pp-frame">
+          <div class="pp-dots"><span></span><span></span><span></span></div>
+          <div class="pp-url">app.fincoach.kr/portfolio</div>
+          <div style="width: 60px;"></div>
+        </div>
+        <div class="pp-body">
+          <div class="pp-card">
+            <div class="pp-label">총 평가금액 <span class="badge">+4.05%</span></div>
+            <div class="pp-big num" data-counter="12350000">0</div>
+            <div class="pp-diff num pos">+480,000원 오늘</div>
+            <svg class="pp-spark" viewBox="0 0 400 80" preserveAspectRatio="none">
+              <defs><linearGradient id="ppFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#11FF99" stop-opacity="0.25"/><stop offset="100%" stop-color="#11FF99" stop-opacity="0"/></linearGradient></defs>
+              <line x1="0" x2="400" y1="60" y2="60" stroke="rgba(255,255,255,0.04)" stroke-dasharray="2 4"/>
+              <line x1="0" x2="400" y1="30" y2="30" stroke="rgba(255,255,255,0.04)" stroke-dasharray="2 4"/>
+              <path d="M0,66 C40,62 80,54 120,56 C160,58 200,42 240,32 C280,22 320,28 360,12 C380,6 390,8 400,4 L400,80 L0,80 Z" fill="url(#ppFill)"/>
+              <path id="ppSparkLine" d="M0,66 C40,62 80,54 120,56 C160,58 200,42 240,32 C280,22 320,28 360,12 C380,6 390,8 400,4" fill="none" stroke="#11FF99" stroke-width="2"/>
+              <circle cx="400" cy="4" r="3.5" fill="#11FF99"/>
+              <circle cx="400" cy="4" r="9" fill="#11FF99" opacity="0.22"/>
+            </svg>
+          </div>
+          <div class="pp-grid">
+            <div class="pp-stock"><div class="left"><div class="ic" style="background:#152F4A; color:#3B9EFF;">삼</div><div><div class="nm">삼성전자</div><div class="tk">005930.KS · 32%</div></div></div><div class="num pos">+5.2%</div></div>
+            <div class="pp-stock"><div class="left"><div class="ic" style="background:#1A1A1A; color:#F0F0F0;">A</div><div><div class="nm">Apple</div><div class="tk">AAPL · 22%</div></div></div><div class="num pos">+3.1%</div></div>
+            <div class="pp-stock"><div class="left"><div class="ic" style="background:#0E3320; color:#11FF99;">N</div><div><div class="nm">NVIDIA</div><div class="tk">NVDA · 18%</div></div></div><div class="num pos">+12.7%</div></div>
+            <div class="pp-stock"><div class="left"><div class="ic" style="background:#3B280A; color:#FFC53D;">카</div><div><div class="nm">카카오</div><div class="tk">035720.KS · 15%</div></div></div><div class="num neg">-2.4%</div></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="trust-strip">
+        <div class="label">실데이터로 동작합니다</div>
+        <div class="row">
+          <span class="src">KRX</span>
+          <span class="src">pykrx</span>
+          <span class="src">yfinance</span>
+          <span class="src">한국경제 RSS</span>
+          <span class="src">Anthropic Claude</span>
+        </div>
+      </div>
+    </section>
+
+    <div id="features"></div>
+
+    <section class="feature reveal">
+      <div class="ft-text">
+        <div class="ft-mark blue"><span class="num-tag">01</span><span class="bar"></span><span>Portfolio</span></div>
+        <h3 class="ft-title">국내·해외 종목을<br/>한 화면에서.</h3>
+        <p class="ft-desc">한국과 미국 주식을 KRW 환산으로 같이 봅니다. 비중, 손익, 수익률, 30일 추이까지 한 번에.</p>
+        <ul class="ft-list">
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="#3B9EFF" stroke-opacity="0.3"/><path d="M5 8L7 10L11 6" stroke="#3B9EFF" stroke-width="1.6" fill="none"/></svg>실 종가 기준 · 매일 갱신</li>
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="#3B9EFF" stroke-opacity="0.3"/><path d="M5 8L7 10L11 6" stroke="#3B9EFF" stroke-width="1.6" fill="none"/></svg>종목별 30일 추이 미니 차트</li>
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="#3B9EFF" stroke-opacity="0.3"/><path d="M5 8L7 10L11 6" stroke="#3B9EFF" stroke-width="1.6" fill="none"/></svg>비중·손익·수익률 한 표에</li>
+        </ul>
+        <a href="./portfolio.html" class="ft-link">포트폴리오 보기 →</a>
+      </div>
+      <div class="ft-visual ft-stack">
+        <div class="ft-illust-float" style="background-image: url('./assets/portfolio-illust.png');"></div>
+        <div class="ft-card blue-glow">
+          <div class="ft-visual-illust" style="background-image: url('./assets/portfolio-illust.png');"></div>
+          <div class="ftc-port-head"><div class="ttl">보유 종목</div><div class="ag">5개 · 30일</div></div>
+          <div class="ftc-port-rows" id="featPort"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature reverse reveal">
+      <div class="ft-text">
+        <div class="ft-mark green"><span class="num-tag">02</span><span class="bar"></span><span>AI Coach</span></div>
+        <h3 class="ft-title">내 종목을 알고<br/>답하는 코치.</h3>
+        <p class="ft-desc">시장 개념·종목·리스크 무엇이든. 보유 데이터를 같이 보고 답하기 때문에 내 상황에 맞는 설명을 들을 수 있어요.</p>
+        <ul class="ft-list">
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="#11FF99" stroke-opacity="0.3"/><path d="M5 8L7 10L11 6" stroke="#11FF99" stroke-width="1.6" fill="none"/></svg>SSE 스트리밍 · 실시간 답변</li>
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="#11FF99" stroke-opacity="0.3"/><path d="M5 8L7 10L11 6" stroke="#11FF99" stroke-width="1.6" fill="none"/></svg>매수·매도 직접 추천 없음</li>
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="#11FF99" stroke-opacity="0.3"/><path d="M5 8L7 10L11 6" stroke="#11FF99" stroke-width="1.6" fill="none"/></svg>대화 기록 자동 저장</li>
+        </ul>
+        <a href="./chat.html" class="ft-link">코치에게 묻기 →</a>
+      </div>
+      <div class="ft-visual ft-stack">
+        <div class="ft-illust-float" style="background-image: url('./assets/chat-illust.png'); right: auto; left: -40px;"></div>
+        <div class="ft-card green-glow">
+          <div class="ft-visual-illust" style="background-image: url('./assets/chat-illust.png');"></div>
+          <div class="chat-demo">
+            <div class="bubble user">PER이 높으면 무슨 의미예요?</div>
+            <div class="bubble coach"><b>PER(주가수익비율)</b>은 주가를 EPS로 나눈 값으로, 한 주가 1년치 이익의 몇 배에 거래되는지 보여줘요. 보유 중인 NVIDIA의 PER이 시장 평균보다 높은 건 미래 성장 기대가 큰 영향이에요.</div>
+            <div class="bubble user">반도체 비중이 큰가요?</div>
+            <div class="bubble coach"><span class="typing"><span></span><span></span><span></span></span></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="feature reveal">
+      <div class="ft-text">
+        <div class="ft-mark yellow"><span class="num-tag">03</span><span class="bar"></span><span>Glossary</span></div>
+        <h3 class="ft-title">처음 보는 단어도<br/>한 줄로.</h3>
+        <p class="ft-desc">PER·인플레이션·반도체 사이클·환율 등 자주 마주치는 용어를 정의·현재 시장 흐름·내 포트폴리오 적용 3단 구조로.</p>
+        <ul class="ft-list">
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="#FFC53D" stroke-opacity="0.3"/><path d="M5 8L7 10L11 6" stroke="#FFC53D" stroke-width="1.6" fill="none"/></svg>정의 · 현재 시장 흐름 · 포트폴리오 적용</li>
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="#FFC53D" stroke-opacity="0.3"/><path d="M5 8L7 10L11 6" stroke="#FFC53D" stroke-width="1.6" fill="none"/></svg>보유 종목과의 연결</li>
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="#FFC53D" stroke-opacity="0.3"/><path d="M5 8L7 10L11 6" stroke="#FFC53D" stroke-width="1.6" fill="none"/></svg>기초·종목 분석·리스크·거시</li>
+        </ul>
+        <a href="./learn.html" class="ft-link">용어 사전 →</a>
+      </div>
+      <div class="ft-visual ft-stack">
+        <div class="ft-illust-float" style="background-image: url('./assets/glossary-illust.png');"></div>
+        <div class="ft-card yellow-glow">
+          <div class="ft-visual-illust" style="background-image: url('./assets/glossary-illust.png');"></div>
+          <div class="term-grid">
+            <div class="term-card"><div class="cat">종목 분석</div><div class="nm">PER</div><div class="ds">주가가 1년치 이익의 몇 배에 거래되는지.</div></div>
+            <div class="term-card"><div class="cat">거시 경제</div><div class="nm">인플레이션</div><div class="ds">물가가 지속적으로 상승하는 현상.</div></div>
+            <div class="term-card"><div class="cat">리스크</div><div class="nm">환율</div><div class="ds">해외 종목 평가액에 직접 영향.</div></div>
+            <div class="term-card"><div class="cat">리스크</div><div class="nm">백테스트</div><div class="ds">과거 데이터로 전략 검증.</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="how" class="reveal">
+      <div class="sec-head">
+        <span class="eyebrow">3단계로 시작</span>
+        <h2>몇 번의 클릭으로<br/>준비됩니다.</h2>
+        <p>가입과 종목 입력 후 바로 코치에게 물어볼 수 있어요.</p>
+      </div>
+      <div class="how-grid">
+        <div class="how-card"><div class="step">01 / GET STARTED</div><div class="ttl">계정 만들기</div><div class="ds">이메일로 무료 가입. 신용카드 등록 없이 바로.</div></div>
+        <div class="how-card"><div class="step">02 / IMPORT</div><div class="ttl">종목 입력</div><div class="ds">한국·미국 주식 티커를 입력하면 KRW 환산으로 같이.</div></div>
+        <div class="how-card"><div class="step">03 / ASK</div><div class="ttl">코치에게 묻기</div><div class="ds">시장·종목·용어 무엇이든. 보유 종목을 같이 보고 답합니다.</div></div>
+      </div>
+    </section>
+
+    <section id="faq" class="reveal">
+      <div class="sec-head">
+        <span class="eyebrow">FAQ</span>
+        <h2>자주 묻는 질문</h2>
+      </div>
+      <div class="faq-grid">
+        <div class="faq-item"><div class="faq-q">매수·매도 추천을 받을 수 있나요?</div><div class="faq-a">아니요. FinCoach는 정보 제공 도구로, 특정 종목의 매수 또는 매도를 직접 추천하지 않습니다.</div></div>
+        <div class="faq-item"><div class="faq-q">어떤 데이터를 사용하나요?</div><div class="faq-a">한국 주식은 KRX(pykrx), 미국 주식은 yfinance, 시장 뉴스는 RSS, AI 답변은 Anthropic Claude를 사용합니다.</div></div>
+        <div class="faq-item"><div class="faq-q">유료 서비스인가요?</div><div class="faq-a">컨퍼런스 데모 단계로, 현재 무료로 제공됩니다.</div></div>
+        <div class="faq-item"><div class="faq-q">실시간 시세인가요?</div><div class="faq-a">일일 종가 기준으로 동작합니다. 실시간 호가는 제공하지 않습니다.</div></div>
+      </div>
+    </section>
+
+    <section class="cta-section reveal">
+      <h2>코치에게<br/>물어볼 준비가 됐어요.</h2>
+      <p>가입 5초. 신용카드 등록 없이 시작합니다.</p>
+      <div class="actions">
+        <a href="./portfolio.html" class="btn-white">무료로 시작</a>
+        <a href="./chat.html" class="btn-frost">코치에게 묻기</a>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="foot-row">
+      <div class="foot-col">
+        <a href="./index.html" class="brand" style="margin-bottom: 12px;"><div class="logo"></div>FinCoach</a>
+        <p>한국 주식과 미국 주식을 한 화면에. 정보 제공 도구이며, 매수와 매도는 추천하지 않습니다.</p>
+      </div>
+      <div class="foot-col"><h6>SERVICE</h6><a href="./index.html">홈</a><a href="./portfolio.html">포트폴리오</a><a href="./chat.html">AI 코치</a><a href="./learn.html">금융 용어</a></div>
+      <div class="foot-col"><h6>DATA</h6><a href="#">KRX 한국 주식</a><a href="#">yfinance 미국 주식</a><a href="#">RSS 뉴스</a></div>
+      <div class="foot-col"><h6>LEGAL</h6><a href="#">면책 조항</a><a href="#">서비스 약관</a><a href="#">개인정보 처리방침</a></div>
+    </div>
+    <div class="foot-bottom">
+      <span>본 서비스는 정보 제공 도구이며, 매수 또는 매도를 추천하지 않습니다.</span>
+      <span>© 2026 FinCoach · KUBIG conf3</span>
+    </div>
+  </footer>
+
+  <script src="./app.js"></script>
+  <script>
+    const stocks = [
+      { name: "삼성전자", ticker: "005930.KS", weight: 32, pnl: 5.2, spark: "M0,18 C8,16 16,14 24,12 C32,10 40,14 48,8 C56,4 64,6 72,5 C80,4 88,7 100,3", iconBg:"#152F4A", iconFg:"#3B9EFF", iconCh:"삼" },
+      { name: "Apple", ticker: "AAPL", weight: 22, pnl: 3.1, spark: "M0,16 C10,14 20,12 30,10 C40,8 50,12 60,6 C70,4 80,8 90,5 C95,4 98,5 100,4", iconBg:"#1A1A1A", iconFg:"#F0F0F0", iconCh:"A" },
+      { name: "NVIDIA", ticker: "NVDA", weight: 18, pnl: 12.7, spark: "M0,18 C10,16 20,12 30,10 C40,6 50,8 60,4 C70,2 80,3 90,1 C95,1 98,1 100,1", iconBg:"#0E3320", iconFg:"#11FF99", iconCh:"N" },
+      { name: "카카오", ticker: "035720.KS", weight: 15, pnl: -2.4, spark: "M0,8 C10,12 20,10 30,14 C40,18 50,14 60,16 C70,18 80,16 90,18 C95,18 98,18 100,18", iconBg:"#3B280A", iconFg:"#FFC53D", iconCh:"카" },
+      { name: "NAVER", ticker: "035420.KS", weight: 13, pnl: -1.1, spark: "M0,12 C10,14 20,12 30,15 C40,16 50,14 60,16 C70,14 80,15 90,14 C95,13 98,14 100,13", iconBg:"#0F3320", iconFg:"#11FF99", iconCh:"N" },
+    ];
+    document.getElementById("featPort").innerHTML = stocks.map((s) => {
+      const cls = s.pnl >= 0 ? "pos" : "neg";
+      const sign = s.pnl >= 0 ? "+" : "";
+      const stroke = s.pnl >= 0 ? "#11FF99" : "#FF2047";
+      return `
+        <div class="ftc-port-row">
+          <div class="stockcell">
+            <div class="ic" style="background:${s.iconBg}; color:${s.iconFg};">${s.iconCh}</div>
+            <div><div class="nm">${s.name}</div><div class="tk">${s.ticker}</div></div>
+          </div>
+          <svg class="miniSpark" viewBox="0 0 100 22" preserveAspectRatio="none"><path d="${s.spark}" fill="none" stroke="${stroke}" stroke-width="1.6"/></svg>
+          <div class="w">${s.weight}%</div>
+          <div class="pl ${cls}">${sign}${s.pnl.toFixed(1)}%</div>
+        </div>`;
+    }).join("");
+
+    window.drawOnView(".product-preview", ["ppSparkLine"]);
+  </script>
+</body>
+</html>
