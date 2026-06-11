@@ -62,8 +62,11 @@
     .hero-headline > .line { display: block; white-space: nowrap; }
     @media (max-width: 900px) { .hero-headline { font-size: 44px; } }
     @media (max-width: 540px) {
-      .hero-headline { font-size: 34px; }
-      .hero-headline > .line { white-space: normal; }
+      .hero-headline { font-size: 30px; }
+      .hero-headline > .line { white-space: nowrap; display: block; }
+    }
+    @media (max-width: 380px) {
+      .hero-headline { font-size: 26px; }
     }
     .hero-headline em {
       font-style: normal; font-weight: 800;
@@ -252,12 +255,13 @@
     .ftc-port-head .ag { font-size: 11px; color: var(--fg-muted); font-family: "JetBrains Mono", monospace; }
     .ftc-port-rows { display: grid; gap: 8px; }
     .ftc-port-row {
-      display: grid; grid-template-columns: 1fr 90px 55px 70px; gap: 12px; align-items: center;
-      padding: 12px 14px;
+      display: grid; grid-template-columns: 1fr 88px 48px 60px; gap: 14px; align-items: center;
+      padding: 12px 16px;
       background: rgba(255,255,255,0.02);
       border-radius: 10px; border: 1px solid var(--frost-alt);
       font-size: 13px;
     }
+    .ftc-port-row svg.miniSpark { display: block; margin: 0 auto; }
     .ftc-port-row .stockcell { display: flex; align-items: center; gap: 10px; }
     .ftc-port-row .ic { width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
     .ftc-port-row .nm { font-weight: 600; font-size: 13px; }
@@ -340,18 +344,21 @@
       .hero-headline { font-size: 36px; }
       .hero-sub { font-size: 15px; margin-top: 22px; }
       .hero-cta { margin-top: 24px; }
-      .pp-frame { padding: 10px 14px; font-size: 11px; }
       .pp-body { padding: 16px; gap: 14px; }
       .pp-big { font-size: 28px; }
       .pp-spark { height: 60px !important; }
-      .pp-stock { padding: 10px 12px; grid-template-columns: 1fr 56px 60px; column-gap: 10px; }
-      .pp-stock .left { gap: 10px; }
-      .pp-stock .brand-mark { width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0; }
+      .pp-stock { grid-template-columns: 26px 1fr 52px 48px; padding: 0 12px; min-height: 50px; column-gap: 10px; }
+      .pp-stock .brand-mark { width: 26px; height: 26px; border-radius: 6px; }
       .pp-stock .brand-mark .logo { width: 14px; height: 14px; }
-      .pp-stock .nm { font-size: 13px; }
+      .pp-stock .nm { font-size: 12.5px; }
       .pp-stock .tk { font-size: 10px; }
-      .pp-stock .mini-spark { width: 56px; height: 22px; }
-      .pp-stock .num { font-size: 12.5px; }
+      .pp-stock .mini-spark { width: 52px; }
+      .pp-stock .mini-spark svg { width: 52px; height: 20px; }
+      .pp-stock .num { font-size: 12px; }
+      .ftc-port-row { grid-template-columns: 1fr 56px 36px 50px !important; column-gap: 8px !important; }
+      .ftc-port-row svg.miniSpark { width: 56px !important; height: 22px !important; }
+      .ftc-port-row .w { font-size: 11px; }
+      .ftc-port-row .pl { font-size: 12px; }
       .trust-strip .row { gap: 10px; font-size: 11px; }
       .sec-head h2 { font-size: 28px; }
       .cta-section { padding: 72px 0; }
@@ -442,11 +449,6 @@
         <div class="pp-fade-left"></div>
         <div class="pp-fade-right"></div>
         <div class="pp-fade-corners"></div>
-        <div class="pp-frame">
-          <div class="pp-dots"><span></span><span></span><span></span></div>
-          <div class="pp-url">내 포트폴리오</div>
-          <div style="width: 60px;"></div>
-        </div>
         <div class="pp-body">
           <div class="pp-card">
             <div class="pp-label">총 평가금액 <span class="badge">+4.05%</span></div>
