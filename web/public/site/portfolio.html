@@ -248,9 +248,34 @@
       display: inline-flex; align-items: center; justify-content: center;
       width: 18px; height: 18px; border-radius: 4px;
       color: var(--fg-muted); transition: transform 220ms, color 150ms;
-      margin-left: 6px;
+      margin-left: 6px; flex-shrink: 0;
     }
     .stock-tr.open .row-caret { transform: rotate(180deg); color: var(--green); }
+    /* 종목명 + caret 한 줄 고정 */
+    .stock-row .nm { display: inline-flex; align-items: center; gap: 0; white-space: nowrap; }
+    .stock-row > div:last-child { min-width: 0; flex: 1; }
+    .stock-row .tk { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    /* 보유 종목 표 모바일 단순화 */
+    @media (max-width: 640px) {
+      .stock-tr td { padding: 12px 4px !important; }
+      .stock-tr td:nth-child(2),
+      .stock-tr td:nth-child(4) { display: none !important; }
+      .stock-tr td:nth-child(1) { width: auto !important; padding-left: 4px !important; }
+      .stock-tr td:nth-child(3),
+      .stock-tr td:nth-child(5) { width: auto !important; padding-right: 4px !important; }
+      .stock-tr td:nth-child(5) { font-size: 12px; white-space: nowrap; }
+      .stock-tr td:nth-child(3) > div:first-child .num { font-size: 13px; }
+      table thead th:nth-child(2),
+      table thead th:nth-child(4) { display: none; }
+      table thead th { padding: 0 4px 10px; font-size: 11px; }
+      .stock-row { gap: 8px; }
+      .stock-row .brand-mark { width: 26px; height: 26px; border-radius: 6px; }
+      .stock-row .brand-mark .logo { width: 14px; height: 14px; }
+      .stock-row .nm { font-size: 13px; }
+      .stock-row .tk { font-size: 9.5px; }
+      .row-caret { width: 14px; height: 14px; margin-left: 3px; }
+    }
 
     .donut-card { padding: 22px; }
     .donut-wrap { display: grid; grid-template-columns: 180px 1fr; gap: 28px; align-items: center; margin-top: 18px; }
