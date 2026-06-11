@@ -363,13 +363,13 @@
       </div>
     </div>
 
-    <!-- 보유 종목 카드 그리드 -->
+    <!-- 보유 종목 표 -->
     <div class="grid grid-12" style="margin-top: 14px;">
-      <section class="card c-12 reveal" style="padding: 24px;">
-        <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px;">
+      <section class="card c-12 reveal" style="padding: 26px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px;">
           <div>
             <div class="subhead" style="font-size: 17px;">보유 종목 상세</div>
-            <div style="font-size: 12px; color: var(--fg-muted); margin-top: 4px;">10개 · 30일 가격 추이 + 매수평단 + 변동률</div>
+            <div style="font-size: 12px; color: var(--fg-muted); margin-top: 4px;">30일 가격 추이 · 점선 = 매수 평단</div>
           </div>
           <div style="display: flex; gap: 4px;">
             <button class="toggle-btn">이름</button>
@@ -377,7 +377,10 @@
             <button class="toggle-btn">비중</button>
           </div>
         </div>
-        <div class="stock-grid" id="stockGrid"></div>
+        <table>
+          <thead><tr><th>종목</th><th>30D 추이</th><th style="text-align:right;">30D %</th><th style="text-align:right;">비중</th><th style="text-align:right;">평가액</th></tr></thead>
+          <tbody id="stockTable"></tbody>
+        </table>
       </section>
     </div>
 
@@ -477,15 +480,15 @@
       "COIN":      [0,1.2,2.6,1.8,3.6,5.2,4.0,6.4,8.4,7.2,9.6,12.0,10.4,12.8,15.0,13.4,15.8,14.6,16.6,17.8,16.4,18.0,18.4,17.4,18.0,18.4,18.0,18.2,18.4,18.4],
     };
 
-    // ========= 종목 카드 그리드 (모든 정보 인라인) =========
-    function buildStockCard(s) {
+    // ========= 보유 종목 표 (mini sparkline + 점선 매수평단) =========
+    function buildStockRow(s) {
       const series = stockSeries[s.ticker] || [];
       const cls = s.pnl >= 0 ? "pos" : "neg";
       const sign = s.pnl >= 0 ? "+" : "";
       const color = s.pnl >= 0 ? "#11FF99" : "#FF2047";
 
-      // mini 차트 (라인 + 면적 + 매수평단 점선)
-      const W = 280, H = 56, pad = 3;
+      // 작은 sparkline (라인 + 면적 + 점선 매수평단)
+      const W = 160, H = 40, pad = 3;
       const max = Math.max(...series), min = Math.min(...series);
       const range = (max - min) || 1;
       const xStep = (W - pad * 2) / (series.length - 1);
@@ -496,61 +499,46 @@
       const buyAvgVal = series[Math.floor(series.length * 0.15)];
       const buyY = pad + (H - pad * 2) * (1 - (buyAvgVal - min) / range);
       const endX = pts[pts.length-1][0], endY = pts[pts.length-1][1];
-      const gid = "scg" + s.ticker.replace(/[^a-z0-9]/gi, "");
-
-      // 변동률 (1D, 7D, 30D)
-      const day1Pct = (series[series.length-1] - series[series.length-2]).toFixed(2);
-      const day7Pct = (series[series.length-1] - series[series.length-8]).toFixed(2);
-      const day30Pct = s.pnl.toFixed(2);
+      const gid = "sg" + s.ticker.replace(/[^a-z0-9]/gi, "");
       const buyPrice = Math.round(s.value / (1 + s.pnl/100));
 
-      const chip = (k, v) => {
-        const num = parseFloat(v);
-        const c = num >= 0 ? "pos" : "neg";
-        const sn = num >= 0 ? "+" : "";
-        return `<div class="sc-chip ${c}"><div class="k">${k}</div><div class="v">${sn}${v}%</div></div>`;
-      };
+      const arrowUp = `<svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M3 10L7 4L11 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      const arrowDn = `<svg width="11" height="11" viewBox="0 0 14 14" fill="none"><path d="M3 4L7 10L11 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+      const arrow = s.pnl >= 0 ? arrowUp : arrowDn;
 
       return `
-        <div class="stock-card">
-          <div class="sc-head">
-            <div class="sc-id">
+        <tr>
+          <td>
+            <div class="stock-row">
               <div class="brand-mark ${s.brand}"><span class="logo"></span></div>
               <div>
                 <div class="nm">${s.name}</div>
                 <div class="tk">${s.ticker} · ${s.sector || ""}</div>
               </div>
             </div>
-            <div class="sc-pnl">
-              <div class="v ${cls}">${sign}${s.pnl.toFixed(2)}%</div>
-              <div class="l">30D</div>
-            </div>
-          </div>
-          <div class="sc-chart">
-            <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-              <defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity="0.45"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
-              <line x1="${pad}" x2="${W-pad}" y1="${buyY.toFixed(1)}" y2="${buyY.toFixed(1)}" stroke="rgba(255,255,255,0.16)" stroke-dasharray="3 3" stroke-width="0.8"/>
+          </td>
+          <td style="width: 180px;">
+            <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width: 100%; height: ${H}px; display: block;">
+              <defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity="0.32"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
+              <line x1="${pad}" x2="${W-pad}" y1="${buyY.toFixed(1)}" y2="${buyY.toFixed(1)}" stroke="rgba(255,255,255,0.32)" stroke-dasharray="3 3" stroke-width="1"/>
               <path d="${ap}" fill="url(#${gid})"/>
-              <path d="${lp}" fill="none" stroke="${color}" stroke-width="1.6"/>
+              <path d="${lp}" fill="none" stroke="${color}" stroke-width="1.8"/>
               <circle cx="${endX}" cy="${endY}" r="2.4" fill="${color}"/>
               <circle cx="${endX}" cy="${endY}" r="5" fill="${color}" opacity="0.3"/>
             </svg>
-            <div class="avg-label" style="top: ${(buyY - 14).toFixed(1)}px;">AVG</div>
-          </div>
-          <div class="sc-chips">
-            ${chip("1D", day1Pct)}
-            ${chip("7D", day7Pct)}
-            ${chip("30D", day30Pct)}
-          </div>
-          <div class="sc-foot">
-            <div class="col"><div class="k">매수평단</div><div class="v">${krw(buyPrice)}원</div></div>
-            <div class="col"><div class="k">평가액</div><div class="v">${krw(s.value)}원</div></div>
-            <div class="col"><div class="k">비중</div><div class="v">${s.weight}%</div></div>
-          </div>
-        </div>
+          </td>
+          <td style="text-align:right;">
+            <div style="display: inline-flex; align-items: center; gap: 5px; color: ${color};">
+              ${arrow}<span class="num" style="font-weight: 700;">${sign}${s.pnl.toFixed(2)}%</span>
+            </div>
+            <div style="font-size: 10px; color: var(--fg-muted); margin-top: 2px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em;">매수 ${krw(buyPrice)}</div>
+          </td>
+          <td style="text-align:right;" class="num">${s.weight}%</td>
+          <td style="text-align:right;" class="num">${krw(s.value)}원</td>
+        </tr>
       `;
     }
-    document.getElementById("stockGrid").innerHTML = stocks.map(buildStockCard).join("");
+    document.getElementById("stockTable").innerHTML = stocks.map(buildStockRow).join("");
 
     // 30일 sparkline 제거 (토스증권 결 - row-trend 텍스트만)
 
