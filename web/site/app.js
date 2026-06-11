@@ -79,7 +79,7 @@
   function loop() {
     if (timer) clearInterval(timer);
     if (!inView) return;
-    timer = setInterval(() => { if (inView) replay(); }, 7000);
+    timer = setInterval(() => { if (inView) replay(); }, 16000);
   }
   const io = new IntersectionObserver(
     (entries) => {

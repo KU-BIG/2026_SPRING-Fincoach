@@ -286,14 +286,14 @@
       .stock-row .nm { font-size: 13px; }
       .stock-row .tk { font-size: 9.5px; }
       .row-caret { width: 14px; height: 14px; margin-left: 3px; }
-      /* 비중 분포 모바일 — 글씨 키우고 종목명·% 간격 축소 */
+      /* 비중 분포 모바일 — legend grid 3컬럼으로 종목명·% 간격 통제 */
       .donut-card { padding: 18px; }
-      .donut-wrap { gap: 18px; margin-top: 14px; }
+      .donut-wrap { gap: 16px; margin-top: 14px; }
       .donut { width: 160px; height: 160px; margin: 0 auto; }
-      .legend { gap: 8px; }
-      .legend-row { font-size: 14px; gap: 10px; }
+      .legend { gap: 10px; max-width: 210px; margin: 0 auto; width: 100%; }
+      .legend-row { display: grid; grid-template-columns: 11px 1fr auto; gap: 10px; font-size: 14.5px; align-items: center; }
       .legend .swatch { width: 11px; height: 11px; border-radius: 3px; }
-      .legend .right { margin-left: 12px; font-size: 13.5px; }
+      .legend .right { margin-left: 0; font-size: 14px; }
     }
 
     .donut-card { padding: 22px; }
@@ -431,7 +431,7 @@
             <col style="width: 10%"/>
             <col style="width: 26%"/>
           </colgroup>
-          <thead><tr><th>종목</th><th style="text-align:right;">30D 추이</th><th style="text-align:right;">30D %</th><th style="text-align:right;">비중</th><th style="text-align:right;">평가액</th></tr></thead>
+          <thead><tr><th>종목</th><th style="text-align:center;">30D 추이</th><th style="text-align:right;">30D %</th><th style="text-align:right;">비중</th><th style="text-align:right;">평가액</th></tr></thead>
           <tbody id="stockTable"></tbody>
         </table>
       </section>
@@ -617,7 +617,7 @@
             </div>
             <div style="font-size: 11.5px; color: var(--fg-muted); margin-top: 3px; font-family: 'JetBrains Mono', monospace; letter-spacing: 0.04em;">매수 ${krw(buyPrice)}</div>
           </td>
-          <td style="text-align:right; padding-right: 16px; font-size: 15px;" class="num">${s.weight}%</td>
+          <td style="text-align:right; padding-right: 0; font-size: 15px;" class="num">${s.weight}%</td>
           <td style="text-align:right; font-size: 15.5px;" class="num">${krw(s.value)}원</td>
         </tr>
         <tr class="expand-tr"><td colspan="5"><div class="expand-panel" id="ep${idx}"></div></td></tr>
