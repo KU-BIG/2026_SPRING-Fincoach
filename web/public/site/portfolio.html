@@ -170,16 +170,41 @@
     .stock-row .tk { font-size: 11px; color: var(--fg-muted); margin-top: 2px; font-family: "JetBrains Mono", monospace; }
     .row-spark { height: 48px; width: 100%; display: block; }
     .row-spark-host { position: relative; width: 100%; }
-    /* 30D 변화율 셀 (토스증권 결 - 차트 대신 텍스트) */
-    .row-trend {
-      display: inline-flex; align-items: center; gap: 8px;
-      padding: 5px 10px; border-radius: 7px;
-      background: rgba(255,255,255,0.02);
-      border: 1px solid var(--frost-alt);
+    /* 종목 카드 그리드 (토스증권 결 - 모든 정보 인라인) */
+    .stock-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-top: 16px; }
+    .stock-card {
+      padding: 18px; background: var(--bg-elevated); border: 1px solid var(--frost-alt);
+      border-radius: 12px; transition: background 200ms, border-color 200ms;
     }
-    .row-trend .arrow { width: 14px; height: 14px; flex-shrink: 0; }
-    .row-trend .pct { font-family: Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; font-weight: 700; font-size: 14px; }
-    .row-trend .label { font-family: "JetBrains Mono", monospace; font-size: 9.5px; color: var(--fg-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+    .stock-card:hover { background: var(--bg-elevated-2); border-color: var(--frost); }
+    .sc-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; }
+    .sc-id { display: flex; align-items: center; gap: 10px; }
+    .sc-id .nm { font-weight: 700; font-size: 15px; letter-spacing: -0.015em; }
+    .sc-id .tk { font-size: 11px; color: var(--fg-muted); margin-top: 2px; font-family: "JetBrains Mono", monospace; }
+    .sc-pnl { text-align: right; }
+    .sc-pnl .v { font-family: Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; font-weight: 800; font-size: 18px; }
+    .sc-pnl .l { font-family: "JetBrains Mono", monospace; font-size: 9.5px; color: var(--fg-muted); letter-spacing: 0.08em; text-transform: uppercase; margin-top: 2px; }
+    .sc-chart { margin-top: 14px; height: 56px; position: relative; }
+    .sc-chart svg { width: 100%; height: 100%; display: block; }
+    .sc-chart .avg-label {
+      position: absolute; right: 6px; padding: 1px 5px; border-radius: 3px;
+      background: rgba(255,255,255,0.06); font-family: "JetBrains Mono", monospace;
+      font-size: 8.5px; color: var(--fg-muted); letter-spacing: 0.06em;
+    }
+    .sc-chips { display: flex; gap: 4px; margin-top: 12px; }
+    .sc-chip {
+      flex: 1; padding: 6px 8px; border-radius: 6px;
+      background: rgba(255,255,255,0.03); border: 1px solid var(--frost-alt);
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+    }
+    .sc-chip .k { font-family: "JetBrains Mono", monospace; font-size: 9px; color: var(--fg-muted); letter-spacing: 0.08em; }
+    .sc-chip .v { font-family: Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; font-weight: 700; font-size: 12px; letter-spacing: -0.02em; }
+    .sc-chip.pos .v { color: var(--green); }
+    .sc-chip.neg .v { color: var(--red); }
+    .sc-foot { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--frost-alt); display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+    .sc-foot .col { display: flex; flex-direction: column; }
+    .sc-foot .col .k { font-family: "JetBrains Mono", monospace; font-size: 9px; color: var(--fg-muted); letter-spacing: 0.08em; text-transform: uppercase; }
+    .sc-foot .col .v { font-family: Inter, system-ui, sans-serif; font-variant-numeric: tabular-nums; font-weight: 600; font-size: 12px; margin-top: 4px; }
 
     /* 종목 행 펼침 (토스증권 결 종목 상세 미니) */
     tbody tr.stock-tr { cursor: pointer; transition: background 150ms; }
@@ -338,13 +363,13 @@
       </div>
     </div>
 
-    <!-- 보유 종목 표 -->
+    <!-- 보유 종목 카드 그리드 -->
     <div class="grid grid-12" style="margin-top: 14px;">
-      <section class="card c-12 reveal" style="padding: 26px;">
-        <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 14px;">
+      <section class="card c-12 reveal" style="padding: 24px;">
+        <div style="display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 4px;">
           <div>
             <div class="subhead" style="font-size: 17px;">보유 종목 상세</div>
-            <div style="font-size: 12px; color: var(--fg-muted); margin-top: 4px;">30일 가격 추이 · KRW 환산</div>
+            <div style="font-size: 12px; color: var(--fg-muted); margin-top: 4px;">10개 · 30일 가격 추이 + 매수평단 + 변동률</div>
           </div>
           <div style="display: flex; gap: 4px;">
             <button class="toggle-btn">이름</button>
@@ -352,10 +377,7 @@
             <button class="toggle-btn">비중</button>
           </div>
         </div>
-        <table>
-          <thead><tr><th>종목</th><th>30D 변화</th><th style="text-align:right;">비중</th><th style="text-align:right;">평가금액</th><th style="text-align:right;">수익률</th></tr></thead>
-          <tbody id="stockTable"></tbody>
-        </table>
+        <div class="stock-grid" id="stockGrid"></div>
       </section>
     </div>
 
@@ -455,31 +477,15 @@
       "COIN":      [0,1.2,2.6,1.8,3.6,5.2,4.0,6.4,8.4,7.2,9.6,12.0,10.4,12.8,15.0,13.4,15.8,14.6,16.6,17.8,16.4,18.0,18.4,17.4,18.0,18.4,18.0,18.2,18.4,18.4],
     };
 
-    document.getElementById("stockTable").innerHTML = stocks.map((s, idx) => {
-      const cls = s.pnl >= 0 ? "pos" : "neg";
-      const sign = s.pnl >= 0 ? "+" : "";
-      const arrowUp = `<svg class="arrow" viewBox="0 0 14 14" fill="none"><path d="M3 10L7 4L11 10" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      const arrowDn = `<svg class="arrow" viewBox="0 0 14 14" fill="none"><path d="M3 4L7 10L11 4" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      const arrow = s.pnl >= 0 ? arrowUp : arrowDn;
-      const caret = `<svg class="row-caret" viewBox="0 0 14 14" fill="none"><path d="M3 5L7 9L11 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
-      return `
-        <tr class="stock-tr" data-idx="${idx}">
-          <td><div class="stock-row"><div class="brand-mark ${s.brand}"><span class="logo"></span></div><div><div class="nm">${s.name} ${caret}</div><div class="tk">${s.ticker} · ${s.sector || ""}</div></div></div></td>
-          <td><div class="row-trend ${cls}">${arrow}<span class="pct">${sign}${s.pnl.toFixed(2)}%</span><span class="label">30D</span></div></td>
-          <td style="text-align:right;" class="num">${s.weight}%</td>
-          <td style="text-align:right;" class="num">${krw(s.value)}원</td>
-          <td style="text-align:right;" class="num ${cls}">${sign}${s.pnl.toFixed(2)}%</td>
-        </tr>
-        <tr class="expand-tr"><td colspan="5"><div class="expand-panel" id="ep${idx}"></div></td></tr>`;
-    }).join("");
-
-    // 종목 행 클릭 시 펼침 (토스증권 결 종목 상세 미니)
-    function buildExpandPanel(s, idx) {
+    // ========= 종목 카드 그리드 (모든 정보 인라인) =========
+    function buildStockCard(s) {
       const series = stockSeries[s.ticker] || [];
       const cls = s.pnl >= 0 ? "pos" : "neg";
       const sign = s.pnl >= 0 ? "+" : "";
-      // mini 차트 (라인 + 면적 + 매수평단 가로선)
-      const W = 400, H = 120, pad = 6;
+      const color = s.pnl >= 0 ? "#11FF99" : "#FF2047";
+
+      // mini 차트 (라인 + 면적 + 매수평단 점선)
+      const W = 280, H = 56, pad = 3;
       const max = Math.max(...series), min = Math.min(...series);
       const range = (max - min) || 1;
       const xStep = (W - pad * 2) / (series.length - 1);
@@ -487,61 +493,64 @@
       const pts = series.map((v, i) => [pad + i * xStep, ys[i]]);
       const lp = pts.map((p, i) => (i === 0 ? "M" : "L") + p[0].toFixed(1) + "," + p[1].toFixed(1)).join(" ");
       const ap = lp + ` L${pts[pts.length-1][0]},${H-pad} L${pts[0][0]},${H-pad} Z`;
-      const color = s.pnl >= 0 ? "#11FF99" : "#FF2047";
-      // 매수평단 (현재 평가 - 변동률 환산)
-      const buyAvgVal = series[Math.floor(series.length * 0.15)]; // 초반 시점을 매수가로 가정
+      const buyAvgVal = series[Math.floor(series.length * 0.15)];
       const buyY = pad + (H - pad * 2) * (1 - (buyAvgVal - min) / range);
       const endX = pts[pts.length-1][0], endY = pts[pts.length-1][1];
+      const gid = "scg" + s.ticker.replace(/[^a-z0-9]/gi, "");
 
+      // 변동률 (1D, 7D, 30D)
       const day1Pct = (series[series.length-1] - series[series.length-2]).toFixed(2);
       const day7Pct = (series[series.length-1] - series[series.length-8]).toFixed(2);
       const day30Pct = s.pnl.toFixed(2);
-
       const buyPrice = Math.round(s.value / (1 + s.pnl/100));
+
+      const chip = (k, v) => {
+        const num = parseFloat(v);
+        const c = num >= 0 ? "pos" : "neg";
+        const sn = num >= 0 ? "+" : "";
+        return `<div class="sc-chip ${c}"><div class="k">${k}</div><div class="v">${sn}${v}%</div></div>`;
+      };
+
       return `
-        <div class="expand-inner">
-          <div class="expand-chart">
-            <div style="display:flex; justify-content:space-between; align-items:baseline;">
-              <span class="lbl">30D 차트</span>
-              <span class="lbl" style="color: ${color};">${sign}${s.pnl.toFixed(2)}%</span>
+        <div class="stock-card">
+          <div class="sc-head">
+            <div class="sc-id">
+              <div class="brand-mark ${s.brand}"><span class="logo"></span></div>
+              <div>
+                <div class="nm">${s.name}</div>
+                <div class="tk">${s.ticker} · ${s.sector || ""}</div>
+              </div>
             </div>
-            <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
-              <defs><linearGradient id="exg${idx}" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity="0.32"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
-              <line x1="${pad}" x2="${W-pad}" y1="${buyY.toFixed(1)}" y2="${buyY.toFixed(1)}" stroke="rgba(255,255,255,0.18)" stroke-dasharray="3 3" stroke-width="1"/>
-              <text x="${(W-pad-4).toFixed(1)}" y="${(buyY - 4).toFixed(1)}" text-anchor="end" style="font-family: 'JetBrains Mono'; font-size: 9px; fill: rgba(255,255,255,0.45); letter-spacing: 0.04em;">AVG</text>
-              <path d="${ap}" fill="url(#exg${idx})"/>
-              <path d="${lp}" fill="none" stroke="${color}" stroke-width="1.8"/>
-              <circle cx="${endX}" cy="${endY}" r="2.6" fill="${color}"/>
-              <circle cx="${endX}" cy="${endY}" r="6" fill="${color}" opacity="0.3"/>
-            </svg>
-            <div class="expand-chips" style="margin-top: 10px;">
-              <div class="expand-chip ${parseFloat(day1Pct) >= 0 ? 'pos' : 'neg'}">1D <span class="v">${parseFloat(day1Pct) >= 0 ? '+' : ''}${day1Pct}%</span></div>
-              <div class="expand-chip ${parseFloat(day7Pct) >= 0 ? 'pos' : 'neg'}">7D <span class="v">${parseFloat(day7Pct) >= 0 ? '+' : ''}${day7Pct}%</span></div>
-              <div class="expand-chip ${parseFloat(day30Pct) >= 0 ? 'pos' : 'neg'}">30D <span class="v">${parseFloat(day30Pct) >= 0 ? '+' : ''}${day30Pct}%</span></div>
+            <div class="sc-pnl">
+              <div class="v ${cls}">${sign}${s.pnl.toFixed(2)}%</div>
+              <div class="l">30D</div>
             </div>
           </div>
-          <div class="expand-stats">
-            <div class="expand-stat"><span class="k">매수 평균가</span><span class="v num">${krw(buyPrice)}원</span></div>
-            <div class="expand-stat"><span class="k">현재 평가액</span><span class="v num">${krw(s.value)}원</span></div>
-            <div class="expand-stat"><span class="k">평가 손익</span><span class="v num ${cls}">${sign}${krw(s.value - buyPrice)}원</span></div>
-            <div class="expand-stat"><span class="k">섹터</span><span class="v" style="font-size:12px; font-weight:600;">${s.sector || "-"}</span></div>
+          <div class="sc-chart">
+            <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none">
+              <defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity="0.45"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
+              <line x1="${pad}" x2="${W-pad}" y1="${buyY.toFixed(1)}" y2="${buyY.toFixed(1)}" stroke="rgba(255,255,255,0.16)" stroke-dasharray="3 3" stroke-width="0.8"/>
+              <path d="${ap}" fill="url(#${gid})"/>
+              <path d="${lp}" fill="none" stroke="${color}" stroke-width="1.6"/>
+              <circle cx="${endX}" cy="${endY}" r="2.4" fill="${color}"/>
+              <circle cx="${endX}" cy="${endY}" r="5" fill="${color}" opacity="0.3"/>
+            </svg>
+            <div class="avg-label" style="top: ${(buyY - 14).toFixed(1)}px;">AVG</div>
+          </div>
+          <div class="sc-chips">
+            ${chip("1D", day1Pct)}
+            ${chip("7D", day7Pct)}
+            ${chip("30D", day30Pct)}
+          </div>
+          <div class="sc-foot">
+            <div class="col"><div class="k">매수평단</div><div class="v">${krw(buyPrice)}원</div></div>
+            <div class="col"><div class="k">평가액</div><div class="v">${krw(s.value)}원</div></div>
+            <div class="col"><div class="k">비중</div><div class="v">${s.weight}%</div></div>
           </div>
         </div>
       `;
     }
-    document.querySelectorAll(".stock-tr").forEach((tr) => {
-      tr.addEventListener("click", () => {
-        const idx = parseInt(tr.dataset.idx);
-        const panel = document.getElementById("ep" + idx);
-        const isOpen = tr.classList.toggle("open");
-        if (isOpen) {
-          if (!panel.innerHTML) panel.innerHTML = buildExpandPanel(stocks[idx], idx);
-          panel.classList.add("show");
-        } else {
-          panel.classList.remove("show");
-        }
-      });
-    });
+    document.getElementById("stockGrid").innerHTML = stocks.map(buildStockCard).join("");
 
     // 30일 sparkline 제거 (토스증권 결 - row-trend 텍스트만)
 
