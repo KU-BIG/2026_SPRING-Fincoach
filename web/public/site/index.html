@@ -178,9 +178,9 @@
       pointer-events: none; z-index: 2;
       opacity: 0.78;
       mix-blend-mode: screen;
-      filter: drop-shadow(0 10px 28px rgba(0,0,0,0.5)) contrast(1.15) brightness(1.02);
-      -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 70%, transparent 100%);
-      mask-image: radial-gradient(circle at 50% 50%, #000 70%, transparent 100%);
+      filter: drop-shadow(0 10px 28px rgba(0,0,0,0.5));
+      -webkit-mask-image: radial-gradient(ellipse at 50% 50%, #000 88%, transparent 100%);
+      mask-image: radial-gradient(ellipse at 50% 50%, #000 88%, transparent 100%);
     }
     @media (max-width: 900px) { .ft-illust-float { display: none; } }
 
@@ -267,8 +267,14 @@
       .pp-body { padding: 16px; gap: 14px; }
       .pp-big { font-size: 28px; }
       .pp-spark { height: 60px !important; }
-      .pp-stock { padding: 10px 12px; }
-      .pp-stock .mini-spark { width: 44px; height: 18px; }
+      .pp-stock { padding: 10px 12px; grid-template-columns: 1fr 56px 60px; column-gap: 10px; }
+      .pp-stock .left { gap: 10px; }
+      .pp-stock .brand-mark { width: 26px; height: 26px; border-radius: 6px; flex-shrink: 0; }
+      .pp-stock .brand-mark .logo { width: 14px; height: 14px; }
+      .pp-stock .nm { font-size: 13px; }
+      .pp-stock .tk { font-size: 10px; }
+      .pp-stock .mini-spark { width: 56px; height: 22px; }
+      .pp-stock .num { font-size: 12.5px; }
       .trust-strip .row { gap: 10px; font-size: 11px; }
       .sec-head h2 { font-size: 28px; }
       .cta-section { padding: 72px 0; }
@@ -349,7 +355,7 @@
       <div class="product-preview">
         <div class="pp-frame">
           <div class="pp-dots"><span></span><span></span><span></span></div>
-          <div class="pp-url">app.fincoach.kr/portfolio</div>
+          <div class="pp-url">내 포트폴리오</div>
           <div style="width: 60px;"></div>
         </div>
         <div class="pp-body">

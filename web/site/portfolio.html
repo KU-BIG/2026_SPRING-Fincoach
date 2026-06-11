@@ -258,17 +258,23 @@
 
     /* 보유 종목 표 모바일 단순화 */
     @media (max-width: 640px) {
-      .stock-tr td { padding: 12px 4px !important; }
-      .stock-tr td:nth-child(2),
+      /* colgroup 모바일: 종목/차트/30D %/평가액 (비중만 숨김) */
+      table colgroup col:nth-child(1) { width: 32% !important; }
+      table colgroup col:nth-child(2) { width: 18% !important; }
+      table colgroup col:nth-child(3) { width: 20% !important; }
+      table colgroup col:nth-child(4) { width: 0 !important; }
+      table colgroup col:nth-child(5) { width: 30% !important; }
+      .stock-tr td { padding: 12px 2px !important; }
       .stock-tr td:nth-child(4) { display: none !important; }
-      .stock-tr td:nth-child(1) { width: auto !important; padding-left: 4px !important; }
-      .stock-tr td:nth-child(3),
-      .stock-tr td:nth-child(5) { width: auto !important; padding-right: 4px !important; }
-      .stock-tr td:nth-child(5) { font-size: 12px; white-space: nowrap; }
-      .stock-tr td:nth-child(3) > div:first-child .num { font-size: 13px; }
-      table thead th:nth-child(2),
+      .stock-tr td:nth-child(1) { padding-left: 4px !important; }
+      .stock-tr td:nth-child(2) > div { width: 52px !important; height: 20px !important; }
+      .stock-tr td:nth-child(3) { padding-right: 2px !important; }
+      .stock-tr td:nth-child(5) { padding-right: 4px !important; font-size: 12px; white-space: nowrap; }
+      .stock-tr td:nth-child(3) > div:first-child .num { font-size: 12.5px; }
+      .stock-tr td:nth-child(3) > div:last-child { display: none; } /* 매수가 라벨 숨김(공간 부족) */
       table thead th:nth-child(4) { display: none; }
-      table thead th { padding: 0 4px 10px; font-size: 11px; }
+      table thead th { padding: 0 2px 10px; font-size: 10.5px; }
+      table thead th:nth-child(2) { text-align: center; }
       .stock-row { gap: 8px; }
       .stock-row .brand-mark { width: 26px; height: 26px; border-radius: 6px; }
       .stock-row .brand-mark .logo { width: 14px; height: 14px; }
@@ -406,11 +412,11 @@
         </div>
         <table style="table-layout: fixed; width: 100%;">
           <colgroup>
-            <col style="width: 36%"/>
-            <col style="width: 11%"/>
-            <col style="width: 19%"/>
-            <col style="width: 12%"/>
-            <col style="width: 22%"/>
+            <col style="width: 28%"/>
+            <col style="width: 14%"/>
+            <col style="width: 20%"/>
+            <col style="width: 14%"/>
+            <col style="width: 24%"/>
           </colgroup>
           <thead><tr><th>종목</th><th style="text-align:right;">30D 추이</th><th style="text-align:right;">30D %</th><th style="text-align:right;">비중</th><th style="text-align:right;">평가액</th></tr></thead>
           <tbody id="stockTable"></tbody>
@@ -747,7 +753,7 @@
       const [bx, by] = pt(ba);
 
       host.innerHTML = `
-        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%; height:${H}px;">
+        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMidYMid meet" style="width:100%; max-width:220px; height:${H}px; display:block; margin: 0 auto;">
           <defs>
             <linearGradient id="gaugeG" x1="0" x2="1" y1="0" y2="0">
               <stop offset="0%" stop-color="#3B9EFF"/>
