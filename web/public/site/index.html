@@ -118,31 +118,23 @@
       isolation: isolate;
     }
     .product-preview .pp-fade-top {
-      position: absolute; top: 0; left: 0; right: 0; height: 120px;
+      position: absolute; top: 0; left: 0; right: 0; height: 70px;
       z-index: 5; pointer-events: none;
-      background: linear-gradient(to bottom, var(--bg-base) 0%, rgba(0,0,0,0.6) 35%, transparent 100%);
+      background: linear-gradient(to bottom, var(--bg-base) 0%, transparent 100%);
     }
     .product-preview .pp-fade-bottom {
-      position: absolute; bottom: 0; left: 0; right: 0; height: 120px;
+      position: absolute; bottom: 0; left: 0; right: 0; height: 70px;
       z-index: 5; pointer-events: none;
-      background: linear-gradient(to top, var(--bg-base) 0%, rgba(0,0,0,0.6) 35%, transparent 100%);
+      background: linear-gradient(to top, var(--bg-base) 0%, transparent 100%);
     }
     .product-preview .pp-fade-left,
     .product-preview .pp-fade-right {
-      position: absolute; top: 0; bottom: 0; width: 90px;
+      position: absolute; top: 0; bottom: 0; width: 36px;
       z-index: 5; pointer-events: none;
     }
-    .product-preview .pp-fade-left { left: 0; background: linear-gradient(to right, var(--bg-base) 0%, rgba(0,0,0,0.5) 35%, transparent 100%); }
-    .product-preview .pp-fade-right { right: 0; background: linear-gradient(to left, var(--bg-base) 0%, rgba(0,0,0,0.5) 35%, transparent 100%); }
-    /* 4 모서리 radial 페이드 — corner 진하게 */
-    .product-preview .pp-fade-corners {
-      position: absolute; inset: 0; z-index: 6; pointer-events: none;
-      background:
-        radial-gradient(circle at top left, var(--bg-base) 0%, transparent 22%),
-        radial-gradient(circle at top right, var(--bg-base) 0%, transparent 22%),
-        radial-gradient(circle at bottom left, var(--bg-base) 0%, transparent 22%),
-        radial-gradient(circle at bottom right, var(--bg-base) 0%, transparent 22%);
-    }
+    .product-preview .pp-fade-left { left: 0; background: linear-gradient(to right, var(--bg-base) 0%, transparent 100%); }
+    .product-preview .pp-fade-right { right: 0; background: linear-gradient(to left, var(--bg-base) 0%, transparent 100%); }
+    .product-preview .pp-fade-corners { display: none; }
     .pp-frame { padding: 14px 18px; border-bottom: 1px solid var(--frost); display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.02); }
     .pp-dots { display: flex; gap: 6px; }
     .pp-dots span { width: 10px; height: 10px; border-radius: 50%; background: var(--bg-elevated); border: 1px solid var(--frost); }
