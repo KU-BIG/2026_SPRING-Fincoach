@@ -257,8 +257,9 @@
     .pp-grid { display: grid; gap: 8px; }
     .pp-stock {
       display: grid;
-      /* 32 | 1fr (종목명 셀) | 88 spark | 56 num — 변경 없음 */
-      grid-template-columns: 32px minmax(0, 1fr) 88px 56px;
+      /* 32 brand | text(max-content, 종목명 폭만큼만) | 88 spark | 1fr spacer | 56 num
+         종목명이 짧아도 차트가 종목명 바로 옆에 붙고, % 만 우측 끝으로 분리된다. */
+      grid-template-columns: 32px minmax(0, max-content) 88px 1fr 56px;
       align-items: center;
       column-gap: 14px;
       height: 60px;
@@ -414,7 +415,10 @@
     .ftc-port-row .tk { font-size: 10px; color: var(--fg-muted); margin-top: 1px; font-family: "JetBrains Mono", monospace; }
     .ftc-port-row > .spark-cell { width: 88px; height: 22px; flex-shrink: 0; }
     .ftc-port-row > .spark-cell svg { width: 88px; height: 22px; display: block; }
-    .ftc-port-row .w { width: 48px; flex-shrink: 0; margin-left: auto; font-size: 12px; color: var(--fg-secondary); text-align: right; font-variant-numeric: tabular-nums; }
+    /* margin-left: auto 제거 — 차트와 22% / +5.2% 사이 빈 공간 압축.
+       세 요소(차트 + 22% + +5.2%)가 종목명 옆에 14px 간격으로 자연스럽게 인접하고,
+       남는 여유는 우측 여백으로 흘려보낸다. */
+    .ftc-port-row .w { width: 48px; flex-shrink: 0; font-size: 12px; color: var(--fg-secondary); text-align: right; font-variant-numeric: tabular-nums; }
     .ftc-port-row .pl { width: 60px; flex-shrink: 0; font-size: 12px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
 
     .chat-demo { display: grid; gap: 10px; }
