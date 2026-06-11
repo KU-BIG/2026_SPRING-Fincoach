@@ -47,8 +47,8 @@ input { font-family: inherit; }
   text-transform: uppercase; color: var(--fg-muted);
   font-family: "JetBrains Mono", ui-monospace, monospace;
 }
-.pos { color: var(--green); }
-.neg { color: var(--red); }
+.pos { color: #F04452; }
+.neg { color: #3B9EFF; }
 
 /* HEADER */
 header {

@@ -74,7 +74,7 @@
     @media (max-width: 760px) { .pp-body { grid-template-columns: 1fr; } }
     .pp-card { padding: 22px; background: var(--bg-elevated); border: 1px solid var(--frost); border-radius: 12px; }
     .pp-label { font-size: 10px; font-weight: 500; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-muted); }
-    .pp-label .badge { margin-left: 8px; padding: 1px 7px; background: var(--green-soft); color: var(--green); border-radius: 999px; font-size: 10px; font-weight: 600; text-transform: none; border: 1px solid rgba(17,255,153,0.2); }
+    .pp-label .badge { margin-left: 8px; padding: 1px 7px; background: var(--green-soft); color: var(--green); border-radius: 999px; font-size: 10px; font-weight: 600; text-transform: none; border: 1px solid rgba(240,68,82,0.2); }
     .pp-big { font-size: 36px; font-weight: 700; margin-top: 8px; letter-spacing: -0.025em; }
     .pp-diff { font-size: 13px; font-weight: 500; margin-top: 4px; }
     .pp-spark { margin-top: 14px; width: 100%; height: 80px; }
@@ -127,7 +127,7 @@
       pointer-events: none;
     }
     .ft-card.blue-glow { --ft-glow: rgba(59,158,255,0.18); }
-    .ft-card.green-glow { --ft-glow: rgba(17,255,153,0.14); }
+    .ft-card.green-glow { --ft-glow: rgba(240,68,82,0.14); }
     .ft-card.yellow-glow { --ft-glow: rgba(255,197,61,0.16); }
 
     /* 일러스트는 카드 모서리 floating만 (콘텐츠 가리지 않게) */
@@ -268,19 +268,19 @@
             <div class="pp-big num" data-counter="12350000">0</div>
             <div class="pp-diff num pos">+480,000원 오늘</div>
             <svg class="pp-spark" viewBox="0 0 400 80" preserveAspectRatio="none">
-              <defs><linearGradient id="ppFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#11FF99" stop-opacity="0.25"/><stop offset="100%" stop-color="#11FF99" stop-opacity="0"/></linearGradient></defs>
+              <defs><linearGradient id="ppFill" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="#F04452" stop-opacity="0.25"/><stop offset="100%" stop-color="#F04452" stop-opacity="0"/></linearGradient></defs>
               <line x1="0" x2="400" y1="60" y2="60" stroke="rgba(255,255,255,0.04)" stroke-dasharray="2 4"/>
               <line x1="0" x2="400" y1="30" y2="30" stroke="rgba(255,255,255,0.04)" stroke-dasharray="2 4"/>
               <path d="M0,66 C40,62 80,54 120,56 C160,58 200,42 240,32 C280,22 320,28 360,12 C380,6 390,8 400,4 L400,80 L0,80 Z" fill="url(#ppFill)"/>
-              <path id="ppSparkLine" d="M0,66 C40,62 80,54 120,56 C160,58 200,42 240,32 C280,22 320,28 360,12 C380,6 390,8 400,4" fill="none" stroke="#11FF99" stroke-width="2"/>
-              <circle cx="400" cy="4" r="3.5" fill="#11FF99"/>
-              <circle cx="400" cy="4" r="9" fill="#11FF99" opacity="0.22"/>
+              <path id="ppSparkLine" d="M0,66 C40,62 80,54 120,56 C160,58 200,42 240,32 C280,22 320,28 360,12 C380,6 390,8 400,4" fill="none" stroke="#F04452" stroke-width="2"/>
+              <circle cx="400" cy="4" r="3.5" fill="#F04452"/>
+              <circle cx="400" cy="4" r="9" fill="#F04452" opacity="0.22"/>
             </svg>
           </div>
           <div class="pp-grid">
             <div class="pp-stock"><div class="left"><div class="ic" style="background:#152F4A; color:#3B9EFF;">삼</div><div><div class="nm">삼성전자</div><div class="tk">005930.KS · 32%</div></div></div><div class="num pos">+5.2%</div></div>
             <div class="pp-stock"><div class="left"><div class="ic" style="background:#1A1A1A; color:#F0F0F0;">A</div><div><div class="nm">Apple</div><div class="tk">AAPL · 22%</div></div></div><div class="num pos">+3.1%</div></div>
-            <div class="pp-stock"><div class="left"><div class="ic" style="background:#0E3320; color:#11FF99;">N</div><div><div class="nm">NVIDIA</div><div class="tk">NVDA · 18%</div></div></div><div class="num pos">+12.7%</div></div>
+            <div class="pp-stock"><div class="left"><div class="ic" style="background:#0E3320; color:#F04452;">N</div><div><div class="nm">NVIDIA</div><div class="tk">NVDA · 18%</div></div></div><div class="num pos">+12.7%</div></div>
             <div class="pp-stock"><div class="left"><div class="ic" style="background:#3B280A; color:#FFC53D;">카</div><div><div class="nm">카카오</div><div class="tk">035720.KS · 15%</div></div></div><div class="num neg">-2.4%</div></div>
           </div>
         </div>
@@ -327,9 +327,9 @@
         <h3 class="ft-title">내 종목을 알고<br/>답하는 코치.</h3>
         <p class="ft-desc">시장 개념·종목·리스크 무엇이든. 보유 데이터를 같이 보고 답하기 때문에 내 상황에 맞는 설명을 들을 수 있어요.</p>
         <ul class="ft-list">
-          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="#11FF99" stroke-opacity="0.3"/><path d="M5 8L7 10L11 6" stroke="#11FF99" stroke-width="1.6" fill="none"/></svg>SSE 스트리밍 · 실시간 답변</li>
-          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="#11FF99" stroke-opacity="0.3"/><path d="M5 8L7 10L11 6" stroke="#11FF99" stroke-width="1.6" fill="none"/></svg>매수·매도 직접 추천 없음</li>
-          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="#11FF99" stroke-opacity="0.3"/><path d="M5 8L7 10L11 6" stroke="#11FF99" stroke-width="1.6" fill="none"/></svg>대화 기록 자동 저장</li>
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="#F04452" stroke-opacity="0.3"/><path d="M5 8L7 10L11 6" stroke="#F04452" stroke-width="1.6" fill="none"/></svg>SSE 스트리밍 · 실시간 답변</li>
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="#F04452" stroke-opacity="0.3"/><path d="M5 8L7 10L11 6" stroke="#F04452" stroke-width="1.6" fill="none"/></svg>매수·매도 직접 추천 없음</li>
+          <li><svg width="16" height="16" viewBox="0 0 16 16" fill="none"><circle cx="8" cy="8" r="7.5" stroke="#F04452" stroke-opacity="0.3"/><path d="M5 8L7 10L11 6" stroke="#F04452" stroke-width="1.6" fill="none"/></svg>대화 기록 자동 저장</li>
         </ul>
         <a href="./chat.html" class="ft-link">코치에게 묻기 →</a>
       </div>
@@ -428,14 +428,14 @@
     const stocks = [
       { name: "삼성전자", ticker: "005930.KS", weight: 32, pnl: 5.2, spark: "M0,18 C8,16 16,14 24,12 C32,10 40,14 48,8 C56,4 64,6 72,5 C80,4 88,7 100,3", iconBg:"#152F4A", iconFg:"#3B9EFF", iconCh:"삼" },
       { name: "Apple", ticker: "AAPL", weight: 22, pnl: 3.1, spark: "M0,16 C10,14 20,12 30,10 C40,8 50,12 60,6 C70,4 80,8 90,5 C95,4 98,5 100,4", iconBg:"#1A1A1A", iconFg:"#F0F0F0", iconCh:"A" },
-      { name: "NVIDIA", ticker: "NVDA", weight: 18, pnl: 12.7, spark: "M0,18 C10,16 20,12 30,10 C40,6 50,8 60,4 C70,2 80,3 90,1 C95,1 98,1 100,1", iconBg:"#0E3320", iconFg:"#11FF99", iconCh:"N" },
+      { name: "NVIDIA", ticker: "NVDA", weight: 18, pnl: 12.7, spark: "M0,18 C10,16 20,12 30,10 C40,6 50,8 60,4 C70,2 80,3 90,1 C95,1 98,1 100,1", iconBg:"#0E3320", iconFg:"#F04452", iconCh:"N" },
       { name: "카카오", ticker: "035720.KS", weight: 15, pnl: -2.4, spark: "M0,8 C10,12 20,10 30,14 C40,18 50,14 60,16 C70,18 80,16 90,18 C95,18 98,18 100,18", iconBg:"#3B280A", iconFg:"#FFC53D", iconCh:"카" },
-      { name: "NAVER", ticker: "035420.KS", weight: 13, pnl: -1.1, spark: "M0,12 C10,14 20,12 30,15 C40,16 50,14 60,16 C70,14 80,15 90,14 C95,13 98,14 100,13", iconBg:"#0F3320", iconFg:"#11FF99", iconCh:"N" },
+      { name: "NAVER", ticker: "035420.KS", weight: 13, pnl: -1.1, spark: "M0,12 C10,14 20,12 30,15 C40,16 50,14 60,16 C70,14 80,15 90,14 C95,13 98,14 100,13", iconBg:"#0F3320", iconFg:"#F04452", iconCh:"N" },
     ];
     document.getElementById("featPort").innerHTML = stocks.map((s) => {
       const cls = s.pnl >= 0 ? "pos" : "neg";
       const sign = s.pnl >= 0 ? "+" : "";
-      const stroke = s.pnl >= 0 ? "#11FF99" : "#FF2047";
+      const stroke = s.pnl >= 0 ? "#F04452" : "#3B9EFF";
       return `
         <div class="ftc-port-row">
           <div class="stockcell">
