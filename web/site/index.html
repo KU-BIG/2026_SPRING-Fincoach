@@ -15,7 +15,11 @@
     section { padding: 96px 0; }
     @media (max-width: 720px) { section { padding: 56px 0; } }
 
-    .hero { position: relative; padding-top: 96px; padding-bottom: 64px; text-align: center; overflow: hidden; }
+    .hero {
+      position: relative; padding-top: 96px; padding-bottom: 64px; text-align: center; overflow: hidden;
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%);
+      mask-image: linear-gradient(to right, transparent 0%, #000 8%, #000 92%, transparent 100%);
+    }
     .hero-glow {
       position: absolute; top: -120px; left: 50%; transform: translateX(-50%);
       width: 1600px; height: 900px;
@@ -95,7 +99,7 @@
       50% { transform: translateY(-2px); }
     }
 
-    .hero-sub { margin: 32px auto 0; font-size: 18px; line-height: 1.6; color: var(--fg-secondary); max-width: 560px; }
+    .hero-sub { margin: 32px auto 0; font-size: 18px; line-height: 1.6; color: var(--fg-secondary); max-width: 560px; word-break: keep-all; overflow-wrap: break-word; }
     .hero-sub, .hero-cta {
       opacity: 0; transform: translateY(10px);
       animation: heroFadeUp 700ms cubic-bezier(0.2,0.7,0.2,1) forwards;

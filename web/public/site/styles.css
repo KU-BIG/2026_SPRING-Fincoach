@@ -193,4 +193,5 @@ footer {
   .foot-row { grid-template-columns: 1fr 1fr; gap: 24px; }
   .grid-12 { grid-template-columns: 1fr; }
   table { font-size: 13px; }
+  .card { padding: 16px; }
 }
