@@ -10,23 +10,56 @@
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css" />
   <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="./styles.css?v=20260612a" />
+  <link rel="stylesheet" href="./styles.css?v=20260612b" />
   <style>
     section { padding: 96px 0; }
     @media (max-width: 720px) { section { padding: 56px 0; } }
 
+    /* hero full-bleed: <main>의 max-width: 1180px + padding을 negative margin으로 빠져나와
+       뷰포트 전폭을 차지한다. 이렇게 해야 hero-glow 텍스처가 hero overflow:hidden 경계에서
+       수직으로 잘리지 않고, 뷰포트 양 끝 #000 으로 자연 페이드된다.
+       내부 콘텐츠(.hero-headline, .hero-sub 등)는 자체 max-width + margin: auto 로 정렬되어
+       full-bleed 후에도 화면 중앙에 그대로 위치한다. */
     .hero {
-      position: relative; padding-top: 96px; padding-bottom: 64px; text-align: center; overflow: hidden;
+      position: relative;
+      padding-top: 96px; padding-bottom: 64px;
+      padding-left: 24px; padding-right: 24px;
+      text-align: center;
+      /* main이 max-w 1180 + pad 28 + margin auto 인 상태에서 뷰포트 전폭으로 확장.
+         calc((100vw - 100%) / -2) = 좌우로 빠져나가야 할 양. */
+      margin-left: calc((100vw - 100%) / -2);
+      margin-right: calc((100vw - 100%) / -2);
+      width: 100vw;
+      max-width: 100vw;
+      /* overflow:hidden 유지 — 텍스처가 viewport 밖으로 새는 건 방지 */
+      overflow: hidden;
+      /* hero 자체에 좌우 horizontal soft mask. 가장자리 0~10% 구간을 페이드해
+         hero-glow의 어떤 픽셀도 뷰포트 끝에서 sharp cut 으로 끊기지 않게 한다.
+         상하는 그대로 두어 헤더/다음 섹션과의 경계는 유지. */
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
+              mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
+    }
+    @media (max-width: 720px) {
+      .hero {
+        padding-left: 18px; padding-right: 18px;
+        /* 모바일은 main padding이 18px라 1124->354 식으로 좁아진다.
+           full-bleed 후 좌우 fade 비율을 좀 더 좁혀 콘텐츠 영역을 보호. */
+        -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+                mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+      }
     }
     .hero-glow {
       position: absolute; top: -120px; left: 50%; transform: translateX(-50%);
-      width: 1600px; height: 900px;
+      /* 뷰포트보다 충분히 크되 너무 거대하지 않게. 최소 1600px, 최대 viewport의 130%. */
+      width: min(1800px, 130vw); height: 900px;
       background:
         radial-gradient(closest-side, rgba(0,0,0,0) 30%, rgba(0,0,0,0.6) 90%),
         url("./assets/hero-bg.png") center/cover no-repeat;
       pointer-events: none; z-index: -1;
-      mask-image: radial-gradient(ellipse at center top, black 30%, transparent 80%);
-      -webkit-mask-image: radial-gradient(ellipse at center top, black 30%, transparent 80%);
+      /* radial mask를 살짝 좁혀 hero-glow 자체도 중앙으로 모아둠.
+         hero의 horizontal mask와 곱셈 효과로 가장자리 fade를 한 번 더 부드럽게. */
+      mask-image: radial-gradient(ellipse 70% 80% at center top, black 25%, transparent 75%);
+      -webkit-mask-image: radial-gradient(ellipse 70% 80% at center top, black 25%, transparent 75%);
     }
     .hero-pill {
       display: inline-flex; align-items: center; gap: 8px;
@@ -359,21 +392,30 @@
     .ftc-port-head .ttl { font-size: 14px; font-weight: 600; }
     .ftc-port-head .ag { font-size: 11px; color: var(--fg-muted); font-family: "JetBrains Mono", monospace; }
     .ftc-port-rows { display: grid; gap: 8px; }
+    /* flex 레이아웃으로 변경: 종목명(stockcell) auto 폭 + 차트가 종목명 바로 옆에 붙는다.
+       w / pl 는 margin-left: auto 로 우측 끝에 정렬. 종목명↔차트 간 빈 공간 제거. */
     .ftc-port-row {
-      display: grid; grid-template-columns: 1fr 88px 48px 60px; gap: 14px; align-items: center;
+      display: flex; align-items: center; gap: 14px;
       padding: 12px 16px;
       background: rgba(255,255,255,0.02);
       border-radius: 10px; border: 1px solid var(--frost-alt);
       font-size: 13px;
+      transition: background 180ms, border-color 180ms, transform 180ms;
     }
-    .ftc-port-row svg.miniSpark { display: block; margin: 0 auto; }
-    .ftc-port-row .stockcell { display: flex; align-items: center; gap: 10px; }
+    .ftc-port-row:hover {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(214,235,253,0.32);
+      transform: translateY(-1px);
+    }
+    .ftc-port-row svg.miniSpark { display: block; margin: 0; }
+    .ftc-port-row .stockcell { display: flex; align-items: center; gap: 10px; flex: 0 1 auto; min-width: 0; }
     .ftc-port-row .ic { width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
     .ftc-port-row .nm { font-weight: 600; font-size: 13px; }
     .ftc-port-row .tk { font-size: 10px; color: var(--fg-muted); margin-top: 1px; font-family: "JetBrains Mono", monospace; }
-    .ftc-port-row svg.miniSpark { width: 100%; height: 22px; }
-    .ftc-port-row .w { font-size: 12px; color: var(--fg-secondary); text-align: right; font-variant-numeric: tabular-nums; }
-    .ftc-port-row .pl { font-size: 12px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+    .ftc-port-row > .spark-cell { width: 88px; height: 22px; flex-shrink: 0; }
+    .ftc-port-row > .spark-cell svg { width: 88px; height: 22px; display: block; }
+    .ftc-port-row .w { width: 48px; flex-shrink: 0; margin-left: auto; font-size: 12px; color: var(--fg-secondary); text-align: right; font-variant-numeric: tabular-nums; }
+    .ftc-port-row .pl { width: 60px; flex-shrink: 0; font-size: 12px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
 
     .chat-demo { display: grid; gap: 10px; }
     .bubble { max-width: 86%; padding: 12px 16px; border-radius: 14px; font-size: 14px; line-height: 1.65; }
@@ -460,10 +502,11 @@
       .pp-stock .mini-spark { width: 52px; }
       .pp-stock .mini-spark svg { width: 52px; height: 20px; }
       .pp-stock .num { font-size: 12px; }
-      .ftc-port-row { grid-template-columns: 1fr 56px 36px 50px !important; column-gap: 8px !important; }
-      .ftc-port-row svg.miniSpark { width: 56px !important; height: 22px !important; }
-      .ftc-port-row .w { font-size: 11px; }
-      .ftc-port-row .pl { font-size: 12px; }
+      .ftc-port-row { gap: 8px !important; padding: 10px 12px !important; }
+      .ftc-port-row > .spark-cell { width: 56px !important; height: 22px !important; }
+      .ftc-port-row > .spark-cell svg { width: 56px !important; height: 22px !important; }
+      .ftc-port-row .w { font-size: 11px; width: 36px; }
+      .ftc-port-row .pl { font-size: 12px; width: 50px; }
       .trust-strip .row { gap: 10px; font-size: 11px; }
       .sec-head h2 { font-size: 28px; }
       .cta-section { padding: 72px 0; }
@@ -471,7 +514,7 @@
       .feature, .feature > * { min-width: 0; }
       .ft-text, .ft-visual, .ft-stack, .ft-card { max-width: 100%; min-width: 0; }
       .ftc-port-row { min-width: 0; }
-      .ftc-port-row .stockcell { min-width: 0; flex: 1; overflow: hidden; }
+      .ftc-port-row .stockcell { min-width: 0; overflow: hidden; }
       .ftc-port-row .stockcell .nm,
       .ftc-port-row .stockcell .tk { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     }
@@ -481,22 +524,108 @@
     @keyframes ppFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
     @media (prefers-reduced-motion: reduce) { .product-preview { animation: none; } }
 
+    /* pp-stock 행 hover — 미세한 보더 highlight + 살짝 떠오름 (이미 transform/border 정의됨, glow 추가) */
+    .pp-stock { box-shadow: 0 0 0 0 transparent; }
+    .pp-stock:hover { box-shadow: 0 6px 22px -12px rgba(59,158,255,0.35); }
+
+    /* ft-card hover — 카드 자체가 살짝 떠오르고 보더가 밝아진다 */
+    .ft-card { transition: transform 280ms cubic-bezier(0.2,0,0.1,1), border-color 280ms, box-shadow 280ms; }
+    .ft-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(214,235,253,0.30);
+      box-shadow: 0 18px 48px -24px rgba(0,0,0,0.6);
+    }
+    /* ft-card 내부 glow 가 살짝 더 짙어진다 */
+    .ft-card::before { transition: opacity 280ms; opacity: 1; }
+    .ft-card:hover::before { opacity: 1.4; }
+
+    /* how-card hover */
+    .how-card { transition: background 240ms, border-color 240ms, transform 240ms cubic-bezier(0.2,0,0.1,1); border: 1px solid var(--frost); }
+    .how-card:hover { transform: translateY(-3px); border-color: rgba(214,235,253,0.30); }
+    .how-card .step { transition: background 180ms, border-color 180ms, color 180ms; }
+    .how-card:hover .step { color: var(--fg-primary); border-color: rgba(214,235,253,0.30); }
+
+    /* term-card hover */
+    .term-card { transition: background 200ms, border-color 200ms, transform 200ms; }
+    .term-card:hover { background: rgba(255,255,255,0.04); border-color: rgba(214,235,253,0.26); transform: translateY(-1px); }
+
+    /* faq-item open/hover — q 의 화살표 회전 */
+    .faq-item .faq-q::after { transition: transform 240ms cubic-bezier(0.2,0,0.1,1); }
+    .faq-item:hover .faq-q::after { transform: translateX(2px) translateY(-2px); }
+
+    /* ft-link 화살표 살짝 슬라이드 (이미 gap transition 있으나 화살표만 따로 더) */
+    .ft-link { position: relative; }
+
+    /* hero-cta 버튼들 — entrance 후 살짝 hover 시 떠오름 */
+    .btn-white, .btn-frost { transition: transform 180ms cubic-bezier(0.2,0,0.1,1), background 150ms, box-shadow 200ms; }
+    .btn-white:hover { box-shadow: 0 8px 24px -10px rgba(255,255,255,0.45); }
+    .btn-frost:hover { box-shadow: 0 8px 24px -14px rgba(214,235,253,0.4); }
+
+    /* trust-strip 항목 hover — 살짝 채도 회복 */
+    .trust-strip .row { transition: opacity 240ms; }
+    .trust-strip:hover .row { opacity: 1; }
+    .trust-strip .src { transition: color 180ms, transform 180ms; cursor: default; }
+    .trust-strip .src:hover { color: var(--fg-primary); }
+
+    /* nav-cta 미세한 펄스 (시작하기/코치에게 묻기 — 시각적 끌림) */
+    .nav-cta { position: relative; }
+    .nav-cta::after {
+      content: ""; position: absolute; inset: 0; border-radius: 9999px;
+      box-shadow: 0 0 0 0 rgba(255,255,255,0.0);
+      animation: ctaPulse 4.2s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes ctaPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+      50% { box-shadow: 0 0 0 4px rgba(255,255,255,0.10); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .nav-cta::after { animation: none; }
+      .pp-stock, .ft-card, .how-card, .term-card { transition: none; }
+      .pp-stock:hover, .ft-card:hover, .how-card:hover, .term-card:hover { transform: none; box-shadow: none; }
+    }
+
     /* 카드/리스트 entrance stagger */
     .reveal.in .pp-stock,
     .reveal.in .ftc-port-row,
     .reveal.in .term-card,
     .reveal.in .how-card,
-    .reveal.in .faq-item { animation: rowIn 520ms cubic-bezier(0.2,0.7,0.2,1) both; }
+    .reveal.in .faq-item,
+    .reveal.in .bubble { animation: rowIn 520ms cubic-bezier(0.2,0.7,0.2,1) both; }
     .reveal.in .pp-stock:nth-child(1),
-    .reveal.in .ftc-port-row:nth-child(1) { animation-delay: 80ms; }
+    .reveal.in .ftc-port-row:nth-child(1),
+    .reveal.in .bubble:nth-child(1) { animation-delay: 80ms; }
     .reveal.in .pp-stock:nth-child(2),
-    .reveal.in .ftc-port-row:nth-child(2) { animation-delay: 160ms; }
+    .reveal.in .ftc-port-row:nth-child(2),
+    .reveal.in .bubble:nth-child(2) { animation-delay: 220ms; }
     .reveal.in .pp-stock:nth-child(3),
-    .reveal.in .ftc-port-row:nth-child(3) { animation-delay: 240ms; }
+    .reveal.in .ftc-port-row:nth-child(3),
+    .reveal.in .bubble:nth-child(3) { animation-delay: 360ms; }
     .reveal.in .pp-stock:nth-child(4),
-    .reveal.in .ftc-port-row:nth-child(4) { animation-delay: 320ms; }
+    .reveal.in .ftc-port-row:nth-child(4),
+    .reveal.in .bubble:nth-child(4) { animation-delay: 500ms; }
     .reveal.in .ftc-port-row:nth-child(5) { animation-delay: 400ms; }
+    /* how-card / term-card / faq-item — 부드러운 stagger */
+    .reveal.in .how-card:nth-child(1),
+    .reveal.in .term-card:nth-child(1),
+    .reveal.in .faq-item:nth-child(1) { animation-delay: 80ms; }
+    .reveal.in .how-card:nth-child(2),
+    .reveal.in .term-card:nth-child(2),
+    .reveal.in .faq-item:nth-child(2) { animation-delay: 180ms; }
+    .reveal.in .how-card:nth-child(3),
+    .reveal.in .term-card:nth-child(3),
+    .reveal.in .faq-item:nth-child(3) { animation-delay: 280ms; }
+    .reveal.in .term-card:nth-child(4),
+    .reveal.in .faq-item:nth-child(4) { animation-delay: 380ms; }
     @keyframes rowIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal.in .pp-stock,
+      .reveal.in .ftc-port-row,
+      .reveal.in .term-card,
+      .reveal.in .how-card,
+      .reveal.in .faq-item,
+      .reveal.in .bubble { animation: none; }
+    }
   </style>
 </head>
 <body>
@@ -746,11 +875,11 @@
       const buyIdx = Math.max(0, Math.floor(series.length * 0.12));
       const buyY = pad + (H - pad * 2) * (1 - (series[buyIdx] - min) / range);
       return `
-        <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%; height:100%; display:block;">
+        <svg class="spark" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%; height:100%; display:block;">
           <defs><linearGradient id="${gid}" x1="0" x2="0" y1="0" y2="1"><stop offset="0%" stop-color="${color}" stop-opacity="${fillTop}"/><stop offset="100%" stop-color="${color}" stop-opacity="0"/></linearGradient></defs>
           <path d="${ap}" fill="url(#${gid})"/>
           ${showAvg ? `<line x1="${pad}" x2="${W-pad}" y1="${buyY.toFixed(1)}" y2="${buyY.toFixed(1)}" stroke="rgba(255,255,255,${avgAlpha})" stroke-dasharray="${avgDash}" stroke-width="0.9"/>` : ""}
-          <path d="${lp}" fill="none" stroke="${color}" stroke-width="${strokeW}" stroke-linejoin="round" stroke-linecap="round"/>
+          <path class="spark-line" d="${lp}" fill="none" stroke="${color}" stroke-width="${strokeW}" stroke-linejoin="round" stroke-linecap="round"/>
           ${showEndDot ? `<circle cx="${pts[pts.length-1][0]}" cy="${pts[pts.length-1][1]}" r="2" fill="${color}"/>` : ""}
         </svg>
       `;
@@ -799,7 +928,7 @@
             <div class="brand-mark ${s.brand}" style="width:26px; height:26px; border-radius:6px;"><span class="logo" style="width:14px; height:14px;"></span></div>
             <div><div class="nm">${s.name}</div><div class="tk">${s.ticker}</div></div>
           </div>
-          <div style="width:64px; height:24px;">${buildMiniChart(series, color, 64, 24, { pad: 2, strokeWidth: 1.4, showAvg: true, avgAlpha: 0.30, avgDash: "2 2" })}</div>
+          <div class="spark-cell">${buildMiniChart(series, color, 88, 22, { pad: 2, strokeWidth: 1.4, showAvg: true, avgAlpha: 0.30, avgDash: "2 2" })}</div>
           <div class="w">${s.weight}%</div>
           <div class="pl ${cls}">${sign}${s.pnl.toFixed(1)}%</div>
         </div>`;

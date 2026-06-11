@@ -18,17 +18,74 @@
   onScroll();
 })();
 
-// fade-in
+// fade-in (+ inline stagger via data-reveal-stagger on parent)
 (function () {
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
   const io = new IntersectionObserver(
     (entries) => {
       entries.forEach((e) => {
-        if (e.isIntersecting) e.target.classList.add("in");
+        if (!e.isIntersecting) return;
+        const el = e.target;
+        el.classList.add("in");
+        // 자식 stagger: data-reveal-stagger="80" 부모 안의 .reveal-child 들에 delay 부여
+        const step = parseInt(el.dataset.revealStagger || "0", 10);
+        if (step > 0 && !reduced) {
+          el.querySelectorAll(".reveal-child").forEach((c, i) => {
+            c.style.transitionDelay = (i * step) + "ms";
+            // 한 프레임 뒤에 in 부여해 transition 이 잡히게
+            requestAnimationFrame(() => requestAnimationFrame(() => c.classList.add("in")));
+          });
+        }
+        io.unobserve(el);
       });
     },
-    { rootMargin: "-8% 0px", threshold: 0.05 }
+    { rootMargin: "-6% 0px", threshold: 0.05 }
   );
   document.querySelectorAll(".reveal").forEach((el) => io.observe(el));
+})();
+
+// mini sparkline draw-in: viewport 진입 시 svg .spark-line 에 dasharray 부여 후 0 으로
+// 인라인 스크립트가 SVG 를 동적으로 삽입하므로 querySelectorAll 만으론 부족 — 짧은 폴링으로 보강
+(function () {
+  const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+  if (reduced) return;
+  const observed = new WeakSet();
+  const io = new IntersectionObserver(
+    (entries) => {
+      entries.forEach((e) => {
+        if (!e.isIntersecting) return;
+        const svg = e.target;
+        const lines = svg.querySelectorAll(".spark-line");
+        lines.forEach((p, idx) => {
+          try {
+            const L = p.getTotalLength();
+            if (!L) return;
+            p.style.strokeDasharray = L;
+            p.style.strokeDashoffset = L;
+            p.style.transition = `stroke-dashoffset 1100ms cubic-bezier(0.2,0,0.1,1) ${idx * 50}ms`;
+            requestAnimationFrame(() => requestAnimationFrame(() => {
+              p.style.strokeDashoffset = "0";
+            }));
+          } catch (_) { /* path not yet rendered */ }
+        });
+        io.unobserve(svg);
+      });
+    },
+    { rootMargin: "-4% 0px", threshold: 0.2 }
+  );
+  function pickup() {
+    document.querySelectorAll("svg.spark, svg[data-spark]").forEach((el) => {
+      if (observed.has(el)) return;
+      observed.add(el);
+      io.observe(el);
+    });
+  }
+  // 첫 픽업 + 인라인 스크립트가 SVG 삽입 후 한 번 더 + DOM 변경 감지
+  pickup();
+  requestAnimationFrame(() => requestAnimationFrame(pickup));
+  setTimeout(pickup, 200);
+  const mo = new MutationObserver(() => pickup());
+  mo.observe(document.body, { childList: true, subtree: true });
 })();
 
 // 숫자 카운터

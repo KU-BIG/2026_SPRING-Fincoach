@@ -176,9 +176,69 @@ footer {
 .scroll-progress { position: fixed; top: 0; left: 0; right: 0; height: 2px; z-index: 100; pointer-events: none; }
 .scroll-progress .bar { height: 100%; background: var(--blue); width: 0; transition: width 60ms linear; box-shadow: 0 0 8px var(--blue); }
 
-/* REVEAL */
+/* REVEAL — 기본은 fade+up. variant로 fade-left / fade-right / zoom / blur 가능.
+   transition-delay 는 inline style 로 stagger 부여. */
 .reveal { opacity: 0; transform: translateY(16px); transition: opacity 600ms cubic-bezier(0.2,0,0.1,1), transform 600ms cubic-bezier(0.2,0,0.1,1); }
 .reveal.in { opacity: 1; transform: translateY(0); }
+.reveal.reveal-left { transform: translateX(-18px); }
+.reveal.reveal-left.in { transform: translateX(0); }
+.reveal.reveal-right { transform: translateX(18px); }
+.reveal.reveal-right.in { transform: translateX(0); }
+.reveal.reveal-zoom { transform: scale(0.97); }
+.reveal.reveal-zoom.in { transform: scale(1); }
+
+/* CARD lift on hover — 전 페이지 공통 카드는 살짝 떠오르고 보더 강조 */
+.card { transition: background 240ms cubic-bezier(0.2,0,0.1,1), border-color 240ms cubic-bezier(0.2,0,0.1,1), transform 240ms cubic-bezier(0.2,0,0.1,1), box-shadow 240ms; }
+.card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(214,235,253,0.30);
+  box-shadow: 0 10px 32px -16px rgba(0,0,0,0.5);
+}
+
+/* TABLE row hover — 사이드 띠 대신 배경 음영으로 강조 (CLAUDE.md 규칙: 사이드 컬러 띠 금지).
+   행 전체에 살짝 진해지는 배경 + 보더 톤을 올린다. */
+tbody tr.stock-tr td { transition: background 180ms cubic-bezier(0.2,0,0.1,1), border-color 180ms; }
+tbody tr.stock-tr:hover td { background: rgba(255,255,255,0.025); }
+tbody tr.stock-tr.open td { background: rgba(240,68,82,0.035); }
+
+/* MINI sparkline draw-in: .draw-spark[data-drawn] 에 적용.
+   IntersectionObserver 가 .in 클래스를 붙이면 stroke-dashoffset → 0 */
+svg .spark-line, svg.spark .spark-line {
+  stroke-dasharray: 240;
+  stroke-dashoffset: 240;
+  transition: stroke-dashoffset 1100ms cubic-bezier(0.2,0,0.1,1);
+}
+.in svg .spark-line, .in svg.spark .spark-line,
+svg .spark-line.drawn, svg.spark.drawn .spark-line { stroke-dashoffset: 0; }
+
+/* COUNTERS — tabular num 펄스 (값이 갱신될 때 살짝) */
+@keyframes numPulse {
+  0% { color: var(--fg-primary); }
+  40% { color: var(--green); }
+  100% { color: var(--fg-primary); }
+}
+
+/* BUTTONS — 토글/CTA 미세한 press */
+.btn-white, .btn-frost, .nav-cta, .nav-ghost, .toggle-btn {
+  transition: background 150ms, color 150ms, border-color 150ms, transform 100ms ease-out;
+}
+.btn-white:active, .btn-frost:active, .nav-cta:active, .nav-ghost:active, .toggle-btn:active {
+  transform: translateY(0.5px) scale(0.98);
+}
+
+/* SCROLL PROGRESS — 부드러운 그림자 */
+.scroll-progress .bar { box-shadow: 0 0 10px rgba(59,158,255,0.55), 0 0 2px rgba(59,158,255,0.8); }
+
+/* PREFERS-REDUCED-MOTION — 정중하게 모든 transform 애니메이션 비활성, transition 은 짧게 유지 */
+@media (prefers-reduced-motion: reduce) {
+  .reveal, .reveal.in,
+  .reveal.reveal-left, .reveal.reveal-left.in,
+  .reveal.reveal-right, .reveal.reveal-right.in,
+  .reveal.reveal-zoom, .reveal.reveal-zoom.in { transform: none; transition: opacity 200ms linear; }
+  .card:hover { transform: none; box-shadow: none; }
+  svg .spark-line, svg.spark .spark-line { stroke-dasharray: 0 !important; stroke-dashoffset: 0 !important; transition: none; }
+  tbody tr.stock-tr td:first-child::before { transition: none; }
+}
 
 /* 모바일 공통 */
 @media (max-width: 640px) {
