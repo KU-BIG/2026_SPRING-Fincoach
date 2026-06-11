@@ -118,13 +118,18 @@
       isolation: isolate;
     }
     .product-preview .pp-fade-top {
-      position: absolute; top: 0; left: 0; right: 0; height: 160px;
+      position: absolute; top: 0; left: 0; right: 0; height: 90px;
       z-index: 5; pointer-events: none;
-      background: linear-gradient(to bottom, var(--bg-base) 0%, rgba(0,0,0,0.55) 45%, transparent 100%);
+      background: linear-gradient(to bottom, var(--bg-base) 0%, rgba(0,0,0,0.5) 30%, transparent 100%);
+    }
+    .product-preview .pp-fade-bottom {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 90px;
+      z-index: 5; pointer-events: none;
+      background: linear-gradient(to top, var(--bg-base) 0%, rgba(0,0,0,0.5) 30%, transparent 100%);
     }
     .product-preview .pp-fade-left,
     .product-preview .pp-fade-right {
-      position: absolute; top: 0; bottom: 0; width: 80px;
+      position: absolute; top: 0; bottom: 0; width: 70px;
       z-index: 5; pointer-events: none;
     }
     .product-preview .pp-fade-left { left: 0; background: linear-gradient(to right, var(--bg-base) 0%, transparent 100%); }
@@ -311,8 +316,12 @@
       mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
     }
     .cta-section::after {
-      content: ""; position: absolute; left: 0; right: 0; top: -1px; height: 120px;
-      background: linear-gradient(to bottom, var(--bg-base) 0%, rgba(0,0,0,0.7) 40%, transparent 100%);
+      content: ""; position: absolute; inset: 0;
+      background:
+        linear-gradient(to bottom, var(--bg-base) 0%, rgba(0,0,0,0.4) 10%, transparent 18%),
+        linear-gradient(to top, var(--bg-base) 0%, rgba(0,0,0,0.4) 10%, transparent 18%),
+        linear-gradient(to right, var(--bg-base) 0%, transparent 12%),
+        linear-gradient(to left, var(--bg-base) 0%, transparent 12%);
       pointer-events: none; z-index: 1;
     }
     .cta-section h2 { font-size: 60px; letter-spacing: -0.045em; line-height: 1.06; max-width: 800px; margin: 0 auto; font-weight: 800; }
@@ -428,6 +437,7 @@
 
       <div class="product-preview">
         <div class="pp-fade-top"></div>
+        <div class="pp-fade-bottom"></div>
         <div class="pp-fade-left"></div>
         <div class="pp-fade-right"></div>
         <div class="pp-frame">
