@@ -404,8 +404,15 @@
             <button class="toggle-btn">비중</button>
           </div>
         </div>
-        <table>
-          <thead><tr><th>종목</th><th>30D 추이</th><th style="text-align:right;">30D %</th><th style="text-align:right;">비중</th><th style="text-align:right;">평가액</th></tr></thead>
+        <table style="table-layout: fixed; width: 100%;">
+          <colgroup>
+            <col style="width: 36%"/>
+            <col style="width: 11%"/>
+            <col style="width: 19%"/>
+            <col style="width: 12%"/>
+            <col style="width: 22%"/>
+          </colgroup>
+          <thead><tr><th>종목</th><th style="text-align:right;">30D 추이</th><th style="text-align:right;">30D %</th><th style="text-align:right;">비중</th><th style="text-align:right;">평가액</th></tr></thead>
           <tbody id="stockTable"></tbody>
         </table>
       </section>

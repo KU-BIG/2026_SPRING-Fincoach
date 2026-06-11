@@ -15,7 +15,7 @@
     section { padding: 96px 0; }
     @media (max-width: 720px) { section { padding: 56px 0; } }
 
-    .hero { position: relative; padding-top: 96px; padding-bottom: 64px; text-align: center; }
+    .hero { position: relative; padding-top: 96px; padding-bottom: 64px; text-align: center; overflow: hidden; }
     .hero-glow {
       position: absolute; top: -120px; left: 50%; transform: translateX(-50%);
       width: 1600px; height: 900px;
@@ -172,15 +172,15 @@
     .ft-card > * { position: relative; z-index: 1; }
     .ft-stack { position: relative; }
     .ft-illust-float {
-      position: absolute; right: -24px; top: -28px;
-      width: 150px; height: 150px;
+      position: absolute; right: -24px; top: -32px;
+      width: 130px; height: 130px;
       background-size: contain; background-repeat: no-repeat; background-position: center;
       pointer-events: none; z-index: 2;
-      opacity: 0.82;
+      opacity: 0.78;
       mix-blend-mode: screen;
-      filter: drop-shadow(0 10px 26px rgba(0,0,0,0.5));
-      -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 62%, transparent 95%);
-      mask-image: radial-gradient(circle at 50% 50%, #000 62%, transparent 95%);
+      filter: drop-shadow(0 10px 28px rgba(0,0,0,0.5)) contrast(1.15) brightness(1.02);
+      -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 70%, transparent 100%);
+      mask-image: radial-gradient(circle at 50% 50%, #000 70%, transparent 100%);
     }
     @media (max-width: 900px) { .ft-illust-float { display: none; } }
 
@@ -255,6 +255,7 @@
 
     /* 모바일 보강 */
     @media (max-width: 640px) {
+      html, body { overflow-x: hidden; }
       nav.menu { display: none; }
       .nav-wrap { padding: 14px 18px; }
       main { padding: 0 18px; }
@@ -272,6 +273,12 @@
       .sec-head h2 { font-size: 28px; }
       .cta-section { padding: 72px 0; }
       .cta-section h2 { font-size: 28px; }
+      .feature, .feature > * { min-width: 0; }
+      .ft-text, .ft-visual, .ft-stack, .ft-card { max-width: 100%; min-width: 0; }
+      .ftc-port-row { min-width: 0; }
+      .ftc-port-row .stockcell { min-width: 0; flex: 1; overflow: hidden; }
+      .ftc-port-row .stockcell .nm,
+      .ftc-port-row .stockcell .tk { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     }
 
     /* product-preview 미세 floating */
