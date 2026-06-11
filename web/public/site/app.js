@@ -66,7 +66,7 @@
             requestAnimationFrame(() => requestAnimationFrame(() => {
               p.style.strokeDashoffset = "0";
             }));
-          } catch (_) { /* path not yet rendered */ }
+          } catch { /* path not yet rendered */ }
         });
         io.unobserve(svg);
       });
