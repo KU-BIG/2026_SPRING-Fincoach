@@ -56,18 +56,11 @@
       margin: 64px auto 0;
       max-width: 1080px;
       border-radius: 18px;
-      background: linear-gradient(to bottom, transparent 0%, var(--bg-surface) 12%, var(--bg-surface) 100%);
-      border-top: none;
-      border-left: 1px solid var(--frost);
-      border-right: 1px solid var(--frost);
-      border-bottom: 1px solid var(--frost);
+      background: var(--bg-surface);
+      border: 1px solid var(--frost);
       position: relative;
-      overflow: hidden;
-    }
-    .product-preview::before {
-      content: ""; position: absolute; left: 0; right: 0; top: 0; height: 1px;
-      background: linear-gradient(to right, transparent 0%, var(--frost) 30%, var(--frost) 70%, transparent 100%);
-      z-index: 3; pointer-events: none;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 9%, #000 100%);
+      mask-image: linear-gradient(to bottom, transparent 0%, #000 9%, #000 100%);
     }
     .pp-frame { padding: 14px 18px; border-bottom: 1px solid var(--frost); display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.02); }
     .pp-dots { display: flex; gap: 6px; }
@@ -101,8 +94,8 @@
     }
     .pp-stock:hover { transform: translateY(-1px); border-color: rgba(214,235,253,0.32); }
     .pp-stock .left { display: flex; align-items: center; gap: 10px; min-width: 0; }
-    .pp-stock .left > div:last-child { min-width: 0; }
-    .pp-stock .nm { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pp-stock .left > div:last-child { min-width: 0; display: flex; flex-direction: column; justify-content: center; line-height: 1.25; }
+    .pp-stock .nm { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
     .pp-stock .tk { font-size: 10px; color: var(--fg-muted); margin-top: 1px; font-family: "JetBrains Mono", monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .pp-stock .mini-spark { width: 64px; height: 24px; }
     .pp-stock .num { text-align: right; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
@@ -172,14 +165,25 @@
       background: radial-gradient(600px 300px at 80% 0%, var(--ft-glow, rgba(147,197,253,0.10)), transparent 70%);
       pointer-events: none;
     }
-    .ft-card.blue-glow { --ft-glow: rgba(59,158,255,0.18); }
-    .ft-card.green-glow { --ft-glow: rgba(240,68,82,0.14); }
-    .ft-card.yellow-glow { --ft-glow: rgba(255,197,61,0.16); }
+    /* 카드 우측 상단에 illust를 background로 부드럽게 (radial mask로 가장자리 자연 페이드) */
+    .ft-card::after {
+      content: ""; position: absolute; top: 14px; right: 14px;
+      width: 140px; height: 140px;
+      background: var(--ft-illust, none) center/contain no-repeat;
+      opacity: 0.42;
+      mix-blend-mode: screen;
+      -webkit-mask-image: radial-gradient(circle at 50% 50%, #000 35%, transparent 80%);
+      mask-image: radial-gradient(circle at 50% 50%, #000 35%, transparent 80%);
+      pointer-events: none;
+      filter: drop-shadow(0 6px 18px rgba(0,0,0,0.35));
+    }
+    .ft-card.blue-glow { --ft-glow: rgba(59,158,255,0.18); --ft-illust: url("./assets/portfolio-illust.png"); }
+    .ft-card.green-glow { --ft-glow: rgba(240,68,82,0.14); --ft-illust: url("./assets/chat-illust.png"); }
+    .ft-card.yellow-glow { --ft-glow: rgba(255,197,61,0.16); --ft-illust: url("./assets/glossary-illust.png"); }
+    @media (max-width: 900px) { .ft-card::after { display: none; } }
 
-    /* 일러스트는 카드 모서리 floating만 (콘텐츠 가리지 않게) */
     .ft-card > * { position: relative; z-index: 1; }
     .ft-stack { position: relative; }
-    /* floating overlay 사용자 어색 피드백으로 제거 — 카드 자체 콘텐츠가 dominate */
     .ft-illust-float { display: none; }
 
     .ftc-port-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
@@ -605,7 +609,7 @@
         </div>`;
     }).join("");
 
-    /* 코치 두 번째 답변 타이핑 효과 (intersection observer로 viewport 진입 시 시작) */
+    /* 코치 두 번째 답변 타이핑 효과 — viewport 진입 시 무한 반복 */
     (function () {
       const target = document.getElementById("typeTarget");
       const bubble = document.getElementById("typeBubble");
@@ -621,20 +625,30 @@
         tokens.push(ch);
       }
       if (buf) tokens.push(buf);
-      let started = false;
-      function start() {
-        if (started) return;
-        started = true;
+      let inView = false;
+      let running = false;
+      function cycle() {
+        if (!inView) { running = false; return; }
+        running = true;
+        target.innerHTML = '';
+        bubble.classList.remove('done');
         let i = 0;
         const tick = () => {
-          if (i >= tokens.length) { bubble.classList.add('done'); return; }
+          if (!inView) { running = false; return; }
+          if (i >= tokens.length) {
+            setTimeout(() => { if (inView) cycle(); else running = false; }, 2400);
+            return;
+          }
           target.innerHTML += tokens[i++];
           setTimeout(tick, 22 + Math.random() * 28);
         };
         tick();
       }
       const io = new IntersectionObserver((entries) => {
-        entries.forEach(e => { if (e.isIntersecting) { setTimeout(start, 500); io.disconnect(); } });
+        entries.forEach(e => {
+          inView = e.isIntersecting;
+          if (inView && !running) setTimeout(cycle, 400);
+        });
       }, { threshold: 0.3 });
       io.observe(bubble);
     })();
