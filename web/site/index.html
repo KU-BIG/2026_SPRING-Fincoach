@@ -56,9 +56,15 @@
 
     .hero-headline {
       font-size: 84px; line-height: 1.02; letter-spacing: -0.045em;
-      max-width: 920px; margin: 0 auto; font-weight: 800;
+      width: fit-content; max-width: 100%; margin: 0 auto;
+      text-align: left; font-weight: 800;
     }
+    .hero-headline > .line { display: block; white-space: nowrap; }
     @media (max-width: 900px) { .hero-headline { font-size: 44px; } }
+    @media (max-width: 540px) {
+      .hero-headline { font-size: 34px; }
+      .hero-headline > .line { white-space: normal; }
+    }
     .hero-headline em {
       font-style: normal; font-weight: 800;
       background: linear-gradient(120deg, var(--blue) 0%, var(--green) 50%, var(--blue) 100%);
@@ -108,9 +114,21 @@
       background: var(--bg-surface);
       border: 1px solid var(--frost);
       position: relative;
-      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.35) 8%, rgba(0,0,0,0.85) 18%, #000 28%, #000 100%);
-      mask-image: linear-gradient(to bottom, transparent 0%, rgba(0,0,0,0.35) 8%, rgba(0,0,0,0.85) 18%, #000 28%, #000 100%);
+      overflow: hidden;
+      isolation: isolate;
     }
+    .product-preview .pp-fade-top {
+      position: absolute; top: 0; left: 0; right: 0; height: 160px;
+      z-index: 5; pointer-events: none;
+      background: linear-gradient(to bottom, var(--bg-base) 0%, rgba(0,0,0,0.55) 45%, transparent 100%);
+    }
+    .product-preview .pp-fade-left,
+    .product-preview .pp-fade-right {
+      position: absolute; top: 0; bottom: 0; width: 80px;
+      z-index: 5; pointer-events: none;
+    }
+    .product-preview .pp-fade-left { left: 0; background: linear-gradient(to right, var(--bg-base) 0%, transparent 100%); }
+    .product-preview .pp-fade-right { right: 0; background: linear-gradient(to left, var(--bg-base) 0%, transparent 100%); }
     .pp-frame { padding: 14px 18px; border-bottom: 1px solid var(--frost); display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.02); }
     .pp-dots { display: flex; gap: 6px; }
     .pp-dots span { width: 10px; height: 10px; border-radius: 50%; background: var(--bg-elevated); border: 1px solid var(--frost); }
@@ -131,23 +149,23 @@
     .pp-grid { display: grid; gap: 8px; }
     .pp-stock {
       display: grid;
-      grid-template-columns: 1fr 64px 62px;
+      grid-template-columns: 28px 1fr 88px 56px;
       align-items: center;
-      column-gap: 14px;
-      padding: 12px 14px;
+      column-gap: 12px;
+      min-height: 56px;
+      padding: 0 14px;
       background: var(--bg-elevated);
       border: 1px solid var(--frost);
       border-radius: 10px;
-      font-size: 13px;
       transition: transform 200ms, border-color 200ms;
     }
     .pp-stock:hover { transform: translateY(-1px); border-color: rgba(214,235,253,0.32); }
-    .pp-stock .left { display: flex; align-items: center; gap: 10px; min-width: 0; }
-    .pp-stock .left > div:last-child { min-width: 0; display: flex; flex-direction: column; justify-content: center; gap: 2px; }
-    .pp-stock .nm { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.1; font-feature-settings: "tnum"; }
-    .pp-stock .tk { font-size: 10px; color: var(--fg-muted); margin-top: 1px; font-family: "JetBrains Mono", monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .pp-stock .mini-spark { width: 64px; height: 24px; }
-    .pp-stock .num { text-align: right; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
+    .pp-stock .text { display: flex; flex-direction: column; justify-content: center; gap: 5px; min-width: 0; }
+    .pp-stock .nm { font-weight: 700; font-size: 13px; line-height: 1; letter-spacing: -0.02em; color: rgba(255,255,255,0.92); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-feature-settings: "tnum"; }
+    .pp-stock .tk { font-size: 10.5px; font-weight: 500; line-height: 1; letter-spacing: 0.01em; color: rgba(255,255,255,0.42); font-family: "JetBrains Mono", monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .pp-stock .mini-spark { width: 88px; display: flex; justify-content: center; align-items: center; }
+    .pp-stock .mini-spark svg { width: 88px; height: 28px; display: block; }
+    .pp-stock .num { text-align: right; font-size: 13px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
 
     /* brand-mark: 실 브랜드 로고 (CDN simple-icons + 쿠팡 PNG) */
     .brand-mark { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; flex-shrink: 0; overflow: hidden; align-self: center; }
@@ -390,11 +408,15 @@
         매수 매도 추천 없음
       </span>
       <h1 class="hero-headline">
-        <span class="word" style="animation-delay: 80ms;">보유</span>
-        <span class="word" style="animation-delay: 180ms;">종목과</span>
-        <span class="word" style="animation-delay: 280ms;">시장을</span><br/>
-        <em class="word" style="animation-delay: 400ms;">같이</em>
-        <span class="word" style="animation-delay: 500ms;">읽어드립니다.</span>
+        <span class="line">
+          <span class="word" style="animation-delay: 80ms;">보유</span>
+          <span class="word" style="animation-delay: 180ms;">종목과</span>
+          <span class="word" style="animation-delay: 280ms;">시장을</span>
+        </span>
+        <span class="line">
+          <em class="word" style="animation-delay: 400ms;">같이</em>
+          <span class="word" style="animation-delay: 500ms;">읽어드립니다.</span>
+        </span>
       </h1>
       <p class="hero-sub">
         한국·미국 주식을 한 화면에. 비중과 수익률, 오늘의 시장 흐름까지 본 다음<br/><span style="white-space: nowrap;">AI 코치</span>에게 바로 물어볼 수 있어요.
@@ -405,6 +427,9 @@
       </div>
 
       <div class="product-preview">
+        <div class="pp-fade-top"></div>
+        <div class="pp-fade-left"></div>
+        <div class="pp-fade-right"></div>
         <div class="pp-frame">
           <div class="pp-dots"><span></span><span></span><span></span></div>
           <div class="pp-url">내 포트폴리오</div>
@@ -627,11 +652,12 @@
       const series = genSeries(s.pnl, 14, 0.55, s.seed);
       return `
         <div class="pp-stock">
-          <div class="left">
-            <div class="brand-mark ${s.brand}"><span class="logo"></span></div>
-            <div><div class="nm">${s.name}</div><div class="tk">${s.ticker} · ${s.weight}%</div></div>
+          <div class="brand-mark ${s.brand}"><span class="logo"></span></div>
+          <div class="text">
+            <div class="nm">${s.name}</div>
+            <div class="tk">${s.ticker} · ${s.weight}%</div>
           </div>
-          <div class="mini-spark">${buildMiniChart(series, color, 64, 24, { pad: 2, strokeWidth: 1.4, showAvg: false })}</div>
+          <div class="mini-spark">${buildMiniChart(series, color, 88, 28, { pad: 2, strokeWidth: 1.4, showAvg: true, avgAlpha: 0.22, avgDash: "2 2" })}</div>
           <div class="num ${cls}">${sign}${s.pnl.toFixed(1)}%</div>
         </div>`;
     }).join("");
