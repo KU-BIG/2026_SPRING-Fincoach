@@ -81,7 +81,7 @@
     .pp-grid { display: grid; gap: 8px; }
     .pp-stock {
       display: grid;
-      grid-template-columns: 1fr 72px 62px;
+      grid-template-columns: 1fr 64px 62px;
       align-items: center;
       column-gap: 14px;
       padding: 12px 14px;
@@ -96,7 +96,7 @@
     .pp-stock .left > div:last-child { min-width: 0; }
     .pp-stock .nm { font-weight: 600; font-size: 13px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     .pp-stock .tk { font-size: 10px; color: var(--fg-muted); margin-top: 1px; font-family: "JetBrains Mono", monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .pp-stock .mini-spark { width: 72px; height: 24px; }
+    .pp-stock .mini-spark { width: 64px; height: 24px; }
     .pp-stock .num { text-align: right; font-variant-numeric: tabular-nums; letter-spacing: -0.01em; }
 
     /* brand-mark: 실 브랜드 로고 (CDN simple-icons + 쿠팡 PNG) */
@@ -566,7 +566,7 @@
             <div class="brand-mark ${s.brand}"><span class="logo"></span></div>
             <div><div class="nm">${s.name}</div><div class="tk">${s.ticker} · ${s.weight}%</div></div>
           </div>
-          <div class="mini-spark">${buildMiniChart(series, color, 72, 24, { pad: 2, strokeWidth: 1.5 })}</div>
+          <div class="mini-spark">${buildMiniChart(series, color, 64, 24, { pad: 2, strokeWidth: 1.4, showAvg: false })}</div>
           <div class="num ${cls}">${sign}${s.pnl.toFixed(1)}%</div>
         </div>`;
     }).join("");
@@ -583,7 +583,7 @@
             <div class="brand-mark ${s.brand}" style="width:26px; height:26px; border-radius:6px;"><span class="logo" style="width:14px; height:14px;"></span></div>
             <div><div class="nm">${s.name}</div><div class="tk">${s.ticker}</div></div>
           </div>
-          <div style="width:60px; height:22px;">${buildMiniChart(series, color, 60, 22, { pad: 2, strokeWidth: 1.4 })}</div>
+          <div style="width:64px; height:24px;">${buildMiniChart(series, color, 64, 24, { pad: 2, strokeWidth: 1.4, showAvg: false })}</div>
           <div class="w">${s.weight}%</div>
           <div class="pl ${cls}">${sign}${s.pnl.toFixed(1)}%</div>
         </div>`;
