@@ -1,3 +1,4 @@
-# Cloudflare Pages: SPA fallback only.
+# Cloudflare Pages 라우팅.
 # 운영 API는 VITE_API_BASE 환경변수와 백엔드 CORS로 연결한다.
+/   /site/index.html  302
 /*  /index.html  200
