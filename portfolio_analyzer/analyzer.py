@@ -2,9 +2,12 @@
 
 from __future__ import annotations
 
+import json
+import os
+
 from portfolio_analyzer.calculator import calculate_portfolio
+from shared.disclaimers import REPORT_DISCLAIMER
 from shared.mocks import (
-    mock_analysis_report,
     mock_backtest_result,
     mock_portfolio,
     mock_stock_data,
@@ -18,10 +21,86 @@ def get_portfolio_data() -> dict:
     return calculate_portfolio(portfolio.accounts, stock_data)
 
 
+def _fallback_analysis() -> dict:
+    """API 키 없거나 LLM 실패 시 반환하는 기본 분석."""
+    return {
+        "summary": "포트폴리오 분석을 불러오는 중입니다. 잠시 후 다시 시도해주세요.",
+        "portfolio_type": "-",
+        "investor_match": "-",
+        "characteristics": [],
+        "strengths": [],
+        "risks": [],
+        "suggestions": [],
+        "market_context_note": "",
+        "disclaimer": REPORT_DISCLAIMER,
+    }
+
+
+def _call_llm_analysis(portfolio_data: dict) -> dict:
+    """LLM에 포트폴리오 분석 요청. JSON 응답 파싱."""
+    import anthropic
+
+    api_key = os.getenv("ANTHROPIC_API_KEY")
+    if not api_key:
+        return _fallback_analysis()
+
+    positions_text = "\n".join(
+        f"- {p['name']} ({p['ticker']}): 비중 {p['weight']}%, 수익률 {p['pnl_pct']}%"
+        for p in portfolio_data["positions"]
+    )
+    s = portfolio_data["summary"]
+
+    prompt = f"""다음 포트폴리오를 분석해서 JSON으로만 답해. 한국어로.
+
+포트폴리오:
+총평가금액: {s['total_value_krw']:,}원
+총손익: {s['total_pnl_krw']:,}원 ({s['pnl_pct']}%)
+보유 종목:
+{positions_text}
+
+아래 JSON 형식으로만 응답:
+{{
+  "summary": "포트폴리오 전체 특성 1~2문장 요약",
+  "portfolio_type": "포트폴리오 유형 (예: 공격형 기술주 중심)",
+  "investor_match": "어울리는 투자자 성향 (예: 성장주 선호 + 변동성 감내 가능한 투자자)",
+  "characteristics": ["특성1", "특성2", "특성3"],
+  "strengths": ["강점1", "강점2"],
+  "risks": ["리스크1", "리스크2"],
+  "suggestions": ["고려사항1", "고려사항2"],
+  "market_context_note": "현재 시장 상황과 포트폴리오 관련성 한 줄"
+}}
+
+규칙:
+- 특정 종목 매수/매도 직접 추천 금지
+- 정보 제공, 리스크 설명, 시나리오 비교만
+- JSON 외 다른 텍스트 없이 JSON만 반환"""
+
+    client = anthropic.Anthropic(api_key=api_key)
+    model = os.getenv("LLM_MODEL", "claude-haiku-4-5-20251001")
+    response = client.messages.create(
+        model=model,
+        max_tokens=1024,
+        messages=[{"role": "user", "content": prompt}],
+    )
+    text = response.content[0].text.strip()
+    # LLM이 ```json ... ``` 마크다운으로 감싸는 경우 제거
+    if text.startswith("```"):
+        text = text.split("```")[1]
+        if text.startswith("json"):
+            text = text[4:]
+        text = text.strip()
+    parsed = json.loads(text)
+    parsed["disclaimer"] = REPORT_DISCLAIMER
+    return parsed
+
+
 def get_analysis_report(force_refresh: bool = False) -> dict:
     """LLM 분석 리포트 반환. 느린 함수, 요청 시만 호출."""
-    report = mock_analysis_report()
-    return report.model_dump()
+    try:
+        portfolio_data = get_portfolio_data()
+        return _call_llm_analysis(portfolio_data)
+    except Exception:
+        return _fallback_analysis()
 
 
 def get_backtest_result(period: str = "1y") -> dict:

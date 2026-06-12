@@ -42,6 +42,46 @@ def test_portfolio_summary_positions_shape():
         assert "pnl_pct" in pos
 
 
+# ── /api/portfolio/analysis ───────────────────────────────────────────────────
+
+MOCK_ANALYSIS = {
+    "summary": "기술주 중심의 성장 포트폴리오입니다.",
+    "characteristics": ["기술주 비중 높음", "한미 혼합"],
+    "strengths": ["AI 수혜 종목 보유"],
+    "risks": ["단일 섹터 집중"],
+    "suggestions": ["섹터 분산 검토"],
+    "disclaimer": "본 분석은 정보 제공 목적입니다.",
+}
+
+
+def test_portfolio_analysis_200_and_keys():
+    with patch("api.portfolio.get_analysis_report", return_value=MOCK_ANALYSIS):
+        res = client.get("/api/portfolio/analysis")
+    assert res.status_code == 200
+    data = res.json()
+    assert "summary" in data
+    assert "characteristics" in data
+    assert "strengths" in data
+    assert "risks" in data
+    assert "suggestions" in data
+    assert "disclaimer" in data
+
+
+def test_portfolio_analysis_list_types():
+    with patch("api.portfolio.get_analysis_report", return_value=MOCK_ANALYSIS):
+        data = client.get("/api/portfolio/analysis").json()
+    assert isinstance(data["characteristics"], list)
+    assert isinstance(data["strengths"], list)
+    assert isinstance(data["risks"], list)
+    assert isinstance(data["suggestions"], list)
+
+
+def test_portfolio_analysis_force_refresh():
+    with patch("api.portfolio.get_analysis_report", return_value=MOCK_ANALYSIS) as mock_fn:
+        client.get("/api/portfolio/analysis?force_refresh=true")
+    mock_fn.assert_called_once_with(force_refresh=True)
+
+
 # ── /api/chat ─────────────────────────────────────────────────────────────────
 
 
