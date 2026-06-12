@@ -41,7 +41,7 @@ class ChatResponse(BaseModel):
 
 # ── 내부 헬퍼 ───────────────────────────────────────────────────────────────
 
-def _build_system_prompt(market: MarketOutput | None, portfolio_loaded: bool) -> str:
+def _build_system_prompt(market: MarketOutput | None, portfolio_data: dict | None) -> str:
     lines = [
         "너는 FinCoach야. 사용자의 포트폴리오와 시장 정보를 함께 이해하는 금융 AI 코치야.",
         "정보를 제공하고 금융 개념을 설명하되, 특정 종목의 매수/매도를 절대 추천하지 마.",
@@ -59,8 +59,19 @@ def _build_system_prompt(market: MarketOutput | None, portfolio_loaded: bool) ->
             lines.append(f"트렌딩 키워드: {kw}")
         lines.append("")
 
-    if portfolio_loaded:
-        lines.append("[포트폴리오] 사용자 포트폴리오 데이터가 로드되어 있음.")
+    if portfolio_data:
+        summary = portfolio_data.get("summary", {})
+        positions = portfolio_data.get("positions", [])
+        lines.append("[사용자 포트폴리오]")
+        if summary:
+            total = summary.get("total_value_krw", 0)
+            pnl_pct = summary.get("pnl_pct", 0)
+            lines.append(f"총 평가금액: {total:,.0f}원 (수익률 {pnl_pct:+.2f}%)")
+        for p in positions:
+            lines.append(
+                f"- {p['name']} ({p['ticker']}): 비중 {p['weight']:.1f}%,"
+                f" 수익률 {p['pnl_pct']:+.2f}%"
+            )
         lines.append("")
 
     return "\n".join(lines)
@@ -133,7 +144,7 @@ def chat(req: ChatRequest) -> ChatResponse:
     ]
     ctx = build_context(req.question, history)
 
-    system = _build_system_prompt(ctx.market, ctx.portfolio_data is not None)
+    system = _build_system_prompt(ctx.market, ctx.portfolio_data)
     raw_answer = _call_llm(system, req.history, req.question)
     answer_with_disclaimer = f"{raw_answer}\n\n---\n{QA_DISCLAIMER}"
 
@@ -151,7 +162,7 @@ def chat_stream(req: ChatRequest) -> StreamingResponse:
         for m in req.history
     ]
     ctx = build_context(req.question, history)
-    system = _build_system_prompt(ctx.market, ctx.portfolio_data is not None)
+    system = _build_system_prompt(ctx.market, ctx.portfolio_data)
 
     return StreamingResponse(
         _stream_llm(system, req.history, req.question),
