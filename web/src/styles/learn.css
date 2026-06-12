@@ -1,0 +1,33 @@
+/* /site/learn.html 의 인라인 <style> 를 그대로(verbatim) 추출.
+   금융 용어 페이지 전용 스타일. site.css 의 토큰/공통 위에 얹힌다. Tailwind 미사용. */
+.learn-layout { display: grid; grid-template-columns: 260px 1fr; gap: 16px; margin-top: 8px; }
+@media (max-width: 900px) { .learn-layout { grid-template-columns: 1fr; } }
+
+.toc { padding: 18px; height: fit-content; position: sticky; top: 80px; }
+.toc h4 { font-size: 12px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--fg-muted); font-family: "JetBrains Mono", monospace; margin-bottom: 12px; }
+.toc-section { margin-top: 18px; }
+.toc-section:first-child { margin-top: 0; }
+.toc-section h5 { font-size: 11px; color: var(--yellow); letter-spacing: 0.08em; text-transform: uppercase; font-family: "JetBrains Mono", monospace; margin-bottom: 8px; font-weight: 600; }
+.toc-list { display: grid; gap: 1px; }
+.toc-list a { padding: 7px 10px; font-size: 13px; color: var(--fg-secondary); border-radius: 8px; transition: background 150ms, color 150ms; display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.toc-list a:hover { background: var(--bg-elevated); color: var(--fg-primary); }
+.toc-list a.active { background: var(--yellow-soft); color: var(--yellow); font-weight: 600; }
+.toc-list a .rel { font-size: 10px; color: var(--fg-muted); font-family: "JetBrains Mono", monospace; }
+.toc-list a.active .rel { color: var(--yellow); opacity: 0.7; }
+
+.article { padding: 36px 40px; }
+.article .cat { font-size: 11px; color: var(--yellow); letter-spacing: 0.08em; text-transform: uppercase; font-family: "JetBrains Mono", monospace; font-weight: 600; }
+.article h2 { font-size: 56px; font-weight: 800; margin-top: 8px; letter-spacing: -0.04em; line-height: 1.05; }
+.article .related { font-size: 13px; color: var(--fg-secondary); margin-top: 12px; display: inline-flex; align-items: center; gap: 8px; padding: 4px 10px; background: var(--yellow-soft); border: 1px solid rgba(255,197,61,0.25); border-radius: 999px; }
+.article .body { margin-top: 32px; display: grid; gap: 32px; }
+.article .body section { padding: 24px 26px; background: var(--bg-elevated); border: 1px solid var(--frost); border-radius: 14px; }
+.article .body h3 { font-size: 12px; color: var(--yellow); letter-spacing: 0.08em; text-transform: uppercase; font-family: "JetBrains Mono", monospace; font-weight: 600; }
+.article .body p { margin-top: 8px; font-size: 16px; line-height: 1.78; color: var(--fg-primary); }
+.article .body p b { font-weight: 700; }
+.article .nav-prev-next { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 40px; }
+@media (max-width: 540px) { .article .nav-prev-next { grid-template-columns: 1fr; } }
+.article .nav-prev-next a { padding: 16px 20px; border: 1px solid var(--frost); border-radius: 12px; transition: background 150ms; }
+.article .nav-prev-next a:hover { background: var(--bg-elevated); }
+.article .nav-prev-next .lbl { font-size: 10px; color: var(--fg-muted); letter-spacing: 0.08em; text-transform: uppercase; font-family: "JetBrains Mono", monospace; }
+.article .nav-prev-next .nm { margin-top: 4px; font-size: 15px; font-weight: 600; }
+.article .footer-disclaimer { margin-top: 24px; font-size: 11px; color: var(--fg-muted); }

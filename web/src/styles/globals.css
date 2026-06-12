@@ -4,6 +4,9 @@
    토큰·폰트·레이아웃 전부 /site/ 와 동일. Tailwind 미사용. */
 @import "./site.css";
 @import "./home.css";
+@import "./portfolio.css";
+@import "./chat.css";
+@import "./learn.css";
 
 /* React 루트가 window 스크롤을 막지 않도록 — site.css 의 html,body min-height 규칙과 동일 철학.
    #root 는 별도 스크롤 컨테이너가 되지 않게 둔다(높이 고정 금지). */
