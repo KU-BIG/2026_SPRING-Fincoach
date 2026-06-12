@@ -778,20 +778,20 @@
       .pp-body { padding: 16px; gap: 14px; }
       .pp-big { font-size: 28px; }
       .pp-spark { height: 60px !important; }
-      /* 모바일 pp-stock: 자식 4개(brand/text/spark/num).
-         이전 grid(26px 100px 52px 1fr)는 마지막 1fr 이 차트-% 사이를 벌려
-         우측 정렬된 %가 차트에서 ~52px 떨어져 보였다(이슈 2).
-         flex 여백을 text(종목명) 컬럼으로 옮긴다: 26px | 1fr(종목명) | 52px(차트) | auto(%).
-         이러면 차트와 %가 14px(column-gap)로 인접하고, 남는 가로는 종목명 칸이 흡수한다.
-         차트 시작 x 좌표는 모든 행에서 동일(종목명 1fr 폭이 공유되므로). */
-      /* 종목명/차트/% 균등 간격 — auto 컬럼(콘텐츠 폭) + space-between 으로
-         logo 좌측, % 우측, 가운데 종목명·차트가 균형 있게 분포. */
-      .pp-stock { grid-template-columns: 26px auto 52px auto; justify-content: space-between; padding: 0 14px; min-height: 50px; column-gap: 14px; }
+      /* 모바일 pp-stock: 자식 4개(brand | text | spark | num) — 데스크탑과 같은 철학.
+         토스 증권 종목 리스트 결: 로고·종목명은 좌측 고정 정렬, 차트·%는 우측 그룹.
+         - text 108px 고정: 가장 긴 "005930.KS · 22%"(렌더 107px)가 안 잘리는 최소값.
+           고정폭이라 종목명 left·차트 left 모두 모든 행에서 동일(정렬감 확보).
+         - spark 는 1fr 트랙 안에서 justify-self:end 로 우측 정렬 → num 과 12px(column-gap)
+           으로 타이트하게 붙음. num 은 46px 고정(가장 넓은 "+12.7%" 45.7px)이라 1fr 트랙
+           폭이 행마다 동일 → 차트 left 가 모든 행에서 일치한다.
+         - 종목명↔차트 간격은 1fr 트랙의 남는 폭(고정·일정)으로 과하지 않게 유지. */
+      .pp-stock { grid-template-columns: 26px 108px 1fr 46px; padding: 0 14px; min-height: 50px; column-gap: 12px; }
       .pp-stock .brand-mark { width: 26px; height: 26px; border-radius: 6px; }
       .pp-stock .brand-mark .logo { width: 14px; height: 14px; }
       .pp-stock .nm { font-size: 12.5px; }
       .pp-stock .tk { font-size: 11.5px; }
-      .pp-stock .mini-spark { width: 52px; }
+      .pp-stock .mini-spark { width: 52px; justify-self: end; }
       .pp-stock .mini-spark svg { width: 52px; height: 20px; }
       .pp-stock .num { font-size: 12px; }
       .ftc-port-row { gap: 8px !important; padding: 10px 12px !important; }
