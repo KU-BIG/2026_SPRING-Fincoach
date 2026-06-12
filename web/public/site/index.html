@@ -59,21 +59,24 @@
       /* 뷰포트보다 충분히 크되 너무 거대하지 않게. 최소 1600px, 최대 viewport의 130%. */
       width: min(2000px, 140vw); height: 1080px;
       background:
-        /* 한국식 빨강/파랑을 매우 옅게 좌우로 — 절제된 ambient color hint */
-        radial-gradient(ellipse 38% 42% at 30% 18%, rgba(240,68,82,0.10), transparent 65%),
-        radial-gradient(ellipse 38% 42% at 70% 18%, rgba(59,158,255,0.10), transparent 65%),
-        /* 중앙 상단의 메인 광원 — 헤드라인 뒤를 받친다 */
-        radial-gradient(ellipse 60% 55% at 50% 22%, rgba(214,235,253,0.16), transparent 70%),
-        /* 어둠 vignette */
-        radial-gradient(closest-side, rgba(0,0,0,0) 30%, rgba(0,0,0,0.45) 90%),
+        /* 한국식 빨강/파랑을 매우 옅게 좌우로 — 색 hint만 남기고 강도는 절반으로 */
+        radial-gradient(ellipse 38% 42% at 30% 18%, rgba(240,68,82,0.055), transparent 65%),
+        radial-gradient(ellipse 38% 42% at 70% 18%, rgba(59,158,255,0.055), transparent 65%),
+        /* 중앙 상단의 메인 광원 — 헤드라인 뒤를 받친다. 0.16→0.06으로 대폭 낮춤 (사용자 "조금 밝다" 피드백 대응) */
+        radial-gradient(ellipse 56% 50% at 50% 22%, rgba(214,235,253,0.075), transparent 72%),
+        /* 어둠 vignette 강화 — 0.45 → 0.62 */
+        radial-gradient(closest-side, rgba(0,0,0,0) 28%, rgba(0,0,0,0.62) 92%),
         url("./assets/hero-bg.png") center/cover no-repeat;
+      /* bg 이미지 자체도 어둡고 채도 낮춤 — 합성된 luminance 컨트롤의 핵심 */
+      filter: brightness(0.58) saturate(0.82);
       pointer-events: none; z-index: -1;
       /* radial mask 영역을 좀 더 넓혀 광원이 헤드라인 영역까지 닿게 */
       mask-image: radial-gradient(ellipse 78% 88% at center 28%, black 30%, transparent 82%);
       -webkit-mask-image: radial-gradient(ellipse 78% 88% at center 28%, black 30%, transparent 82%);
     }
     /* hero 헤드라인 바로 뒤 ambient halo — 헤드라인이 살짝 떠올라 보이도록.
-       viewport 진입 시 한 번 0→1로 페이드되고, 이후 매우 느린 breathe. */
+       viewport 진입 시 한 번 0→1로 페이드되고, 이후 매우 느린 breathe.
+       톤은 거의 안 보일 정도로 절제 — 단지 헤드라인 뒤 공기에 미세한 깊이감만. */
     .hero-halo {
       position: absolute;
       left: 50%; top: 36%;
@@ -83,17 +86,17 @@
       z-index: -1;
       opacity: 0;
       background:
-        radial-gradient(ellipse 50% 55% at 50% 50%, rgba(214,235,253,0.22), transparent 70%),
-        radial-gradient(ellipse 28% 60% at 28% 50%, rgba(240,68,82,0.08), transparent 70%),
-        radial-gradient(ellipse 28% 60% at 72% 50%, rgba(59,158,255,0.10), transparent 70%);
-      filter: blur(28px);
+        radial-gradient(ellipse 50% 55% at 50% 50%, rgba(214,235,253,0.10), transparent 70%),
+        radial-gradient(ellipse 28% 60% at 28% 50%, rgba(240,68,82,0.04), transparent 70%),
+        radial-gradient(ellipse 28% 60% at 72% 50%, rgba(59,158,255,0.05), transparent 70%);
+      filter: blur(32px);
       animation: haloIn 1400ms cubic-bezier(0.2,0.7,0.2,1) 200ms forwards,
-                 haloBreathe 9s ease-in-out 1800ms infinite;
+                 haloBreathe 11s ease-in-out 1800ms infinite;
     }
-    @keyframes haloIn { to { opacity: 1; } }
+    @keyframes haloIn { to { opacity: 0.85; } }
     @keyframes haloBreathe {
-      0%, 100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-      50% { opacity: 0.78; transform: translate(-50%, -50%) scale(1.04); }
+      0%, 100% { opacity: 0.85; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 0.62; transform: translate(-50%, -50%) scale(1.03); }
     }
     .hero-pill {
       display: inline-flex; align-items: center; gap: 8px;
@@ -117,10 +120,10 @@
     .hero-pill { animation: pillFloat 5.5s ease-in-out infinite; }
     @keyframes pillFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
 
-    .hero-glow { animation: glowBreathe 7s ease-in-out infinite; }
+    .hero-glow { animation: glowBreathe 9s ease-in-out infinite; }
     @keyframes glowBreathe {
-      0%, 100% { opacity: 0.85; }
-      50% { opacity: 1; transform: translateX(-50%) scale(1.04); }
+      0%, 100% { opacity: 0.65; }
+      50% { opacity: 0.82; transform: translateX(-50%) scale(1.03); }
     }
 
     .hero-headline {
@@ -128,32 +131,6 @@
       font-size: 84px; line-height: 1.02; letter-spacing: -0.045em;
       width: fit-content; max-width: 100%; margin: 0 auto;
       text-align: left; font-weight: 800;
-    }
-    /* 헤드라인 위로 한 번 sweep되는 광택 — viewport 진입 시 1회 */
-    .hero-headline::after {
-      content: "";
-      position: absolute;
-      inset: -8px -24px;
-      pointer-events: none;
-      background: linear-gradient(105deg,
-        transparent 30%,
-        rgba(255,255,255,0.16) 46%,
-        rgba(255,255,255,0.32) 50%,
-        rgba(255,255,255,0.16) 54%,
-        transparent 70%);
-      background-size: 220% 100%;
-      background-position: -50% 0;
-      mix-blend-mode: overlay;
-      opacity: 0;
-      -webkit-mask-image: linear-gradient(180deg, #000 30%, #000 70%, transparent 100%);
-              mask-image: linear-gradient(180deg, #000 30%, #000 70%, transparent 100%);
-      animation: titleSweep 2200ms cubic-bezier(0.2,0.7,0.2,1) 1100ms forwards;
-    }
-    @keyframes titleSweep {
-      0% { background-position: -60% 0; opacity: 0; }
-      15% { opacity: 1; }
-      85% { opacity: 1; }
-      100% { background-position: 160% 0; opacity: 0; }
     }
     .hero-headline > .line { display: block; white-space: nowrap; }
     @media (max-width: 900px) { .hero-headline { font-size: 44px; } }
@@ -164,35 +141,75 @@
     @media (max-width: 380px) {
       .hero-headline { font-size: 26px; }
     }
+    /* em (그라데이션 강조어) — .word 의 shimmer 룰을 덮어쓴다.
+       파랑/빨강 그라데이션이 글자 안에서 천천히 흐른다 (한국식 색 1존 원칙). */
+    .hero-headline em.word,
     .hero-headline em {
       font-style: normal; font-weight: 800;
-      background: linear-gradient(120deg, var(--blue) 0%, var(--green) 50%, var(--blue) 100%);
+      background-image: linear-gradient(120deg, var(--blue) 0%, #F04452 50%, var(--blue) 100%);
       background-size: 220% 100%;
-      -webkit-background-clip: text; background-clip: text; color: transparent;
-      animation: gradShift 5s ease-in-out infinite, wordIn 700ms cubic-bezier(0.2,0.7,0.2,1) forwards;
+      background-position: 0% 50%;
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      animation:
+        gradShift 6s ease-in-out infinite,
+        wordIn 1100ms cubic-bezier(0.2,0.7,0.2,1) forwards;
       display: inline-block;
     }
     @keyframes gradShift {
       0%, 100% { background-position: 0% 50%; }
       50% { background-position: 100% 50%; }
     }
+    /* 글자별 entrance — y/blur 강도 키워서 더 또렷이 (사용자 "애니메이션 눈에 안 띈다" 피드백 대응)
+       동시에 글자 모양 안쪽으로 흐르는 shimmer를 background-clip: text 로 입혀
+       "박스가 반짝이지 않고 글자가 반짝이는" sweep (이슈 4) 을 해결한다.
+       모션 강도 — y 44px, scale 0.88→1, blur 18→0, 1300ms */
     .hero-headline .word {
       display: inline-block;
       opacity: 0;
-      transform: translateY(22px) scale(0.96);
-      filter: blur(8px);
-      animation: wordIn 900ms cubic-bezier(0.2,0.7,0.2,1) forwards;
+      transform: translateY(44px) scale(0.88);
+      filter: blur(18px);
+      /* 글자 fill 자체를 gradient + background-clip: text 로 만들어
+         밝은 stripe가 글자 모양 안쪽을 따라 흐른다. 박스(빈 영역)는 절대 반짝이지 않음. */
+      background-image: linear-gradient(100deg,
+        #C8CACC 0%,
+        #C8CACC 36%,
+        #FFFFFF 50%,
+        #C8CACC 64%,
+        #C8CACC 100%);
+      background-size: 320% 100%;
+      background-position: 100% 0;
+      -webkit-background-clip: text;
+              background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      animation:
+        wordIn 1300ms cubic-bezier(0.2,0.7,0.2,1) forwards,
+        wordShine 2400ms cubic-bezier(0.4,0,0.2,1) forwards;
     }
     @keyframes wordIn {
-      0% { opacity: 0; transform: translateY(22px) scale(0.96); filter: blur(8px); }
-      60% { filter: blur(0); }
+      0% { opacity: 0; transform: translateY(44px) scale(0.88); filter: blur(18px); }
+      40% { opacity: 0.6; }
+      55% { filter: blur(1px); }
       100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
     }
+    /* 글자 안쪽으로 흐르는 shimmer — entrance 직후 밝은 stripe가 글자를 한 번 지나간다.
+       박스가 아니라 글자 fill 이 sweep. */
+    @keyframes wordShine {
+      0%   { background-position: 100% 0; }
+      45%  { background-position: 50% 0; }
+      100% { background-position: -60% 0; }
+    }
     /* hero가 다시 보일 때마다 word 애니메이션 재실행 */
-    .hero-headline.replay .word { animation: wordIn 900ms cubic-bezier(0.2,0.7,0.2,1) forwards; }
+    .hero-headline.replay .word {
+      animation:
+        wordIn 1300ms cubic-bezier(0.2,0.7,0.2,1) forwards,
+        wordShine 2400ms cubic-bezier(0.4,0,0.2,1) forwards;
+    }
     .hero-headline .word { animation-fill-mode: both; }
-    /* headline 자체 매우 미세한 floating (subtle continuous) */
-    .hero-headline { animation: headlineFloat 9s ease-in-out infinite; }
+    /* headline 자체 매우 미세한 floating (subtle continuous) — entrance 후 시작 */
+    .hero-headline { animation: headlineFloat 10s ease-in-out 2400ms infinite; }
     @keyframes headlineFloat {
       0%, 100% { transform: translateY(0); }
       50% { transform: translateY(-2px); }
@@ -203,14 +220,14 @@
       opacity: 0; transform: translateY(10px);
       animation: heroFadeUp 700ms cubic-bezier(0.2,0.7,0.2,1) forwards;
     }
-    .hero-sub { animation-delay: 900ms; }
-    .hero-cta { animation-delay: 1060ms; }
+    .hero-sub { animation-delay: 1280ms; }
+    .hero-cta { animation-delay: 1440ms; }
     @keyframes heroFadeUp { to { opacity: 1; transform: translateY(0); } }
     /* CTA 버튼 — entrance 후 옅게 pull-and-rest (한 번) */
     .hero-cta .btn-white, .hero-cta .btn-frost {
-      animation: ctaSettle 900ms cubic-bezier(0.34, 1.56, 0.64, 1) 1180ms backwards;
+      animation: ctaSettle 900ms cubic-bezier(0.34, 1.56, 0.64, 1) 1560ms backwards;
     }
-    .hero-cta .btn-frost { animation-delay: 1260ms; }
+    .hero-cta .btn-frost { animation-delay: 1640ms; }
     @keyframes ctaSettle {
       0% { transform: translateY(6px) scale(0.96); opacity: 0; }
       60% { transform: translateY(-2px) scale(1.02); opacity: 1; }
@@ -218,9 +235,19 @@
     }
     @media (prefers-reduced-motion: reduce) {
       .hero-pill, .hero-pill .dot, .hero-glow, .hero-halo, .hero-headline em,
-      .hero-headline::after,
       .hero-headline .word, .hero-sub, .hero-cta,
       .hero-cta .btn-white, .hero-cta .btn-frost { animation: none; opacity: 1; transform: none; filter: none; }
+      /* shimmer 비활성: 글자 fill을 단색으로 */
+      .hero-headline .word {
+        background: none;
+        -webkit-text-fill-color: var(--fg-primary);
+        color: var(--fg-primary);
+      }
+      .hero-headline em.word, .hero-headline em {
+        background-image: linear-gradient(120deg, var(--blue) 0%, #F04452 50%, var(--blue) 100%);
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent; color: transparent;
+      }
     }
 
     /* SECTION TITLE REVEAL — feature title, sec-head h2 공통 패턴.
@@ -241,81 +268,82 @@
     .sec-head h2, .cta-section h2 {
       margin-left: auto; margin-right: auto;
     }
+    /* 진입 모션 강화 (이슈 3: "애니메이션 눈에 안 띈다")
+       - y 14px → 24px
+       - blur 진입 (0 → 8px → 0) 추가
+       - duration 800 → 1000ms */
     .reveal .ft-title,
     .reveal .sec-head h2,
     .reveal .cta-section h2 {
       opacity: 0;
-      transform: translateY(14px);
-      -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 0%, transparent 0%);
-              mask-image: linear-gradient(180deg, #000 0%, #000 0%, transparent 0%);
-      transition: opacity 800ms cubic-bezier(0.2,0.7,0.2,1),
-                  transform 800ms cubic-bezier(0.2,0.7,0.2,1),
-                  -webkit-mask-image 900ms cubic-bezier(0.2,0.7,0.2,1),
-                  mask-image 900ms cubic-bezier(0.2,0.7,0.2,1);
+      transform: translateY(24px);
+      filter: blur(10px);
+      transition: opacity 1000ms cubic-bezier(0.2,0.7,0.2,1),
+                  transform 1000ms cubic-bezier(0.2,0.7,0.2,1),
+                  filter 900ms cubic-bezier(0.2,0.7,0.2,1);
     }
     .reveal.in .ft-title,
     .reveal.in .sec-head h2,
     .reveal.in .cta-section h2 {
       opacity: 1;
       transform: translateY(0);
-      -webkit-mask-image: linear-gradient(180deg, #000 0%, #000 110%, transparent 110%);
-              mask-image: linear-gradient(180deg, #000 0%, #000 110%, transparent 110%);
+      filter: blur(0);
     }
-    /* 제목 위로 한 번 sweep되는 광택 — viewport 진입 시 1회 */
-    .ft-title::after, .sec-head h2::after, .cta-section h2::after {
-      content: "";
-      position: absolute;
-      inset: -4px -16px;
-      pointer-events: none;
-      background: linear-gradient(105deg,
-        transparent 35%,
-        rgba(255,255,255,0.10) 47%,
-        rgba(255,255,255,0.24) 50%,
-        rgba(255,255,255,0.10) 53%,
-        transparent 65%);
-      background-size: 240% 100%;
-      background-position: -60% 0;
-      mix-blend-mode: overlay;
-      opacity: 0;
-      -webkit-mask-image: linear-gradient(180deg, #000 30%, #000 70%, transparent 100%);
-              mask-image: linear-gradient(180deg, #000 30%, #000 70%, transparent 100%);
+    /* 섹션 제목 글자 fill 자체에 shimmer — 박스가 아닌 "글자 모양 안쪽"에만 sweep
+       (이슈 4 해결: ::after + mix-blend-mode 박스 sweep 제거)
+       background-clip: text 로 글자 영역 밖에는 어떤 그라데이션도 보이지 않는다. */
+    .ft-title, .sec-head h2, .cta-section h2 {
+      background-image: linear-gradient(100deg,
+        #F0F0F0 0%,
+        #F0F0F0 40%,
+        #FFFFFF 50%,
+        #F0F0F0 60%,
+        #F0F0F0 100%);
+      background-size: 260% 100%;
+      background-position: 100% 0;
+      -webkit-background-clip: text;
+              background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
     }
-    .reveal.in .ft-title::after,
-    .reveal.in .sec-head h2::after,
-    .reveal.in .cta-section h2::after {
-      animation: titleSweepMini 1800ms cubic-bezier(0.2,0.7,0.2,1) 280ms forwards;
+    .reveal.in .ft-title,
+    .reveal.in .sec-head h2,
+    .reveal.in .cta-section h2 {
+      animation: titleShine 2000ms cubic-bezier(0.4,0,0.2,1) 280ms forwards;
     }
-    @keyframes titleSweepMini {
-      0% { background-position: -60% 0; opacity: 0; }
-      20% { opacity: 1; }
-      80% { opacity: 1; }
-      100% { background-position: 160% 0; opacity: 0; }
+    @keyframes titleShine {
+      0%   { background-position: 100% 0; }
+      100% { background-position: -30% 0; }
     }
-    /* ft-card 내부 title (ttl 류) — 카드 진입 시 짧은 fade-up */
+    /* ft-card 내부 title (ttl 류) — 카드 진입 시 명확한 fade-up.
+       y/blur 강도를 키워 사용자가 즉시 인지할 수 있게. */
     .reveal.in .ftc-port-head .ttl,
     .reveal.in .how-card .ttl,
     .reveal.in .term-card .nm {
-      animation: subTitleIn 600ms cubic-bezier(0.2,0.7,0.2,1) both;
+      animation: subTitleIn 800ms cubic-bezier(0.2,0.7,0.2,1) both;
     }
     .reveal.in .how-card:nth-child(1) .ttl,
-    .reveal.in .term-card:nth-child(1) .nm { animation-delay: 200ms; }
+    .reveal.in .term-card:nth-child(1) .nm { animation-delay: 260ms; }
     .reveal.in .how-card:nth-child(2) .ttl,
-    .reveal.in .term-card:nth-child(2) .nm { animation-delay: 300ms; }
+    .reveal.in .term-card:nth-child(2) .nm { animation-delay: 420ms; }
     .reveal.in .how-card:nth-child(3) .ttl,
-    .reveal.in .term-card:nth-child(3) .nm { animation-delay: 400ms; }
-    .reveal.in .term-card:nth-child(4) .nm { animation-delay: 500ms; }
+    .reveal.in .term-card:nth-child(3) .nm { animation-delay: 580ms; }
+    .reveal.in .term-card:nth-child(4) .nm { animation-delay: 740ms; }
     @keyframes subTitleIn {
-      0% { opacity: 0; transform: translateY(8px); filter: blur(4px); }
-      60% { filter: blur(0); }
+      0% { opacity: 0; transform: translateY(14px); filter: blur(8px); }
+      55% { filter: blur(0.5px); }
       100% { opacity: 1; transform: translateY(0); filter: blur(0); }
     }
     @media (prefers-reduced-motion: reduce) {
       .reveal .ft-title, .reveal .sec-head h2, .reveal .cta-section h2,
       .reveal.in .ft-title, .reveal.in .sec-head h2, .reveal.in .cta-section h2 {
-        opacity: 1; transform: none; transition: none;
-        -webkit-mask-image: none; mask-image: none;
+        opacity: 1; transform: none; transition: none; filter: none;
+        animation: none;
+        /* shimmer 비활성: 글자 fill을 단색으로 (background-clip: text 무효화) */
+        background: none;
+        -webkit-text-fill-color: var(--fg-primary);
+        color: var(--fg-primary);
       }
-      .ft-title::after, .sec-head h2::after, .cta-section h2::after { display: none; }
       .reveal.in .ftc-port-head .ttl,
       .reveal.in .how-card .ttl,
       .reveal.in .term-card .nm { animation: none; }
@@ -388,30 +416,43 @@
     .product-preview .pp-fade-left,
     .product-preview .pp-fade-right,
     .product-preview .pp-fade-corners { display: none !important; }
-    /* 모바일 — fade 영역을 살짝 축소(카드가 좁아 fade가 콘텐츠 영역을 침범 안 하게) */
+    /* 모바일 — fade 영역 재설계
+       - 데스크탑은 카드 폭이 충분해 직선 fade가 자연스럽게 보이지만,
+         모바일에선 카드가 좁아 단일 stop 직선 fade가 "박스 자른 듯한 경계"로 보였음.
+       - 좌우 fade는 모바일에서 시각적 가치가 낮으니 폭을 줄이고(28px),
+         상하 fade는 멀티-스톱 부드러운 그라데이션으로 ease-out 곡선을 흉내.
+       - 하단은 마지막 종목 행이 잘려보이지 않게 충분한 거리를 두고 천천히 페이드. */
     @media (max-width: 760px) {
       .product-preview::before {
         -webkit-mask-image:
           linear-gradient(to right,
             transparent 0,
-            #000 56px,
-            #000 calc(100% - 56px),
+            #000 28px,
+            #000 calc(100% - 28px),
             transparent 100%),
           linear-gradient(to bottom,
             transparent 0,
-            #000 72px,
-            #000 calc(100% - 72px),
+            rgba(0,0,0,0.35) 28px,
+            rgba(0,0,0,0.85) 64px,
+            #000 96px,
+            #000 calc(100% - 96px),
+            rgba(0,0,0,0.85) calc(100% - 64px),
+            rgba(0,0,0,0.35) calc(100% - 28px),
             transparent 100%);
                 mask-image:
           linear-gradient(to right,
             transparent 0,
-            #000 56px,
-            #000 calc(100% - 56px),
+            #000 28px,
+            #000 calc(100% - 28px),
             transparent 100%),
           linear-gradient(to bottom,
             transparent 0,
-            #000 72px,
-            #000 calc(100% - 72px),
+            rgba(0,0,0,0.35) 28px,
+            rgba(0,0,0,0.85) 64px,
+            #000 96px,
+            #000 calc(100% - 96px),
+            rgba(0,0,0,0.85) calc(100% - 64px),
+            rgba(0,0,0,0.35) calc(100% - 28px),
             transparent 100%);
       }
     }
@@ -674,14 +715,21 @@
       nav.menu { display: none; }
       .nav-wrap { padding: 14px 18px; }
       main { padding: 0 18px; }
-      .hero { padding-top: 56px; padding-bottom: 36px; }
+      /* 모바일 hero: header(54px) + margin-top(-64px) 보정 + breathing room.
+         핵심: pill이 sticky header 아래에 충분히 떨어져 보이도록 padding-top을 키운다.
+         계산: header 54 + |margin-top| 64 + pill 위 여백 28 ≈ 146 → 안전하게 140 */
+      .hero { padding-top: 140px; padding-bottom: 36px; }
       .hero-headline { font-size: 36px; }
       .hero-sub { font-size: 15px; margin-top: 22px; }
       .hero-cta { margin-top: 24px; }
       .pp-body { padding: 16px; gap: 14px; }
       .pp-big { font-size: 28px; }
       .pp-spark { height: 60px !important; }
-      .pp-stock { grid-template-columns: 26px 1fr 52px 48px; padding: 0 12px; min-height: 50px; column-gap: 10px; }
+      /* 모바일 pp-stock: 종목명-차트가 자연 인접하도록 text 컬럼을 고정폭으로 두고,
+         차트는 종목명 직후 위치. 남는 가로 공간은 차트-수치 사이 spacer(1fr)가 흡수.
+         결과: 종목명-차트 gap=14px로 통일, 차트 시작 x 좌표는 전 행 동일.
+         자식이 4개(brand/text/spark/num)라 num이 마지막 1fr 컬럼에 우측 정렬로 박힌다. */
+      .pp-stock { grid-template-columns: 26px 100px 52px 1fr; padding: 0 12px; min-height: 50px; column-gap: 14px; }
       .pp-stock .brand-mark { width: 26px; height: 26px; border-radius: 6px; }
       .pp-stock .brand-mark .logo { width: 14px; height: 14px; }
       .pp-stock .nm { font-size: 12.5px; }
@@ -806,7 +854,11 @@
     .reveal.in .faq-item:nth-child(3) { animation-delay: 280ms; }
     .reveal.in .term-card:nth-child(4),
     .reveal.in .faq-item:nth-child(4) { animation-delay: 380ms; }
-    @keyframes rowIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes rowIn {
+      from { opacity: 0; transform: translateY(16px); filter: blur(4px); }
+      60% { filter: blur(0); }
+      to { opacity: 1; transform: translateY(0); filter: blur(0); }
+    }
     @media (prefers-reduced-motion: reduce) {
       .reveal.in .pp-stock,
       .reveal.in .ftc-port-row,
@@ -850,13 +902,13 @@
       </span>
       <h1 class="hero-headline">
         <span class="line">
-          <span class="word" style="animation-delay: 80ms;">보유</span>
-          <span class="word" style="animation-delay: 180ms;">종목과</span>
-          <span class="word" style="animation-delay: 280ms;">시장을</span>
+          <span class="word" style="animation-delay: 200ms;">보유</span>
+          <span class="word" style="animation-delay: 400ms;">종목과</span>
+          <span class="word" style="animation-delay: 600ms;">시장을</span>
         </span>
         <span class="line">
-          <em class="word" style="animation-delay: 400ms;">같이</em>
-          <span class="word" style="animation-delay: 500ms;">읽어드립니다.</span>
+          <em class="word" style="animation-delay: 820ms;">같이</em>
+          <span class="word" style="animation-delay: 1020ms;">읽어드립니다.</span>
         </span>
       </h1>
       <p class="hero-sub">

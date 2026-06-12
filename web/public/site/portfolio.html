@@ -263,17 +263,20 @@
     @media (max-width: 640px) {
       /* 표 자체 max-width 제거하고 카드 전체 폭 사용 — 좌측 치우침 방지 */
       .stock-table-card table { max-width: 100% !important; }
-      /* 모바일 4열: 종목(26%) / 추이(16%) / 30D%(30%) / 평가액(28%) — 비중은 숨김, 시각 무게 가운데 */
+      /* 모바일 4열: 종목(26%) / 추이(20%) / 30D%(26%) / 평가액(28%) — 비중은 숨김, 시각 무게 가운데
+         추이↔30D% 간격을 줄이기 위해 col2를 16→20%로 넓혀 sparkline 오른쪽 끝을 30D% 셀 쪽으로 이동,
+         col3를 30→26%로 좁혀 "+5.20%" 텍스트 시작 위치도 왼쪽으로 당김. */
       table colgroup col:nth-child(1) { width: 26% !important; }
-      table colgroup col:nth-child(2) { width: 16% !important; }
-      table colgroup col:nth-child(3) { width: 30% !important; }
+      table colgroup col:nth-child(2) { width: 20% !important; }
+      table colgroup col:nth-child(3) { width: 26% !important; }
       table colgroup col:nth-child(4) { width: 0 !important; }
       table colgroup col:nth-child(5) { width: 28% !important; }
       .stock-tr td { padding: 14px 4px !important; vertical-align: middle; }
       .stock-tr td:nth-child(4) { display: none !important; }
       .stock-tr td:nth-child(1) { padding-left: 2px !important; padding-right: 4px !important; }
-      .stock-tr td:nth-child(2) { padding: 14px 4px !important; text-align: center !important; }
-      .stock-tr td:nth-child(2) > div { width: 56px !important; height: 22px !important; margin: 0 auto !important; display: inline-block; vertical-align: middle; }
+      /* sparkline 셀: 오른쪽 정렬 + 우측 padding 최소화로 30D% 셀과의 시각적 간격을 좁힌다. */
+      .stock-tr td:nth-child(2) { padding: 14px 0 14px 4px !important; text-align: right !important; }
+      .stock-tr td:nth-child(2) > div { width: 60px !important; height: 22px !important; margin: 0 0 0 auto !important; display: inline-block; vertical-align: middle; }
       /* 본문 30D % td: 헤더(th)와 동일한 우측 padding(8px)으로 통일해
          헤더 "30D %"와 본문 "+5.20%"의 우측 가장자리를 한 라인으로 정렬한다. */
       .stock-tr td:nth-child(3) { padding: 14px 8px 14px 4px !important; text-align: right !important; }
@@ -284,7 +287,8 @@
       .stock-tr td:nth-child(5) { padding-left: 4px !important; padding-right: 2px !important; font-size: 12.5px; white-space: nowrap; text-align: right !important; }
       table thead th { padding: 0 4px 10px; font-size: 10.5px; white-space: nowrap; }
       table thead th:nth-child(1) { padding-left: 2px; text-align: left; }
-      table thead th:nth-child(2) { text-align: center; }
+      /* "30D 추이" 헤더도 sparkline과 같은 오른쪽 정렬로 시각 라인 통일 */
+      table thead th:nth-child(2) { text-align: right; padding-right: 0; }
       /* 헤더 30D %: td와 동일한 우측 padding(8px) — 본문 수치와 같은 우측 라인 */
       table thead th:nth-child(3) { text-align: right; padding-right: 8px; }
       table thead th:nth-child(4) { display: none; }
