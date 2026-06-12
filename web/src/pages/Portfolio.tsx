@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   stocks,
@@ -12,6 +12,28 @@ import {
   buildHeaderStats,
   buildChart,
 } from "../lib/portfolioCharts";
+import { getPortfolioAnalysis, isLiveAnalysis, type DataSource } from "../lib/api";
+import SourceBadge from "../components/SourceBadge";
+
+/* AI 분석 카드 기본값 — 백엔드 미연결 시 보여주는 데모 쇼케이스.
+   /api/portfolio/analysis 가 실 분석(키 있음)을 주면 이 값을 덮어쓴다. */
+interface AnalysisView {
+  sub: string;
+  summary: string;
+  characteristics: string[];
+  strengths: string[];
+  risks: string[];
+  suggestions: string[];
+}
+
+const DEMO_ANALYSIS: AnalysisView = {
+  sub: "데모 구성 · 백엔드 연결 시 실시간 생성",
+  summary: "국내 대형주와 미국 빅테크가 섞인 성장주 포트폴리오. 반도체 사이클과 환율이 핵심 변수.",
+  characteristics: ["성장주 비중 약 70%", "반도체·AI 노출 50%", "국내 60% · 해외 40%"],
+  strengths: ["AI 수요 수혜 종목 집중", "분기 실적 우상향 사이클", "달러 자산으로 환율 헷지"],
+  risks: ["삼성전자 단일 비중 32%", "반도체 사이클 동조 가능", "원화 강세 시 평가액 압축"],
+  suggestions: ["반도체 외 섹터 비중 검토", "방어주·배당주 일부 편입", "환율 시나리오 점검"],
+};
 
 /* /site/portfolio.html <main class="page-pad"> 를 그대로(verbatim) 이식.
    page-head / hero-card / KPI 4 / 보유 종목 표 / 도넛 + 라인차트 / AI 분석.
@@ -19,6 +41,34 @@ import {
    같은 순서로 호출해 동일 DOM/SVG 를 주입한다. 종목 행 클릭 펼침도 동일 이식. */
 export default function Portfolio() {
   const ranRef = useRef(false);
+  const [analysis, setAnalysis] = useState<AnalysisView>(DEMO_ANALYSIS);
+  const [analysisSource, setAnalysisSource] = useState<DataSource>("demo");
+
+  // AI 분석: /api/portfolio/analysis (LLM). 실 분석이 오면 카드를 덮어쓰고,
+  // 키 없음/백엔드 미연결이면 데모 쇼케이스를 그대로 둔다. 보유 종목 표/도넛은
+  // 백엔드 mock(2종목)과 디자인(10종목)이 달라 건드리지 않는다.
+  useEffect(() => {
+    let alive = true;
+    getPortfolioAnalysis()
+      .then((r) => {
+        if (!alive || !isLiveAnalysis(r)) return;
+        setAnalysis({
+          sub: [r.portfolio_type, r.investor_match].filter(Boolean).join(" · "),
+          summary: r.summary,
+          characteristics: r.characteristics?.length ? r.characteristics : DEMO_ANALYSIS.characteristics,
+          strengths: r.strengths?.length ? r.strengths : DEMO_ANALYSIS.strengths,
+          risks: r.risks?.length ? r.risks : DEMO_ANALYSIS.risks,
+          suggestions: r.suggestions?.length ? r.suggestions : DEMO_ANALYSIS.suggestions,
+        });
+        setAnalysisSource("live");
+      })
+      .catch(() => {
+        /* 백엔드 미연결/타임아웃 → 데모 쇼케이스 유지 */
+      });
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   useEffect(() => {
     // StrictMode 의 dev 이중 마운트에서도 출력은 동일하지만, 클릭 핸들러 중복 바인딩과
@@ -339,11 +389,15 @@ export default function Portfolio() {
         <section className="card c-12 reveal" style={{ padding: "28px" }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
             <div>
-              <div className="subhead" style={{ fontSize: "17px" }}>
+              <div
+                className="subhead"
+                style={{ fontSize: "17px", display: "flex", alignItems: "center", gap: "10px" }}
+              >
                 AI 분석
+                <SourceBadge source={analysisSource} liveLabel="실시간 분석" demoLabel="데모 분석" />
               </div>
               <div style={{ fontSize: "12px", color: "var(--fg-muted)", marginTop: "4px" }}>
-                자동 생성 · 2026.06.11 09:00
+                {analysis.sub}
               </div>
             </div>
             <Link
@@ -353,40 +407,38 @@ export default function Portfolio() {
               코치에게 자세히 묻기 →
             </Link>
           </div>
-          <p style={{ marginTop: "14px", fontSize: "15px", lineHeight: 1.7 }}>
-            국내 대형주와 미국 빅테크가 섞인 성장주 포트폴리오. 반도체 사이클과 환율이 핵심 변수.
-          </p>
+          <p style={{ marginTop: "14px", fontSize: "15px", lineHeight: 1.7 }}>{analysis.summary}</p>
           <div className="insight-grid">
             <div className="insight">
               <div className="label">특성</div>
               <ul>
-                <li>성장주 비중 약 70%</li>
-                <li>반도체·AI 노출 50%</li>
-                <li>국내 60% · 해외 40%</li>
+                {analysis.characteristics.map((t, i) => (
+                  <li key={i}>{t}</li>
+                ))}
               </ul>
             </div>
             <div className="insight">
               <div className="label">강점</div>
               <ul>
-                <li>AI 수요 수혜 종목 집중</li>
-                <li>분기 실적 우상향 사이클</li>
-                <li>달러 자산으로 환율 헷지</li>
+                {analysis.strengths.map((t, i) => (
+                  <li key={i}>{t}</li>
+                ))}
               </ul>
             </div>
             <div className="insight">
               <div className="label">리스크</div>
               <ul>
-                <li>삼성전자 단일 비중 32%</li>
-                <li>반도체 사이클 동조 가능</li>
-                <li>원화 강세 시 평가액 압축</li>
+                {analysis.risks.map((t, i) => (
+                  <li key={i}>{t}</li>
+                ))}
               </ul>
             </div>
             <div className="insight">
               <div className="label">점검 포인트</div>
               <ul>
-                <li>반도체 외 섹터 비중 검토</li>
-                <li>방어주·배당주 일부 편입</li>
-                <li>환율 시나리오 점검</li>
+                {analysis.suggestions.map((t, i) => (
+                  <li key={i}>{t}</li>
+                ))}
               </ul>
             </div>
           </div>

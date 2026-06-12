@@ -1,12 +1,25 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
+import { streamChat, type ChatMessage, type DataSource } from "../lib/api";
+import SourceBadge from "../components/SourceBadge";
 
-/* /site/chat.html <main class="page-pad"> 를 그대로(verbatim) 이식.
-   page-head / chat-layout(sidebar + chat-main) / 메시지 / 입력창 / 면책.
-   인라인 <script> 의 addQuestion / sendMessage / Enter 키 핸들러를 그대로 이식한다.
-   메시지 추가는 원본과 동일하게 DOM API(createElement)로 append 한다(출력 동일). */
+/* /site/chat.html <main class="page-pad"> 를 그대로(verbatim) 이식하되, 메시지 전송은
+   실제 /api/chat/stream (SSE) 에 연결한다. 백엔드가 없거나 실패하면 데모 응답으로
+   graceful fallback 하고, 상단 배지로 실시간/데모 출처를 표시한다.
+   초기 시드 버블은 디자인 쇼케이스이므로 LLM history 에는 포함하지 않는다. */
 export default function Chat() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
+  const historyRef = useRef<ChatMessage[]>([]);
+  const aliveRef = useRef(true);
+  const sendingRef = useRef(false);
+  const [source, setSource] = useState<DataSource>("demo");
+
+  useEffect(() => {
+    aliveRef.current = true;
+    return () => {
+      aliveRef.current = false;
+    };
+  }, []);
 
   // 자주 묻는 질문 클릭 → 입력창에 채우고 포커스
   const addQuestion = (q: string) => {
@@ -16,30 +29,115 @@ export default function Chat() {
     input.focus();
   };
 
-  // 보내기 → user 버블 추가 + 0.4s 뒤 코치 타이핑 버블 추가 (원본 시뮬레이션 그대로)
+  const scrollToBottom = () => {
+    const msgs = messagesRef.current;
+    if (msgs) msgs.scrollTop = msgs.scrollHeight;
+  };
+
+  // 코치 버블 + 타이핑 인디케이터 생성
+  const appendCoachBubble = (): { bubble: HTMLDivElement; content: HTMLSpanElement } => {
+    const msgs = messagesRef.current!;
+    const bubble = document.createElement("div");
+    bubble.className = "bubble coach";
+    bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
+    const content = document.createElement("span");
+    content.style.whiteSpace = "pre-wrap";
+    msgs.appendChild(bubble);
+    scrollToBottom();
+    return { bubble, content };
+  };
+
+  // 첫 델타 도착 시 타이핑 인디케이터를 본문 span 으로 교체
+  const swapTypingToContent = (bubble: HTMLDivElement, content: HTMLSpanElement) => {
+    bubble.innerHTML = "";
+    bubble.appendChild(content);
+  };
+
+  const finishCoach = (bubble: HTMLDivElement) => {
+    const meta = document.createElement("div");
+    meta.className = "meta";
+    meta.textContent = "FC · 방금";
+    bubble.appendChild(meta);
+    scrollToBottom();
+  };
+
+  // 보내기 → user 버블 추가 + 실시간 스트리밍 응답
   const sendMessage = () => {
     const input = inputRef.current;
     const msgs = messagesRef.current;
-    if (!input || !msgs) return;
+    if (!input || !msgs || sendingRef.current) return;
     const text = input.value.trim();
     if (!text) return;
+
+    // user 버블
     const bub = document.createElement("div");
     bub.className = "bubble user";
     bub.textContent = text;
-    // remove existing typing
+    // 기존 타이핑 인디케이터 제거
     const typing = msgs.querySelector(".bubble.coach .typing");
     if (typing) typing.parentElement!.remove();
     msgs.appendChild(bub);
     input.value = "";
-    // simulate response
-    setTimeout(() => {
-      const reply = document.createElement("div");
-      reply.className = "bubble coach";
-      reply.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
-      msgs.appendChild(reply);
-      msgs.scrollTop = msgs.scrollHeight;
-    }, 400);
-    msgs.scrollTop = msgs.scrollHeight;
+    scrollToBottom();
+
+    sendingRef.current = true;
+    const prior = [...historyRef.current];
+    const { bubble, content } = appendCoachBubble();
+    let acc = "";
+    let swapped = false;
+
+    const onText = (delta: string) => {
+      acc += delta;
+      if (!swapped) {
+        swapTypingToContent(bubble, content);
+        swapped = true;
+      }
+      content.textContent = acc;
+      scrollToBottom();
+    };
+
+    streamChat(text, prior, {
+      onDelta: onText,
+      onError: (msg) => {
+        onText(`\n\n(응답 오류: ${msg})`);
+      },
+    })
+      .then(() => {
+        // 백엔드가 데모 모드 메시지를 보냈으면 demo, 아니면 live
+        const isDemo = acc.includes("[데모 모드]") || acc === "";
+        if (aliveRef.current) setSource(isDemo ? "demo" : "live");
+        if (!swapped) {
+          // 델타가 전혀 없던 경우(빈 응답) — 데모 안내로 대체
+          swapTypingToContent(bubble, content);
+          content.textContent =
+            "지금은 데모 모드예요. 백엔드를 연결하면 실시간으로 답해드릴게요.";
+        }
+        historyRef.current = [
+          ...prior,
+          { role: "user", content: text },
+          { role: "assistant", content: acc },
+        ];
+        finishCoach(bubble);
+      })
+      .catch(() => {
+        // 전송 실패(백엔드 없음/타임아웃) → 데모 응답으로 graceful fallback
+        if (!swapped) swapTypingToContent(bubble, content);
+        content.textContent =
+          "지금은 데모 모드로 동작 중이에요. 백엔드(API)를 연결하면 보유 종목과 시장을 함께 보고 실시간으로 답해드립니다.";
+        if (aliveRef.current) setSource("demo");
+        finishCoach(bubble);
+      })
+      .finally(() => {
+        sendingRef.current = false;
+      });
+  };
+
+  // 대화 비우기 → 메시지/히스토리 초기화
+  const clearChat = () => {
+    const msgs = messagesRef.current;
+    if (msgs) msgs.innerHTML = "";
+    historyRef.current = [];
+    setSource("demo");
   };
 
   // Enter 키로 전송 (원본 keydown 핸들러 그대로)
@@ -51,6 +149,7 @@ export default function Chat() {
     };
     input.addEventListener("keydown", onKeyDown);
     return () => input.removeEventListener("keydown", onKeyDown);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -68,7 +167,9 @@ export default function Chat() {
       <div className="chat-layout">
         {/* SIDEBAR */}
         <aside className="card sidebar reveal">
-          <button className="new-chat">+ 새 대화</button>
+          <button className="new-chat" onClick={() => clearChat()}>
+            + 새 대화
+          </button>
 
           <div className="side-label">최근 대화</div>
           <div className="side-list">
@@ -107,8 +208,13 @@ export default function Chat() {
                 <div className="sub">AI · CLAUDE HAIKU 4.5 · KO</div>
               </div>
             </div>
-            <div style={{ display: "flex", gap: "6px" }}>
-              <button className="nav-ghost" style={{ padding: "5px 12px", fontSize: "12px" }}>
+            <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+              <SourceBadge source={source} liveLabel="실시간 응답" demoLabel="데모 응답" />
+              <button
+                className="nav-ghost"
+                style={{ padding: "5px 12px", fontSize: "12px" }}
+                onClick={() => clearChat()}
+              >
                 대화 비우기
               </button>
             </div>
@@ -138,14 +244,6 @@ export default function Chat() {
               지금 반도체 사이클 회복 신호가 누적되는 국면이라 단기 기대는 있지만, 사이클이 하강
               국면에 진입하면 두 종목이 동시에 흔들릴 위험이 있어요.
               <div className="meta">FC · 4초 전</div>
-            </div>
-            <div className="bubble user">방어주 비중을 어떻게 늘릴까요?</div>
-            <div className="bubble coach">
-              <span className="typing">
-                <span></span>
-                <span></span>
-                <span></span>
-              </span>
             </div>
           </div>
 
