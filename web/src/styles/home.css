@@ -1,0 +1,914 @@
+    section { padding: 96px 0; }
+    @media (max-width: 720px) { section { padding: 56px 0; } }
+
+    /* hero full-bleed: <main>의 max-width: 1180px + padding을 negative margin으로 빠져나와
+       뷰포트 전폭을 차지한다. 이렇게 해야 hero-glow 텍스처가 hero overflow:hidden 경계에서
+       수직으로 잘리지 않고, 뷰포트 양 끝 #000 으로 자연 페이드된다.
+       내부 콘텐츠(.hero-headline, .hero-sub 등)는 자체 max-width + margin: auto 로 정렬되어
+       full-bleed 후에도 화면 중앙에 그대로 위치한다. */
+    .hero {
+      position: relative;
+      /* header가 hero 위에 떠 있는 형태이지만 sticky라 hero 자신의 top padding은
+         header 높이만큼 추가로 더해줘 헤드라인이 header와 겹치지 않게.
+         기존 96 + header ~62 = 약 158. 광원이 header 뒤로도 뻗어 보이도록 더 늘림. */
+      padding-top: 140px; padding-bottom: 64px;
+      padding-left: 24px; padding-right: 24px;
+      text-align: center;
+      /* main이 max-w 1180 + pad 28 + margin auto 인 상태에서 뷰포트 전폭으로 확장.
+         calc((100vw - 100%) / -2) = 좌우로 빠져나가야 할 양. */
+      margin-left: calc((100vw - 100%) / -2);
+      margin-right: calc((100vw - 100%) / -2);
+      /* header도 sticky하므로 hero가 header를 시각적으로 받쳐주려면 hero가
+         viewport 상단까지 닿아야 한다. 음수 margin-top으로 header 뒤로 들어감. */
+      margin-top: -64px;
+      width: 100vw;
+      max-width: 100vw;
+      /* overflow:hidden 유지 — 텍스처가 viewport 밖으로 새는 건 방지 */
+      overflow: hidden;
+      /* hero 자체에 좌우 horizontal soft mask. 가장자리 0~10% 구간을 페이드해
+         hero-glow의 어떤 픽셀도 뷰포트 끝에서 sharp cut 으로 끊기지 않게 한다.
+         상하는 그대로 두어 헤더/다음 섹션과의 경계는 유지. */
+      -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
+              mask-image: linear-gradient(to right, transparent 0%, #000 12%, #000 88%, transparent 100%);
+    }
+    @media (max-width: 720px) {
+      .hero {
+        padding-left: 18px; padding-right: 18px;
+        /* 모바일은 main padding이 18px라 1124->354 식으로 좁아진다.
+           full-bleed 후 좌우 fade 비율을 좀 더 좁혀 콘텐츠 영역을 보호. */
+        -webkit-mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+                mask-image: linear-gradient(to right, transparent 0%, #000 6%, #000 94%, transparent 100%);
+      }
+    }
+    .hero-glow {
+      position: absolute; top: -220px; left: 50%; transform: translateX(-50%);
+      /* 뷰포트보다 충분히 크되 너무 거대하지 않게. 최소 1600px, 최대 viewport의 130%. */
+      width: min(2000px, 140vw); height: 1080px;
+      background:
+        /* 상단 ambient — nav/pill 영역(glow 상단 ~12%)이 검정으로 죽지 않게 은은하게 받친다.
+           매우 옅게(0.05). 중앙 메인 광원과 분리되어 헤더 근처 공기에만 미세한 빛. */
+        radial-gradient(ellipse 72% 24% at 50% 12%, rgba(214,235,253,0.05), transparent 72%),
+        /* 한국식 빨강/파랑 hint — 좌우 1존씩. 0.055 → 0.072 로 살짝 올려 색이 "있다"는 게
+           보이되 다크 톤은 유지. 매우 옅게. */
+        radial-gradient(ellipse 38% 42% at 30% 18%, rgba(240,68,82,0.072), transparent 65%),
+        radial-gradient(ellipse 38% 42% at 70% 18%, rgba(59,158,255,0.072), transparent 65%),
+        /* 중앙 상단의 메인 광원 — 헤드라인 뒤를 받친다.
+           밝음(0.16)과 거의 안 보임(0.075)의 중간 지점 → 0.115.
+           상하단 ambient + vignette 완화로 중앙도 살짝 올라갔으므로 0.110 으로 미세 하향,
+           "중앙은 유지" 요구에 맞춰 peak를 거의 그대로 둔다. */
+        radial-gradient(ellipse 56% 50% at 50% 22%, rgba(214,235,253,0.110), transparent 72%),
+        /* 하단 ambient — hero가 product-preview 카드로 이어지는 구간(glow 하단 ~58%)이
+           검정으로 끊기지 않게 넓고 옅게(0.06) 받친다. 카드가 빛 위에 떠 보이도록. */
+        radial-gradient(ellipse 60% 30% at 50% 58%, rgba(214,235,253,0.06), transparent 74%),
+        /* 어둠 vignette — 0.62는 광원을 다 먹었음. 0.52 → 0.46 으로 추가 완화해
+           상하단 가장자리의 crush를 덜어준다. */
+        radial-gradient(closest-side, rgba(0,0,0,0) 32%, rgba(0,0,0,0.46) 92%),
+        url("/site/assets/hero-bg.png") center/cover no-repeat;
+      /* bg 이미지 — 0.58은 거의 안 보였음. 0.70 으로 올려 텍스처가 은은히 살아나게.
+         채도는 0.82 유지(다크 톤 보존). */
+      filter: brightness(0.70) saturate(0.84);
+      pointer-events: none; z-index: -1;
+      /* radial mask 영역을 상하로 더 넓혀 광원이 nav/pill(상단)과 product-preview 직전(하단)
+         까지 닿게 한다. 중앙 peak는 그대로 두고(black 30%) 세로 ellipse(88%→96%)와
+         fade-out(82%→90%)만 키워 상하단만 추가로 살린다. */
+      mask-image: radial-gradient(ellipse 78% 96% at center 30%, black 30%, transparent 90%);
+      -webkit-mask-image: radial-gradient(ellipse 78% 96% at center 30%, black 30%, transparent 90%);
+    }
+    /* hero 헤드라인 바로 뒤 ambient halo — 헤드라인이 살짝 떠올라 보이도록.
+       viewport 진입 시 한 번 0→1로 페이드되고, 이후 매우 느린 breathe.
+       톤은 거의 안 보일 정도로 절제 — 단지 헤드라인 뒤 공기에 미세한 깊이감만. */
+    .hero-halo {
+      position: absolute;
+      left: 50%; top: 36%;
+      transform: translate(-50%, -50%);
+      width: min(820px, 86vw); height: 320px;
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0;
+      background:
+        radial-gradient(ellipse 50% 55% at 50% 50%, rgba(214,235,253,0.16), transparent 70%),
+        radial-gradient(ellipse 28% 60% at 28% 50%, rgba(240,68,82,0.05), transparent 70%),
+        radial-gradient(ellipse 28% 60% at 72% 50%, rgba(59,158,255,0.06), transparent 70%);
+      filter: blur(32px);
+      animation: haloIn 1400ms cubic-bezier(0.2,0.7,0.2,1) 200ms forwards,
+                 haloBreathe 11s ease-in-out 1800ms infinite;
+    }
+    @keyframes haloIn { to { opacity: 0.85; } }
+    @keyframes haloBreathe {
+      0%, 100% { opacity: 0.85; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 0.62; transform: translate(-50%, -50%) scale(1.03); }
+    }
+    .hero-pill {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 5px 10px 5px 8px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid var(--frost);
+      border-radius: 9999px;
+      font-size: 12px; color: var(--fg-secondary); font-weight: 500;
+      margin-bottom: 28px;
+    }
+    .hero-pill .dot {
+      width: 6px; height: 6px; border-radius: 999px; background: var(--green);
+      box-shadow: 0 0 8px var(--green);
+      animation: dotPulse 2.4s ease-in-out infinite;
+    }
+    @keyframes dotPulse {
+      0%, 100% { box-shadow: 0 0 6px var(--green); transform: scale(1); }
+      50% { box-shadow: 0 0 14px var(--green), 0 0 24px rgba(17,255,153,0.45); transform: scale(1.12); }
+    }
+    .hero-pill .sep { color: var(--fg-muted); }
+    .hero-pill { animation: pillFloat 5.5s ease-in-out infinite; }
+    @keyframes pillFloat { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-3px); } }
+
+    .hero-glow { animation: glowBreathe 9s ease-in-out infinite; }
+    @keyframes glowBreathe {
+      0%, 100% { opacity: 0.78; }
+      50% { opacity: 0.94; transform: translateX(-50%) scale(1.03); }
+    }
+
+    .hero-headline {
+      position: relative;
+      font-size: 84px; line-height: 1.02; letter-spacing: -0.045em;
+      width: fit-content; max-width: 100%; margin: 0 auto;
+      text-align: left; font-weight: 800;
+    }
+    .hero-headline > .line { display: block; white-space: nowrap; }
+    @media (max-width: 900px) { .hero-headline { font-size: 44px; } }
+    @media (max-width: 540px) {
+      .hero-headline { font-size: 30px; }
+      .hero-headline > .line { white-space: nowrap; display: block; }
+    }
+    @media (max-width: 380px) {
+      .hero-headline { font-size: 26px; }
+    }
+    /* em (그라데이션 강조어) — .word 의 shimmer 룰을 덮어쓴다.
+       파랑/빨강 그라데이션이 글자 안에서 천천히 흐른다 (한국식 색 1존 원칙). */
+    .hero-headline em.word,
+    .hero-headline em {
+      font-style: normal; font-weight: 800;
+      background-image: linear-gradient(120deg, var(--blue) 0%, var(--green) 50%, var(--blue) 100%);
+      background-size: 220% 100%;
+      background-position: 0% 50%;
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      animation:
+        gradShift 6s ease-in-out infinite,
+        wordIn 1100ms cubic-bezier(0.2,0.7,0.2,1) forwards;
+      display: inline-block;
+    }
+    @keyframes gradShift {
+      0%, 100% { background-position: 0% 50%; }
+      50% { background-position: 100% 50%; }
+    }
+    /* 글자별 entrance — y/blur 강도 키워서 더 또렷이 (사용자 "애니메이션 눈에 안 띈다" 피드백 대응)
+       동시에 글자 모양 안쪽으로 흐르는 shimmer를 background-clip: text 로 입혀
+       "박스가 반짝이지 않고 글자가 반짝이는" sweep (이슈 4) 을 해결한다.
+       모션 강도 — y 44px, scale 0.88→1, blur 18→0, 1300ms */
+    .hero-headline .word {
+      display: inline-block;
+      opacity: 0;
+      transform: translateY(44px) scale(0.88);
+      filter: blur(18px);
+      /* 글자 fill 자체를 gradient + background-clip: text 로 만들어
+         밝은 stripe가 글자 모양 안쪽을 따라 흐른다. 박스(빈 영역)는 절대 반짝이지 않음. */
+      background-image: linear-gradient(100deg,
+        #C8CACC 0%,
+        #C8CACC 36%,
+        #FFFFFF 50%,
+        #C8CACC 64%,
+        #C8CACC 100%);
+      background-size: 320% 100%;
+      background-position: 100% 0;
+      -webkit-background-clip: text;
+              background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+      animation:
+        wordIn 1300ms cubic-bezier(0.2,0.7,0.2,1) forwards,
+        wordShine 2400ms cubic-bezier(0.4,0,0.2,1) forwards;
+    }
+    @keyframes wordIn {
+      0% { opacity: 0; transform: translateY(44px) scale(0.88); filter: blur(18px); }
+      40% { opacity: 0.6; }
+      55% { filter: blur(1px); }
+      100% { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    }
+    /* 글자 안쪽으로 흐르는 shimmer — entrance 직후 밝은 stripe가 글자를 한 번 지나간다.
+       박스가 아니라 글자 fill 이 sweep. */
+    @keyframes wordShine {
+      0%   { background-position: 100% 0; }
+      45%  { background-position: 50% 0; }
+      100% { background-position: -60% 0; }
+    }
+    /* hero가 다시 보일 때마다 word 애니메이션 재실행 */
+    .hero-headline.replay .word {
+      animation:
+        wordIn 1300ms cubic-bezier(0.2,0.7,0.2,1) forwards,
+        wordShine 2400ms cubic-bezier(0.4,0,0.2,1) forwards;
+    }
+    .hero-headline .word { animation-fill-mode: both; }
+    /* headline 자체 매우 미세한 floating (subtle continuous) — entrance 후 시작 */
+    .hero-headline { animation: headlineFloat 10s ease-in-out 2400ms infinite; }
+    @keyframes headlineFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2px); }
+    }
+
+    .hero-sub { margin: 32px auto 0; font-size: 18px; line-height: 1.6; color: var(--fg-secondary); max-width: 560px; word-break: keep-all; overflow-wrap: break-word; }
+    .hero-sub, .hero-cta {
+      opacity: 0; transform: translateY(10px);
+      animation: heroFadeUp 700ms cubic-bezier(0.2,0.7,0.2,1) forwards;
+    }
+    .hero-sub { animation-delay: 1280ms; }
+    .hero-cta { animation-delay: 1440ms; }
+    @keyframes heroFadeUp { to { opacity: 1; transform: translateY(0); } }
+    /* CTA 버튼 — entrance 후 옅게 pull-and-rest (한 번) */
+    .hero-cta .btn-white, .hero-cta .btn-frost {
+      animation: ctaSettle 900ms cubic-bezier(0.34, 1.56, 0.64, 1) 1560ms backwards;
+    }
+    .hero-cta .btn-frost { animation-delay: 1640ms; }
+    @keyframes ctaSettle {
+      0% { transform: translateY(6px) scale(0.96); opacity: 0; }
+      60% { transform: translateY(-2px) scale(1.02); opacity: 1; }
+      100% { transform: translateY(0) scale(1); opacity: 1; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .hero-pill, .hero-pill .dot, .hero-glow, .hero-halo, .hero-headline em,
+      .hero-headline .word, .hero-sub, .hero-cta,
+      .hero-cta .btn-white, .hero-cta .btn-frost { animation: none; opacity: 1; transform: none; filter: none; }
+      /* shimmer 비활성: 글자 fill을 단색으로 */
+      .hero-headline .word {
+        background: none;
+        -webkit-text-fill-color: var(--fg-primary);
+        color: var(--fg-primary);
+      }
+      .hero-headline em.word, .hero-headline em {
+        background-image: linear-gradient(120deg, var(--blue) 0%, var(--green) 50%, var(--blue) 100%);
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent; color: transparent;
+      }
+    }
+
+    /* SECTION TITLE REVEAL — feature title, sec-head h2 공통 패턴.
+       reveal.in 진입 시: mask가 위→아래로 풀리며 등장 + 짧은 gradient sweep.
+       Vercel/Apple 결의 절제된 mask reveal. 헤드라인 word-stagger와 다른 결로
+       반복적이지 않게.
+       NOTE: display는 기본 block 유지 — inline-block으로 바꾸면 형제 요소(.ft-mark)와
+       inline flow가 겹쳐 source 순서가 무너진다. position:relative + width:fit-content
+       조합으로 ::after 가 텍스트 폭에만 걸치게 한다. */
+    .ft-title, .sec-head h2, .cta-section h2 {
+      position: relative;
+      width: fit-content;
+      max-width: 100%;
+    }
+    /* sec-head, cta-section 은 text-align: center 컨테이너이므로 width: fit-content 만으로는
+       가운데 정렬이 풀린다. h2 자체를 inline-block 으로 두되, 부모가 text-align: center 일 때만
+       자동 가운데 정렬. ft-text 의 .ft-title 은 컨테이너가 left-align 이라 fit-content 로 충분. */
+    .sec-head h2, .cta-section h2 {
+      margin-left: auto; margin-right: auto;
+    }
+    /* 진입 모션 강화 (이슈 3: "애니메이션 눈에 안 띈다")
+       - y 14px → 24px
+       - blur 진입 (0 → 8px → 0) 추가
+       - duration 800 → 1000ms */
+    .reveal .ft-title,
+    .reveal .sec-head h2,
+    .reveal .cta-section h2 {
+      opacity: 0;
+      transform: translateY(24px);
+      filter: blur(10px);
+      transition: opacity 1000ms cubic-bezier(0.2,0.7,0.2,1),
+                  transform 1000ms cubic-bezier(0.2,0.7,0.2,1),
+                  filter 900ms cubic-bezier(0.2,0.7,0.2,1);
+    }
+    .reveal.in .ft-title,
+    .reveal.in .sec-head h2,
+    .reveal.in .cta-section h2 {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+    /* 섹션 제목 글자 fill 자체에 shimmer — 박스가 아닌 "글자 모양 안쪽"에만 sweep
+       (이슈 4 해결: ::after + mix-blend-mode 박스 sweep 제거)
+       background-clip: text 로 글자 영역 밖에는 어떤 그라데이션도 보이지 않는다. */
+    .ft-title, .sec-head h2, .cta-section h2 {
+      background-image: linear-gradient(100deg,
+        #F0F0F0 0%,
+        #F0F0F0 40%,
+        #FFFFFF 50%,
+        #F0F0F0 60%,
+        #F0F0F0 100%);
+      background-size: 260% 100%;
+      background-position: 100% 0;
+      -webkit-background-clip: text;
+              background-clip: text;
+      -webkit-text-fill-color: transparent;
+      color: transparent;
+    }
+    .reveal.in .ft-title,
+    .reveal.in .sec-head h2,
+    .reveal.in .cta-section h2 {
+      animation: titleShine 2000ms cubic-bezier(0.4,0,0.2,1) 280ms forwards;
+    }
+    @keyframes titleShine {
+      0%   { background-position: 100% 0; }
+      100% { background-position: -30% 0; }
+    }
+    /* ft-card 내부 title (ttl 류) — 카드 진입 시 명확한 fade-up.
+       y/blur 강도를 키워 사용자가 즉시 인지할 수 있게. */
+    .reveal.in .ftc-port-head .ttl,
+    .reveal.in .how-card .ttl,
+    .reveal.in .term-card .nm {
+      animation: subTitleIn 800ms cubic-bezier(0.2,0.7,0.2,1) both;
+    }
+    .reveal.in .how-card:nth-child(1) .ttl,
+    .reveal.in .term-card:nth-child(1) .nm { animation-delay: 260ms; }
+    .reveal.in .how-card:nth-child(2) .ttl,
+    .reveal.in .term-card:nth-child(2) .nm { animation-delay: 420ms; }
+    .reveal.in .how-card:nth-child(3) .ttl,
+    .reveal.in .term-card:nth-child(3) .nm { animation-delay: 580ms; }
+    .reveal.in .term-card:nth-child(4) .nm { animation-delay: 740ms; }
+    @keyframes subTitleIn {
+      0% { opacity: 0; transform: translateY(14px); filter: blur(8px); }
+      55% { filter: blur(0.5px); }
+      100% { opacity: 1; transform: translateY(0); filter: blur(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal .ft-title, .reveal .sec-head h2, .reveal .cta-section h2,
+      .reveal.in .ft-title, .reveal.in .sec-head h2, .reveal.in .cta-section h2 {
+        opacity: 1; transform: none; transition: none; filter: none;
+        animation: none;
+        /* shimmer 비활성: 글자 fill을 단색으로 (background-clip: text 무효화) */
+        background: none;
+        -webkit-text-fill-color: var(--fg-primary);
+        color: var(--fg-primary);
+      }
+      .reveal.in .ftc-port-head .ttl,
+      .reveal.in .how-card .ttl,
+      .reveal.in .term-card .nm { animation: none; }
+    }
+    .hero-cta { margin-top: 36px; display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+
+    /* PRODUCT PREVIEW
+       카드 외부 4면 페이드:
+       - 카드 표면(.product-preview::before)을 한 단계 밝은 패널로 그리고,
+         mask-image로 상하좌우 ~96px 영역을 transparent로 페이드.
+       - 콘텐츠(.pp-body)는 .product-preview의 직계 자식이라 mask 영향 없음.
+       - hero 배경(#000)이 페이드된 가장자리 너머로 자연스럽게 비친다.
+       - 페이드 너머 가장자리에 살짝 글로우를 둬 카드가 공중에 떠 보이게.
+       - 기존 inner fade div(.pp-fade-*)는 콘텐츠를 가렸기 때문에 비활성화. */
+    .product-preview {
+      position: relative;
+      margin: 64px auto 0;
+      max-width: 1080px;
+      /* 자체 배경/보더 없음 — 표면은 ::before로 그림 */
+      background: transparent;
+      border: none;
+      border-radius: 18px;
+      isolation: isolate;
+    }
+    .product-preview::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      border-radius: 18px;
+      background:
+        /* 컬러 hint는 살짝 살리되 너무 강하지 않게 */
+        linear-gradient(135deg, rgba(59,158,255,0.10) 0%, rgba(255,255,255,0.06) 45%, rgba(240,68,82,0.10) 100%),
+        /* 카드 표면을 hero(#000)보다 명확히 밝게 */
+        #14161A;
+      border: 1px solid var(--frost);
+      /* 4면 페이드 마스크: 가장자리 ~96px를 transparent로
+         두 방향 grad를 mask-composite: intersect로 곱해 4면 동시 fade */
+      -webkit-mask-image:
+        linear-gradient(to right,
+          transparent 0,
+          #000 96px,
+          #000 calc(100% - 96px),
+          transparent 100%),
+        linear-gradient(to bottom,
+          transparent 0,
+          #000 96px,
+          #000 calc(100% - 96px),
+          transparent 100%);
+      -webkit-mask-composite: source-in;
+              mask-image:
+        linear-gradient(to right,
+          transparent 0,
+          #000 96px,
+          #000 calc(100% - 96px),
+          transparent 100%),
+        linear-gradient(to bottom,
+          transparent 0,
+          #000 96px,
+          #000 calc(100% - 96px),
+          transparent 100%);
+              mask-composite: intersect;
+      z-index: 0;
+      pointer-events: none;
+    }
+    /* 콘텐츠는 마스크 위에 위치 — 어떤 가장자리에서도 컨텐츠는 잘리지 않는다 */
+    .product-preview > * { position: relative; z-index: 1; }
+    /* 옛 inner fade div는 완전히 숨김 — 콘텐츠 가림 방지 */
+    .product-preview .pp-fade-top,
+    .product-preview .pp-fade-bottom,
+    .product-preview .pp-fade-left,
+    .product-preview .pp-fade-right,
+    .product-preview .pp-fade-corners { display: none !important; }
+    /* 모바일 — fade 영역 재설계
+       - 데스크탑은 카드 폭이 충분해 직선 fade가 자연스럽게 보이지만,
+         모바일에선 카드가 좁아 단일 stop 직선 fade가 "박스 자른 듯한 경계"로 보였음.
+       - 좌우 fade는 모바일에서 시각적 가치가 낮으니 폭을 줄이고(28px),
+         상하 fade는 멀티-스톱 부드러운 그라데이션으로 ease-out 곡선을 흉내.
+       - 하단은 마지막 종목 행이 잘려보이지 않게 충분한 거리를 두고 천천히 페이드. */
+    @media (max-width: 760px) {
+      .product-preview::before {
+        -webkit-mask-image:
+          linear-gradient(to right,
+            transparent 0,
+            #000 28px,
+            #000 calc(100% - 28px),
+            transparent 100%),
+          linear-gradient(to bottom,
+            transparent 0,
+            rgba(0,0,0,0.35) 28px,
+            rgba(0,0,0,0.85) 64px,
+            #000 96px,
+            #000 calc(100% - 96px),
+            rgba(0,0,0,0.85) calc(100% - 64px),
+            rgba(0,0,0,0.35) calc(100% - 28px),
+            transparent 100%);
+                mask-image:
+          linear-gradient(to right,
+            transparent 0,
+            #000 28px,
+            #000 calc(100% - 28px),
+            transparent 100%),
+          linear-gradient(to bottom,
+            transparent 0,
+            rgba(0,0,0,0.35) 28px,
+            rgba(0,0,0,0.85) 64px,
+            #000 96px,
+            #000 calc(100% - 96px),
+            rgba(0,0,0,0.85) calc(100% - 64px),
+            rgba(0,0,0,0.35) calc(100% - 28px),
+            transparent 100%);
+      }
+    }
+    .pp-frame { padding: 14px 18px; border-bottom: 1px solid var(--frost); display: flex; align-items: center; gap: 12px; background: rgba(255,255,255,0.02); }
+    .pp-dots { display: flex; gap: 6px; }
+    .pp-dots span { width: 10px; height: 10px; border-radius: 50%; background: var(--bg-elevated); border: 1px solid var(--frost); }
+    .pp-url {
+      flex: 1; text-align: center; font-size: 12px; color: var(--fg-secondary);
+      background: var(--bg-base); padding: 5px 14px; border-radius: 999px;
+      border: 1px solid var(--frost); max-width: 360px; margin: 0 auto;
+      font-family: "JetBrains Mono", monospace;
+    }
+    .pp-body { padding: 24px; display: grid; grid-template-columns: 1.4fr 1fr; gap: 16px; }
+    @media (max-width: 760px) { .pp-body { grid-template-columns: 1fr; } }
+    .pp-card { padding: 22px; background: var(--bg-elevated); border: 1px solid var(--frost); border-radius: 12px; }
+    .pp-label { font-size: 12px; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; color: var(--fg-secondary); }
+    .pp-label .badge { margin-left: 8px; padding: 1px 7px; background: rgba(240,68,82,0.14); color: #F04452; border-radius: 999px; font-size: 10px; font-weight: 600; text-transform: none; border: 1px solid rgba(240,68,82,0.28); }
+    .pp-big { font-size: 36px; font-weight: 700; margin-top: 8px; letter-spacing: -0.025em; }
+    .pp-diff { font-size: 13px; font-weight: 500; margin-top: 4px; }
+    .pp-spark { margin-top: 14px; width: 100%; height: 80px; }
+    .pp-grid { display: grid; gap: 8px; }
+    .pp-stock {
+      display: grid;
+      /* 32 brand | text(고정 폭, 가장 긴 종목명 기준) | 88 spark | 1fr spacer | 56 num
+         모든 행에서 차트 시작 x 좌표가 동일하도록 text 컬럼을 고정 폭으로 고정.
+         종목명이 더 길면 ellipsis 처리. */
+      grid-template-columns: 32px 110px 88px 1fr 56px;
+      align-items: center;
+      column-gap: 14px;
+      height: 60px;
+      padding: 0 14px;
+      background: var(--bg-surface);
+      border: 1px solid var(--frost);
+      border-radius: 10px;
+      transition: transform 200ms, border-color 200ms;
+    }
+    .pp-stock:hover { transform: translateY(-1px); border-color: rgba(214,235,253,0.32); }
+    .pp-stock .brand-mark { width: 28px; height: 28px; justify-self: center; }
+    /* 텍스트 셀 — Pretendard 한글 metric과 Inter Latin metric을 같이 두기 때문에
+       line-height: 1 로 강제하면 글자 ascender/descender 만큼 row마다 미세하게 어긋남.
+       cap-height 기준이 아닌 정중앙 정렬을 위해 flex column + line-height 1.2 사용.
+       그리고 .nm 자체 padding/margin을 0으로 명시하여 row 간 차이 차단. */
+    .pp-stock .text {
+      display: flex; flex-direction: column;
+      justify-content: center; align-items: flex-start;
+      gap: 4px; min-width: 0;
+      align-self: center;
+    }
+    .pp-stock .nm {
+      font-family: "Pretendard Variable", Pretendard, system-ui, sans-serif;
+      font-weight: 700; font-size: 13.5px; line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: rgba(255,255,255,0.94);
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin: 0; padding: 0;
+      /* Latin이 작아 보이는 문제 보정: Pretendard에서 한/영 동시 사용 시 letter spacing은
+         음수로 조여서 cap-height 차이를 시각적으로 완화. */
+    }
+    .pp-stock .tk {
+      font-size: 12px; font-weight: 500; line-height: 1.2;
+      letter-spacing: 0.02em;
+      color: rgba(255,255,255,0.64);
+      font-family: "JetBrains Mono", monospace;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin: 0; padding: 0;
+    }
+    .pp-stock .mini-spark { width: 88px; display: flex; justify-content: center; align-items: center; align-self: center; }
+    .pp-stock .mini-spark svg { width: 88px; height: 28px; display: block; }
+    .pp-stock .num {
+      text-align: right; font-size: 13.5px; font-weight: 700;
+      line-height: 1.2;
+      font-variant-numeric: tabular-nums; letter-spacing: -0.01em;
+      align-self: center;
+      font-family: Inter, system-ui, sans-serif;
+    }
+    .pp-stock .num.pos { color: #F04452; }
+    .pp-stock .num.neg { color: #3B9EFF; }
+
+    /* brand-mark: 실 브랜드 로고 (CDN simple-icons + 쿠팡 PNG) */
+    .brand-mark { width: 28px; height: 28px; border-radius: 7px; display: grid; place-items: center; flex-shrink: 0; overflow: hidden; align-self: center; }
+    .brand-mark .logo { width: 16px; height: 16px; background-color: currentColor; -webkit-mask-position: center center; mask-position: center center; -webkit-mask-repeat: no-repeat; mask-repeat: no-repeat; -webkit-mask-size: 100% 100%; mask-size: 100% 100%; display: block; }
+    .brand-mark.samsung { background: #1428A0; color: #FFFFFF; }
+    .brand-mark.samsung .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/samsung.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/samsung.svg); }
+    .brand-mark.apple { background: #000000; color: #FFFFFF; }
+    .brand-mark.apple .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/apple.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/apple.svg); }
+    .brand-mark.nvidia { background: #76B900; color: #FFFFFF; }
+    .brand-mark.nvidia .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/nvidia.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/nvidia.svg); }
+    .brand-mark.kakao { background: #FEE500; color: #1A1A1A; }
+    .brand-mark.kakao .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/kakao.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/kakao.svg); }
+    .brand-mark.naver { background: #03C75A; color: #FFFFFF; }
+    .brand-mark.naver .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/naver.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/naver.svg); }
+    .brand-mark.microsoft { background: #00A4EF; color: #FFFFFF; }
+    .brand-mark.microsoft .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/microsoft.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/microsoft.svg); }
+    .brand-mark.tesla { background: #E82127; color: #FFFFFF; }
+    .brand-mark.tesla .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/tesla.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/tesla.svg); }
+    .brand-mark.google { background: #FFFFFF; color: #4285F4; }
+    .brand-mark.google .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/google.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/google.svg); }
+    .brand-mark.coupang { background: #FFFFFF; padding: 2px; }
+    .brand-mark.coupang .logo { width: 100%; height: 100%; background: url("/site/assets/logos/coupang.png") center/contain no-repeat; -webkit-mask-image: none; mask-image: none; }
+    .brand-mark.coinbase { background: #0052FF; color: #FFFFFF; }
+    .brand-mark.coinbase .logo { -webkit-mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/coinbase.svg); mask-image: url(https://cdn.jsdelivr.net/npm/simple-icons@latest/icons/coinbase.svg); }
+
+    /* Trust */
+    .trust-strip { text-align: center; padding: 32px 0 0; }
+    .trust-strip .label { font-size: 13px; color: var(--fg-secondary); letter-spacing: 0.06em; text-transform: uppercase; font-weight: 500; }
+    .trust-strip .row { margin-top: 18px; display: flex; gap: 36px; justify-content: center; flex-wrap: wrap; opacity: 0.7; }
+    .trust-strip .src { font-size: 14px; font-weight: 600; color: var(--fg-secondary); }
+
+    /* Feature */
+    .feature { display: grid; grid-template-columns: 1fr 1fr; gap: 80px; align-items: center; padding: 64px 0; }
+    @media (max-width: 900px) { .feature { grid-template-columns: 1fr; gap: 40px; padding: 32px 0; } }
+    .feature.reverse > .ft-text { order: 2; }
+    .feature.reverse > .ft-visual { order: 1; }
+    @media (max-width: 900px) {
+      .feature > .ft-text { order: 1 !important; }
+      .feature > .ft-visual { order: 2 !important; }
+    }
+
+    /* FEATURE 진입 애니메이션 (이슈 4)
+       섹션이 viewport 에 들어와 .in 이 붙으면, text 와 visual 이 서로 반대 방향에서
+       슬라이드 인 한다. 기본 레이아웃: text 좌측 / visual 우측 →
+       text 는 왼쪽에서, visual 은 오른쪽에서. reverse 섹션(AI Coach)은 좌우가 바뀌므로
+       방향도 반대로. Linear/Resend 결의 절제된 한 번짜리 entrance.
+       내부 행/버블 stagger 와 sparkline draw 는 아래 .reveal.in 룰이 이어받는다. */
+    .feature.reveal > .ft-text {
+      opacity: 0; transform: translateX(-34px);
+      transition: opacity 760ms cubic-bezier(0.2,0.7,0.2,1),
+                  transform 760ms cubic-bezier(0.2,0.7,0.2,1);
+    }
+    .feature.reveal > .ft-visual {
+      opacity: 0; transform: translateX(34px);
+      transition: opacity 820ms cubic-bezier(0.2,0.7,0.2,1) 90ms,
+                  transform 820ms cubic-bezier(0.2,0.7,0.2,1) 90ms;
+    }
+    /* reverse 섹션: visual 이 좌측, text 가 우측 → 방향 스왑 */
+    .feature.reverse.reveal > .ft-visual { transform: translateX(-34px); }
+    .feature.reverse.reveal > .ft-text { transform: translateX(34px); }
+    .feature.reveal.in > .ft-text,
+    .feature.reveal.in > .ft-visual { opacity: 1; transform: translateX(0); }
+    @media (max-width: 900px) {
+      /* 모바일은 좌우 슬라이드가 가로 스크롤을 유발할 수 있어 fade-up 으로 전환 */
+      .feature.reveal > .ft-text,
+      .feature.reveal > .ft-visual,
+      .feature.reverse.reveal > .ft-text,
+      .feature.reverse.reveal > .ft-visual { transform: translateY(22px); }
+      .feature.reveal.in > .ft-text,
+      .feature.reveal.in > .ft-visual { transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .feature.reveal > .ft-text,
+      .feature.reveal > .ft-visual,
+      .feature.reverse.reveal > .ft-text,
+      .feature.reverse.reveal > .ft-visual,
+      .feature.reveal.in > .ft-text,
+      .feature.reveal.in > .ft-visual { opacity: 1; transform: none; transition: opacity 200ms linear; }
+    }
+
+    .ft-mark {
+      display: inline-flex; align-items: center; gap: 14px;
+      font-family: "JetBrains Mono", monospace;
+      font-size: 11px; font-weight: 500;
+      letter-spacing: 0.08em; text-transform: uppercase;
+      color: var(--fg-secondary); margin-bottom: 24px;
+    }
+    .ft-mark .num-tag { color: var(--fg-muted); }
+    .ft-mark .bar { display: inline-block; width: 24px; height: 1px; background: var(--frost); }
+    .ft-mark.blue .num-tag { color: var(--blue); }
+    .ft-mark.green .num-tag { color: var(--green); }
+    .ft-mark.yellow .num-tag { color: var(--yellow); }
+
+    .ft-title { font-size: 44px; letter-spacing: -0.038em; line-height: 1.08; font-weight: 800; }
+    @media (max-width: 900px) { .ft-title { font-size: 32px; } }
+    .ft-desc { margin-top: 18px; font-size: 16px; line-height: 1.7; color: var(--fg-secondary); max-width: 460px; }
+    .ft-list { margin-top: 24px; display: grid; gap: 12px; }
+    .ft-list li { list-style: none; display: flex; align-items: start; gap: 12px; font-size: 16px; color: var(--fg-secondary); line-height: 1.55; }
+    .ft-list li svg { flex-shrink: 0; margin-top: 5px; }
+    .ft-link { margin-top: 28px; display: inline-flex; align-items: center; gap: 6px; color: var(--fg-primary); font-weight: 600; font-size: 14px; transition: gap 150ms, opacity 150ms; }
+    .ft-link:hover { gap: 10px; opacity: 0.8; }
+
+    .ft-visual { position: relative; }
+    .ft-card { position: relative; background: var(--bg-surface); border: 1px solid var(--frost); border-radius: 18px; padding: 24px; overflow: hidden; }
+    .ft-card::before {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(600px 300px at 80% 0%, var(--ft-glow, rgba(147,197,253,0.10)), transparent 70%);
+      pointer-events: none;
+    }
+    /* Cursor/Sanity 패턴 — illust overlay 제거. 카드 콘텐츠가 dominate (사용자 어색 피드백) */
+    .ft-card.blue-glow { --ft-glow: rgba(59,158,255,0.18); }
+    .ft-card.green-glow { --ft-glow: rgba(240,68,82,0.14); }
+    .ft-card.yellow-glow { --ft-glow: rgba(255,197,61,0.16); }
+
+    .ft-card > * { position: relative; z-index: 1; }
+    .ft-stack { position: relative; }
+    .ft-illust-float { display: none; }
+
+    .ftc-port-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 16px; }
+    .ftc-port-head .ttl { font-size: 14px; font-weight: 600; }
+    .ftc-port-head .ag { font-size: 12px; color: var(--fg-secondary); font-family: "JetBrains Mono", monospace; }
+    .ftc-port-rows { display: grid; gap: 8px; }
+    /* flex 레이아웃으로 변경: 종목명(stockcell) auto 폭 + 차트가 종목명 바로 옆에 붙는다.
+       w / pl 는 margin-left: auto 로 우측 끝에 정렬. 종목명↔차트 간 빈 공간 제거. */
+    .ftc-port-row {
+      display: flex; align-items: center; gap: 14px;
+      padding: 12px 16px;
+      background: rgba(255,255,255,0.02);
+      border-radius: 10px; border: 1px solid var(--frost-alt);
+      font-size: 13px;
+      transition: background 180ms, border-color 180ms, transform 180ms;
+    }
+    .ftc-port-row:hover {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(214,235,253,0.32);
+      transform: translateY(-1px);
+    }
+    .ftc-port-row svg.miniSpark { display: block; margin: 0; }
+    /* stockcell 고정 폭 — 모든 행에서 차트 시작 x 좌표 일치. 종목명이 더 길면 ellipsis. */
+    .ftc-port-row .stockcell { display: flex; align-items: center; gap: 10px; flex: 0 0 140px; width: 140px; min-width: 0; }
+    .ftc-port-row .stockcell > div:last-child { min-width: 0; flex: 1 1 auto; }
+    .ftc-port-row .stockcell .nm,
+    .ftc-port-row .stockcell .tk { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ftc-port-row .ic { width: 26px; height: 26px; border-radius: 6px; display: grid; place-items: center; font-size: 10px; font-weight: 700; flex-shrink: 0; }
+    .ftc-port-row .nm { font-weight: 600; font-size: 13px; }
+    .ftc-port-row .tk { font-size: 12px; color: var(--fg-secondary); margin-top: 1px; font-family: "JetBrains Mono", monospace; }
+    .ftc-port-row > .spark-cell { width: 88px; height: 22px; flex-shrink: 0; }
+    .ftc-port-row > .spark-cell svg { width: 88px; height: 22px; display: block; }
+    /* margin-left: auto 제거 — 차트와 22% / +5.2% 사이 빈 공간 압축.
+       세 요소(차트 + 22% + +5.2%)가 종목명 옆에 14px 간격으로 자연스럽게 인접하고,
+       남는 여유는 우측 여백으로 흘려보낸다. */
+    .ftc-port-row .w { width: 48px; flex-shrink: 0; font-size: 12px; color: var(--fg-secondary); text-align: right; font-variant-numeric: tabular-nums; }
+    .ftc-port-row .pl { width: 60px; flex-shrink: 0; font-size: 12px; font-weight: 600; text-align: right; font-variant-numeric: tabular-nums; }
+
+    .chat-demo { display: grid; gap: 10px; }
+    .bubble { max-width: 86%; padding: 12px 16px; border-radius: 14px; font-size: 14px; line-height: 1.65; }
+    .bubble.user { background: var(--fg-primary); color: var(--bg-base); justify-self: end; border-bottom-right-radius: 4px; font-weight: 500; }
+    .bubble.coach { background: rgba(255,255,255,0.04); color: var(--fg-primary); justify-self: start; border-bottom-left-radius: 4px; border: 1px solid var(--frost); }
+    .bubble.coach b { color: var(--green); font-weight: 600; }
+    .typing { display: inline-flex; gap: 3px; align-items: center; }
+    .typing span { width: 5px; height: 5px; background: var(--fg-muted); border-radius: 999px; opacity: 0.5; animation: type 1.2s ease-in-out infinite; }
+    .typing span:nth-child(2) { animation-delay: 0.2s; }
+    .typing span:nth-child(3) { animation-delay: 0.4s; }
+    .caret { display: inline-block; width: 7px; height: 14px; background: var(--fg-primary); margin-left: 2px; vertical-align: middle; animation: blink 0.8s steps(1) infinite; }
+    @keyframes blink { 0%, 50% { opacity: 1; } 51%, 100% { opacity: 0; } }
+    #typeBubble.done .caret { display: none; }
+    @keyframes type { 0%, 60%, 100% { opacity: 0.3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-3px); } }
+
+    .term-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    @media (max-width: 540px) { .term-grid { grid-template-columns: 1fr; } }
+    .term-card { padding: 16px; background: rgba(255,255,255,0.02); border: 1px solid var(--frost-alt); border-radius: 10px; }
+    .term-card .cat { font-size: 10px; color: var(--fg-muted); font-weight: 500; letter-spacing: 0.06em; text-transform: uppercase; font-family: "JetBrains Mono", monospace; }
+    .term-card .nm { font-size: 18px; font-weight: 700; margin-top: 6px; letter-spacing: -0.02em; }
+    .term-card .ds { font-size: 12px; color: var(--fg-secondary); margin-top: 6px; line-height: 1.55; }
+
+    .how-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    @media (max-width: 760px) { .how-grid { grid-template-columns: 1fr; } }
+    .how-card { padding: 28px; background: var(--bg-surface); border: 1px solid var(--frost); border-radius: 16px; transition: background 200ms; }
+    .how-card:hover { background: var(--bg-elevated); }
+    .how-card .step { display: inline-flex; align-items: center; padding: 2px 10px; background: rgba(255,255,255,0.04); border: 1px solid var(--frost); border-radius: 9999px; font-size: 11px; font-weight: 600; color: var(--fg-secondary); letter-spacing: 0.04em; margin-bottom: 18px; font-family: "JetBrains Mono", monospace; }
+    .how-card .ttl { font-size: 22px; font-weight: 700; letter-spacing: -0.018em; }
+    .how-card .ds { font-size: 14px; color: var(--fg-secondary); margin-top: 10px; line-height: 1.6; }
+
+    .sec-head { text-align: center; max-width: 720px; margin: 0 auto 56px; }
+    .sec-head .eyebrow { display: inline-block; font-size: 11px; font-weight: 600; color: var(--fg-secondary); letter-spacing: 0.08em; text-transform: uppercase; padding: 4px 12px; background: rgba(255,255,255,0.04); border: 1px solid var(--frost); border-radius: 9999px; margin-bottom: 18px; font-family: "JetBrains Mono", monospace; }
+    .sec-head h2 { font-size: 54px; letter-spacing: -0.045em; line-height: 1.06; font-weight: 800; }
+    @media (max-width: 720px) { .sec-head h2 { font-size: 36px; } }
+    .sec-head p { margin-top: 18px; font-size: 17px; color: var(--fg-secondary); line-height: 1.6; }
+
+    .faq-grid { display: grid; gap: 10px; max-width: 800px; margin: 0 auto; }
+    .faq-item { padding: 22px 24px; background: var(--bg-surface); border: 1px solid var(--frost); border-radius: 14px; transition: background 200ms; }
+    .faq-item:hover { background: var(--bg-elevated); }
+    .faq-q { font-size: 15px; font-weight: 600; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+    .faq-q::after { content: "↗"; color: var(--fg-muted); font-weight: 400; }
+    .faq-a { margin-top: 10px; font-size: 14px; color: var(--fg-secondary); line-height: 1.65; }
+
+    .cta-section { text-align: center; padding: 120px 0; position: relative; overflow: hidden; }
+    .cta-section::before {
+      content: ""; position: absolute; inset: -40px -200px;
+      background: radial-gradient(1400px 700px at 50% 60%, rgba(147,197,253,0.14), rgba(147,197,253,0.04) 35%, transparent 75%);
+      pointer-events: none; z-index: -1;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+      mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+    }
+    .cta-section::after {
+      content: ""; position: absolute; inset: 0;
+      background:
+        linear-gradient(to bottom, var(--bg-base) 0%, rgba(0,0,0,0.4) 10%, transparent 18%),
+        linear-gradient(to top, var(--bg-base) 0%, rgba(0,0,0,0.4) 10%, transparent 18%),
+        linear-gradient(to right, var(--bg-base) 0%, transparent 12%),
+        linear-gradient(to left, var(--bg-base) 0%, transparent 12%);
+      pointer-events: none; z-index: 1;
+    }
+    .cta-section h2 { font-size: 60px; letter-spacing: -0.045em; line-height: 1.06; max-width: 800px; margin: 0 auto; font-weight: 800; }
+    @media (max-width: 720px) { .cta-section h2 { font-size: 36px; } }
+    .cta-section p { margin: 22px auto 0; font-size: 17px; color: var(--fg-secondary); max-width: 520px; line-height: 1.6; }
+    .cta-section .actions { margin-top: 36px; display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+    /* 모바일 보강 */
+    @media (max-width: 640px) {
+      html, body { overflow-x: hidden; }
+      nav.menu { display: none; }
+      .nav-wrap { padding: 14px 18px; }
+      main { padding: 0 18px; }
+      /* 모바일 hero: header(54px) + margin-top(-64px) 보정 + breathing room.
+         핵심: pill이 sticky header 아래에 충분히 떨어져 보이도록 padding-top을 키운다.
+         계산: header 54 + |margin-top| 64 + pill 위 여백 28 ≈ 146 → 안전하게 140 */
+      .hero { padding-top: 140px; padding-bottom: 36px; }
+      .hero-headline { font-size: 36px; }
+      .hero-sub { font-size: 15px; margin-top: 22px; }
+      .hero-cta { margin-top: 24px; }
+      .pp-body { padding: 16px; gap: 14px; }
+      .pp-big { font-size: 28px; }
+      .pp-spark { height: 60px !important; }
+      /* 모바일 pp-stock: 자식 4개(brand | text | spark | num) — 데스크탑과 같은 철학.
+         토스 증권 종목 리스트 결: 로고·종목명은 좌측 고정 정렬, 차트·%는 우측 그룹.
+         - text 108px 고정: 가장 긴 "005930.KS · 22%"(렌더 107px)가 안 잘리는 최소값.
+           고정폭이라 종목명 left·차트 left 모두 모든 행에서 동일(정렬감 확보).
+         - spark 는 1fr 트랙 안에서 justify-self:end 로 우측 정렬 → num 과 12px(column-gap)
+           으로 타이트하게 붙음. num 은 46px 고정(가장 넓은 "+12.7%" 45.7px)이라 1fr 트랙
+           폭이 행마다 동일 → 차트 left 가 모든 행에서 일치한다.
+         - 종목명↔차트 간격은 1fr 트랙의 남는 폭(고정·일정)으로 과하지 않게 유지. */
+      .pp-stock { grid-template-columns: 26px 108px 1fr 46px; padding: 0 14px; min-height: 50px; column-gap: 12px; }
+      .pp-stock .brand-mark { width: 26px; height: 26px; border-radius: 6px; }
+      .pp-stock .brand-mark .logo { width: 14px; height: 14px; }
+      .pp-stock .nm { font-size: 12.5px; }
+      .pp-stock .tk { font-size: 11.5px; }
+      .pp-stock .mini-spark { width: 52px; justify-self: end; }
+      .pp-stock .mini-spark svg { width: 52px; height: 20px; }
+      .pp-stock .num { font-size: 12px; }
+      .ftc-port-row { gap: 8px !important; padding: 10px 12px !important; }
+      .ftc-port-row > .spark-cell { width: 56px !important; height: 22px !important; }
+      .ftc-port-row > .spark-cell svg { width: 56px !important; height: 22px !important; }
+      .ftc-port-row .w { font-size: 11px; width: 36px; }
+      .ftc-port-row .pl { font-size: 12px; width: 50px; }
+      .trust-strip .row { gap: 10px; font-size: 11px; }
+      .sec-head h2 { font-size: 28px; }
+      .cta-section { padding: 72px 0; }
+      .cta-section h2 { font-size: 28px; }
+      .feature, .feature > * { min-width: 0; }
+      .ft-text, .ft-visual, .ft-stack, .ft-card { max-width: 100%; min-width: 0; }
+      .ftc-port-row { min-width: 0; }
+      /* 모바일 stockcell: 고정폭(0 0 110px)이면 차트+비중+%가 좌측에 뭉치고
+         행 우측에 빈 공백이 남아 표가 좌측으로 쏠려 보였다(이슈 3).
+         flex: 1 1 auto 로 종목명 칸이 남는 가로를 흡수해 차트·비중·% 묶음을
+         카드 우측 가장자리까지 밀어준다. 종목명이 길면 ellipsis(overflow: hidden). */
+      .ftc-port-row .stockcell { flex: 1 1 auto !important; width: auto !important; min-width: 0; overflow: hidden; }
+      .ftc-port-row .stockcell .nm,
+      .ftc-port-row .stockcell .tk { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    }
+
+    /* product-preview 미세 floating */
+    .product-preview { animation: ppFloat 8s ease-in-out infinite; }
+    @keyframes ppFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
+    @media (prefers-reduced-motion: reduce) { .product-preview { animation: none; } }
+
+    /* pp-stock 행 hover — 미세한 보더 highlight + 살짝 떠오름 (이미 transform/border 정의됨, glow 추가) */
+    .pp-stock { box-shadow: 0 0 0 0 transparent; }
+    .pp-stock:hover { box-shadow: 0 6px 22px -12px rgba(59,158,255,0.35); }
+
+    /* ft-card hover — 카드 자체가 살짝 떠오르고 보더가 밝아진다 */
+    .ft-card { transition: transform 280ms cubic-bezier(0.2,0,0.1,1), border-color 280ms, box-shadow 280ms; }
+    .ft-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(214,235,253,0.30);
+      box-shadow: 0 18px 48px -24px rgba(0,0,0,0.6);
+    }
+    /* ft-card 내부 glow 가 살짝 더 짙어진다 */
+    .ft-card::before { transition: opacity 280ms; opacity: 1; }
+    .ft-card:hover::before { opacity: 1.4; }
+
+    /* how-card hover */
+    .how-card { transition: background 240ms, border-color 240ms, transform 240ms cubic-bezier(0.2,0,0.1,1); border: 1px solid var(--frost); }
+    .how-card:hover { transform: translateY(-3px); border-color: rgba(214,235,253,0.30); }
+    .how-card .step { transition: background 180ms, border-color 180ms, color 180ms; }
+    .how-card:hover .step { color: var(--fg-primary); border-color: rgba(214,235,253,0.30); }
+
+    /* term-card hover */
+    .term-card { transition: background 200ms, border-color 200ms, transform 200ms; }
+    .term-card:hover { background: rgba(255,255,255,0.04); border-color: rgba(214,235,253,0.26); transform: translateY(-1px); }
+
+    /* faq-item open/hover — q 의 화살표 회전 */
+    .faq-item .faq-q::after { transition: transform 240ms cubic-bezier(0.2,0,0.1,1); }
+    .faq-item:hover .faq-q::after { transform: translateX(2px) translateY(-2px); }
+
+    /* ft-link 화살표 살짝 슬라이드 (이미 gap transition 있으나 화살표만 따로 더) */
+    .ft-link { position: relative; }
+
+    /* hero-cta 버튼들 — entrance 후 살짝 hover 시 떠오름 */
+    .btn-white, .btn-frost { transition: transform 180ms cubic-bezier(0.2,0,0.1,1), background 150ms, box-shadow 200ms; }
+    .btn-white:hover { box-shadow: 0 8px 24px -10px rgba(255,255,255,0.45); }
+    .btn-frost:hover { box-shadow: 0 8px 24px -14px rgba(214,235,253,0.4); }
+
+    /* trust-strip 항목 hover — 살짝 채도 회복 */
+    .trust-strip .row { transition: opacity 240ms; }
+    .trust-strip:hover .row { opacity: 1; }
+    .trust-strip .src { transition: color 180ms, transform 180ms; cursor: default; }
+    .trust-strip .src:hover { color: var(--fg-primary); }
+
+    /* nav-cta 미세한 펄스 (시작하기/코치에게 묻기 — 시각적 끌림) */
+    .nav-cta { position: relative; }
+    .nav-cta::after {
+      content: ""; position: absolute; inset: 0; border-radius: 9999px;
+      box-shadow: 0 0 0 0 rgba(255,255,255,0.0);
+      animation: ctaPulse 4.2s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes ctaPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
+      50% { box-shadow: 0 0 0 4px rgba(255,255,255,0.10); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .nav-cta::after { animation: none; }
+      .pp-stock, .ft-card, .how-card, .term-card { transition: none; }
+      .pp-stock:hover, .ft-card:hover, .how-card:hover, .term-card:hover { transform: none; box-shadow: none; }
+    }
+
+    /* 카드/리스트 entrance stagger */
+    .reveal.in .pp-stock,
+    .reveal.in .ftc-port-row,
+    .reveal.in .term-card,
+    .reveal.in .how-card,
+    .reveal.in .faq-item,
+    .reveal.in .bubble { animation: rowIn 520ms cubic-bezier(0.2,0.7,0.2,1) both; }
+    .reveal.in .pp-stock:nth-child(1),
+    .reveal.in .ftc-port-row:nth-child(1),
+    .reveal.in .bubble:nth-child(1) { animation-delay: 80ms; }
+    .reveal.in .pp-stock:nth-child(2),
+    .reveal.in .ftc-port-row:nth-child(2),
+    .reveal.in .bubble:nth-child(2) { animation-delay: 220ms; }
+    .reveal.in .pp-stock:nth-child(3),
+    .reveal.in .ftc-port-row:nth-child(3),
+    .reveal.in .bubble:nth-child(3) { animation-delay: 360ms; }
+    .reveal.in .pp-stock:nth-child(4),
+    .reveal.in .ftc-port-row:nth-child(4),
+    .reveal.in .bubble:nth-child(4) { animation-delay: 500ms; }
+    .reveal.in .ftc-port-row:nth-child(5) { animation-delay: 400ms; }
+    /* how-card / term-card / faq-item — 부드러운 stagger */
+    .reveal.in .how-card:nth-child(1),
+    .reveal.in .term-card:nth-child(1),
+    .reveal.in .faq-item:nth-child(1) { animation-delay: 80ms; }
+    .reveal.in .how-card:nth-child(2),
+    .reveal.in .term-card:nth-child(2),
+    .reveal.in .faq-item:nth-child(2) { animation-delay: 180ms; }
+    .reveal.in .how-card:nth-child(3),
+    .reveal.in .term-card:nth-child(3),
+    .reveal.in .faq-item:nth-child(3) { animation-delay: 280ms; }
+    .reveal.in .term-card:nth-child(4),
+    .reveal.in .faq-item:nth-child(4) { animation-delay: 380ms; }
+    @keyframes rowIn {
+      from { opacity: 0; transform: translateY(16px); filter: blur(4px); }
+      60% { filter: blur(0); }
+      to { opacity: 1; transform: translateY(0); filter: blur(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .reveal.in .pp-stock,
+      .reveal.in .ftc-port-row,
+      .reveal.in .term-card,
+      .reveal.in .how-card,
+      .reveal.in .faq-item,
+      .reveal.in .bubble { animation: none; }
+    }

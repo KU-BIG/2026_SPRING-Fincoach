@@ -1,43 +1,40 @@
 import { NavLink } from "react-router-dom";
-import ThemeToggle from "./ThemeToggle";
-import { cn } from "@/lib/cn";
 
-const nav = [
-  { to: "/", label: "홈" },
-  { to: "/portfolio", label: "포트폴리오" },
-  { to: "/chat", label: "AI 코치" },
-  { to: "/learn", label: "금융 용어" },
-];
-
+/* /site/index.html <header> 마크업을 그대로 이식.
+   nav 링크는 React Router 로(/, /portfolio, /chat, /learn).
+   .scrolled 토글은 useSiteInteractions 가 처리한다. */
 export default function Header() {
   return (
-    <header className="sticky top-0 z-10 border-b border-border bg-bg-base/85 backdrop-blur">
-      <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
-        <div className="flex items-center gap-8">
-          <NavLink to="/" className="text-base font-semibold tracking-tight">
-            FinCoach
+    <header>
+      <div className="nav-wrap">
+        <div className="nav-left">
+          <NavLink to="/" className="brand">
+            <div className="logo"></div>FinCoach
           </NavLink>
-          <nav className="hidden items-center gap-1 md:flex">
-            {nav.map((n) => (
-              <NavLink
-                key={n.to}
-                to={n.to}
-                end={n.to === "/"}
-                className={({ isActive }) =>
-                  cn(
-                    "rounded-sm px-3 py-1.5 text-sm transition",
-                    isActive
-                      ? "bg-accent-soft font-medium text-fg-primary"
-                      : "text-fg-secondary hover:bg-bg-muted hover:text-fg-primary",
-                  )
-                }
-              >
-                {n.label}
-              </NavLink>
-            ))}
+          <nav className="menu">
+            <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : undefined)}>
+              홈
+            </NavLink>
+            <NavLink
+              to="/portfolio"
+              className={({ isActive }) => (isActive ? "active" : undefined)}
+            >
+              포트폴리오
+            </NavLink>
+            <NavLink to="/chat" className={({ isActive }) => (isActive ? "active" : undefined)}>
+              AI 코치
+            </NavLink>
+            <NavLink to="/learn" className={({ isActive }) => (isActive ? "active" : undefined)}>
+              금융 용어
+            </NavLink>
           </nav>
         </div>
-        <ThemeToggle />
+        <div className="nav-right">
+          <button className="nav-ghost">로그인</button>
+          <NavLink to="/portfolio" className="nav-cta">
+            시작하기
+          </NavLink>
+        </div>
       </div>
     </header>
   );

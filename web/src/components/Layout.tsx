@@ -1,18 +1,26 @@
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import Header from "./Header";
+import Footer from "./Footer";
+import { useSiteInteractions } from "../hooks/useSiteInteractions";
 
+/* /site/ 의 body 골격을 그대로 이식:
+   scroll-progress 바 → header → main(Outlet) → footer.
+   main 은 site.css 의 max-width:1180px + margin auto + padding 규칙을 받는다
+   (hero full-bleed 의 calc((100vw - 100%)/-2) 가 main 을 기준으로 동작). */
 export default function Layout() {
+  const { pathname } = useLocation();
+  useSiteInteractions([pathname]);
+
   return (
-    <div className="min-h-screen bg-bg-base text-fg-primary">
+    <>
+      <div className="scroll-progress">
+        <div className="bar"></div>
+      </div>
       <Header />
-      <main className="mx-auto max-w-6xl px-6 py-8 lg:py-10">
+      <main>
         <Outlet />
       </main>
-      <footer className="border-t border-border">
-        <div className="mx-auto max-w-6xl px-6 py-6 text-xs text-fg-muted">
-          본 서비스는 정보 제공 도구이며, 매수 또는 매도를 추천하지 않습니다.
-        </div>
-      </footer>
-    </div>
+      <Footer />
+    </>
   );
 }
