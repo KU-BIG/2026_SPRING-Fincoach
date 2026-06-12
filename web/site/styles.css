@@ -51,25 +51,48 @@ input { font-family: inherit; }
 .neg { color: #3B9EFF; }
 
 /* HEADER
-   hero와 시각적으로 한 덩어리로 보이도록 단단한 배경 대신 위→아래로 점진 페이드.
-   상단은 80% 가까이 단단한 검정 (브랜드/메뉴 가독성 보호), 하단으로 갈수록 투명해져
-   hero-glow의 ambient light가 header 뒤로 자연스럽게 비친다.
-   scroll 후에는 단단한 패널로 전환되어 다른 페이지 가독성 유지. */
+   hero와 한 덩어리로 보이도록 단단한 배경 대신 위→아래 점진 페이드 + 헤더 자체에 mask 페이드.
+   - border-bottom 제거 (transparent로도 0.5px 잔존선 발생)
+   - backdrop-filter 끝 경계의 미세 line을 mask로 페이드 → 경계 자체를 지움
+   - gradient는 0%→70% 구간을 부드럽게, 70~100%는 mask로 처리 */
 header {
   position: sticky; top: 0; z-index: 50;
-  backdrop-filter: blur(18px) saturate(140%);
-  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  /* saturate를 120%→108%로 낮춤: backdrop-filter 영역의 하단 박스 경계에서 채도가
+     강할수록 blurred↔unblurred 경계의 색 step이 또렷해진다(모바일 미세선의 직접 원인). */
+  backdrop-filter: blur(14px) saturate(108%);
+  -webkit-backdrop-filter: blur(14px) saturate(108%);
+  /* header 박스를 콘텐츠보다 아래로 더 늘려(padding-bottom) backdrop-filter의 하드 경계가
+     콘텐츠에서 멀어지고, mask의 0-alpha 구간 안에 들어가 seam이 보이지 않게 한다. */
+  padding-bottom: 10px;
   background:
     linear-gradient(to bottom,
-      rgba(0,0,0,0.72) 0%,
-      rgba(0,0,0,0.55) 55%,
-      rgba(0,0,0,0.0) 100%);
-  border-bottom: 1px solid transparent;
-  transition: border-color 200ms, background 220ms;
+      rgba(0,0,0,0.70) 0%,
+      rgba(0,0,0,0.58) 40%,
+      rgba(0,0,0,0.38) 64%,
+      rgba(0,0,0,0.14) 82%,
+      rgba(0,0,0,0.0) 92%);
+  /* backdrop-filter는 header 박스 전체에 균일하게 걸려 하단 경계에서 edge가 보인다.
+     mask가 92%에서 이미 transparent(0-alpha)에 도달하도록 stop을 앞당겨,
+     backdrop-filter의 하드 박스 경계(100%, y=박스 bottom)가 완전히 마스킹된
+     영역 안에 들어가게 한다 → 어떤 seam도 화면에 페인트되지 않는다. */
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 50%, rgba(0,0,0,0.7) 74%, rgba(0,0,0,0.25) 86%, transparent 92%);
+          mask-image: linear-gradient(to bottom, #000 0%, #000 50%, rgba(0,0,0,0.7) 74%, rgba(0,0,0,0.25) 86%, transparent 92%);
+  /* border 제거 — 어떤 색의 1px이든 시각적으로 line으로 보임 */
+  border-bottom: 0 none;
+  transition: background 240ms, -webkit-mask-image 240ms, mask-image 240ms;
 }
+/* 스크롤 시: 콘텐츠가 헤더 뒤를 통과하므로 단단한 패널로 전환. mask도 단단히.
+   단, mask 100% 단단 패널이면 backdrop-filter 하드 경계가 다시 노출되므로
+   하단 ~6%만 부드럽게 페이드를 남겨 seam을 숨긴다(완전 solid가 아닌 soft-bottom). */
 header.scrolled {
-  border-bottom-color: var(--frost);
-  background: rgba(0,0,0,0.78);
+  background: rgba(0,0,0,0.82);
+  /* 스크롤 상태에선 fade용 padding-bottom 제거 → 바가 두꺼워 보이지 않게 */
+  padding-bottom: 0;
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 90%, rgba(0,0,0,0.4) 97%, transparent 100%);
+          mask-image: linear-gradient(to bottom, #000 0%, #000 90%, rgba(0,0,0,0.4) 97%, transparent 100%);
+  /* 스크롤 시에도 line 대신 매우 옅은 shadow로 분리 (visible edge 아님) */
+  box-shadow: 0 8px 24px -16px rgba(0,0,0,0.6);
+  transition: background 240ms, padding 200ms, -webkit-mask-image 240ms, mask-image 240ms;
 }
 .nav-wrap {
   max-width: 1180px; margin: 0 auto; padding: 18px 28px;
