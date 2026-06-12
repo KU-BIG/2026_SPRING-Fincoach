@@ -1,0 +1,30 @@
+# Render Blueprint for the FinCoach backend (real-service environment).
+# Render -> New -> Blueprint -> connect this repo. Render reads this file and
+# creates the web service. ANTHROPIC_API_KEY is NOT in the repo: set it in the
+# Render dashboard later (sync: false). Until then the API runs in demo mode.
+#
+# Frontend stays on Cloudflare Pages (see .github/workflows/deploy-app.yml).
+# Cloudflare DNS points api.bsghcal.com -> this service's onrender.com host.
+services:
+  - type: web
+    name: fincoach-api
+    runtime: python
+    plan: free
+    region: singapore # closest Render region to Korea
+    buildCommand: pip install .
+    startCommand: uvicorn api.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/health
+    autoDeploy: true
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.11.9"
+      # Comma-separated allowed origins for CORS. Add the custom domain once
+      # Cloudflare maps it; the *.pages.dev value is the fallback Pages URL.
+      - key: ALLOWED_ORIGINS
+        value: "https://fincoach.bsghcal.com,https://fincoach-app.pages.dev"
+      - key: LLM_MODEL
+        value: "claude-haiku-4-5-20251001"
+      # Set this in the Render dashboard (Environment -> Secret). Not in repo.
+      # Without it the chat/analysis endpoints return demo responses.
+      - key: ANTHROPIC_API_KEY
+        sync: false

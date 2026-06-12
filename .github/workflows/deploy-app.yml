@@ -1,0 +1,48 @@
+name: Deploy web (real service) to Cloudflare Pages
+
+# Real-service frontend. Separate Cloudflare Pages project (fincoach-app) from
+# the demo (deploy-web.yml -> fincoach). Built with VITE_API_BASE pointing at
+# the live backend so the React app talks to Render instead of falling back to
+# demo data. The backend URL is a repo Variable (APP_API_BASE) so it can change
+# without editing code: Settings -> Secrets and variables -> Actions -> Variables.
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths:
+      - "web/**"
+      - ".github/workflows/deploy-app.yml"
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      deployments: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: web/package-lock.json
+
+      - name: Install
+        working-directory: web
+        run: npm ci
+
+      - name: Build (points at live backend via VITE_API_BASE)
+        working-directory: web
+        env:
+          VITE_API_BASE: ${{ vars.APP_API_BASE }}
+        run: npm run build
+
+      - name: Publish to Cloudflare Pages (fincoach-app)
+        uses: cloudflare/pages-action@v1
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          projectName: fincoach-app
+          directory: web/dist
+          gitHubToken: ${{ secrets.GITHUB_TOKEN }}
