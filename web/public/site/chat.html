@@ -200,35 +200,103 @@
 
   <script src="./app.js"></script>
   <script>
+    const API_BASE = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+      ? "http://localhost:8000" : "";
+
+    let chatHistory = [];
+    let isStreaming = false;
+
     function addQuestion(q) {
       document.getElementById("msgInput").value = q;
       document.getElementById("msgInput").focus();
     }
-    function sendMessage() {
+
+    async function sendMessage() {
+      if (isStreaming) return;
       const input = document.getElementById("msgInput");
       const text = input.value.trim();
       if (!text) return;
+
       const msgs = document.getElementById("messages");
-      const bub = document.createElement("div");
-      bub.className = "bubble user";
-      bub.textContent = text;
-      // remove existing typing
-      const typing = msgs.querySelector(".bubble.coach .typing");
-      if (typing) typing.parentElement.remove();
-      msgs.appendChild(bub);
+      // 초기 데모 typing bubble 제거
+      const existingTyping = msgs.querySelector(".bubble.coach .typing");
+      if (existingTyping) existingTyping.parentElement.remove();
+
+      const userBub = document.createElement("div");
+      userBub.className = "bubble user";
+      userBub.textContent = text;
+      msgs.appendChild(userBub);
       input.value = "";
-      // simulate response
-      setTimeout(() => {
-        const reply = document.createElement("div");
-        reply.className = "bubble coach";
-        reply.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
-        msgs.appendChild(reply);
-        msgs.scrollTop = msgs.scrollHeight;
-      }, 400);
+
+      const coachBub = document.createElement("div");
+      coachBub.className = "bubble coach";
+      coachBub.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
+      msgs.appendChild(coachBub);
       msgs.scrollTop = msgs.scrollHeight;
+
+      isStreaming = true;
+      let fullText = "";
+
+      try {
+        const res = await fetch(API_BASE + "/api/chat/stream", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question: text, history: chatHistory }),
+        });
+
+        if (!res.ok) throw new Error("HTTP " + res.status);
+
+        const reader = res.body.getReader();
+        const dec = new TextDecoder();
+        let buf = "";
+        coachBub.innerHTML = "";
+
+        outer: while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+          buf += dec.decode(value, { stream: true });
+          const lines = buf.split("\n");
+          buf = lines.pop();
+          for (const line of lines) {
+            if (!line.startsWith("data: ")) continue;
+            const raw = line.slice(6).trim();
+            if (raw === "[DONE]") {
+              chatHistory.push({ role: "user", content: text });
+              chatHistory.push({ role: "assistant", content: fullText });
+              if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+              break outer;
+            }
+            try {
+              const ev = JSON.parse(raw);
+              if (ev.delta) {
+                fullText += ev.delta;
+                coachBub.textContent = fullText;
+                msgs.scrollTop = msgs.scrollHeight;
+              }
+              if (ev.error) coachBub.textContent = ev.error;
+            } catch { /* 파싱 실패 무시 */ }
+          }
+        }
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = "FC · 방금";
+        coachBub.appendChild(meta);
+      } catch {
+        coachBub.textContent = "[연결 오류] 백엔드 서버를 확인해 주세요. (localhost:8000)";
+      } finally {
+        isStreaming = false;
+        msgs.scrollTop = msgs.scrollHeight;
+      }
     }
+
     document.getElementById("msgInput").addEventListener("keydown", (e) => {
       if (e.key === "Enter") sendMessage();
+    });
+
+    document.querySelector(".new-chat").addEventListener("click", () => {
+      chatHistory = [];
+      const msgs = document.getElementById("messages");
+      msgs.innerHTML = "";
     });
   </script>
 </body>
