@@ -38,6 +38,22 @@ jobs:
           VITE_API_BASE: ${{ vars.APP_API_BASE }}
         run: npm run build
 
+      # pages-action does not create projects; create it once via the API.
+      # Idempotent: a name-already-exists 4xx is fine. Token is never printed.
+      - name: Ensure Pages project exists
+        env:
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: |
+          code=$(curl -s -o /tmp/cf.json -w "%{http_code}" -X POST \
+            "https://api.cloudflare.com/client/v4/accounts/$CF_ACCOUNT/pages/projects" \
+            -H "Authorization: Bearer $CF_TOKEN" \
+            -H "Content-Type: application/json" \
+            --data '{"name":"fincoach-app","production_branch":"main"}')
+          echo "create-project HTTP $code"
+          sed -E 's/"(id|jwt|subdomain)":"[^"]*"/"\1":"***"/g' /tmp/cf.json || true
+          # Do not fail on 409/4xx (already exists); publish step is the gate.
+
       - name: Publish to Cloudflare Pages (fincoach-app)
         uses: cloudflare/pages-action@v1
         with:
