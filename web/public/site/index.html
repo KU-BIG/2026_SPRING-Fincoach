@@ -59,24 +59,34 @@
       /* 뷰포트보다 충분히 크되 너무 거대하지 않게. 최소 1600px, 최대 viewport의 130%. */
       width: min(2000px, 140vw); height: 1080px;
       background:
+        /* 상단 ambient — nav/pill 영역(glow 상단 ~12%)이 검정으로 죽지 않게 은은하게 받친다.
+           매우 옅게(0.05). 중앙 메인 광원과 분리되어 헤더 근처 공기에만 미세한 빛. */
+        radial-gradient(ellipse 72% 24% at 50% 12%, rgba(214,235,253,0.05), transparent 72%),
         /* 한국식 빨강/파랑 hint — 좌우 1존씩. 0.055 → 0.072 로 살짝 올려 색이 "있다"는 게
            보이되 다크 톤은 유지. 매우 옅게. */
         radial-gradient(ellipse 38% 42% at 30% 18%, rgba(240,68,82,0.072), transparent 65%),
         radial-gradient(ellipse 38% 42% at 70% 18%, rgba(59,158,255,0.072), transparent 65%),
         /* 중앙 상단의 메인 광원 — 헤드라인 뒤를 받친다.
            밝음(0.16)과 거의 안 보임(0.075)의 중간 지점 → 0.115.
-           "절제되지만 명확히 존재하는" 광원. */
-        radial-gradient(ellipse 56% 50% at 50% 22%, rgba(214,235,253,0.115), transparent 72%),
-        /* 어둠 vignette — 0.62는 광원을 다 먹었음. 중간값 0.52 로 완화. */
-        radial-gradient(closest-side, rgba(0,0,0,0) 30%, rgba(0,0,0,0.52) 92%),
+           상하단 ambient + vignette 완화로 중앙도 살짝 올라갔으므로 0.110 으로 미세 하향,
+           "중앙은 유지" 요구에 맞춰 peak를 거의 그대로 둔다. */
+        radial-gradient(ellipse 56% 50% at 50% 22%, rgba(214,235,253,0.110), transparent 72%),
+        /* 하단 ambient — hero가 product-preview 카드로 이어지는 구간(glow 하단 ~58%)이
+           검정으로 끊기지 않게 넓고 옅게(0.06) 받친다. 카드가 빛 위에 떠 보이도록. */
+        radial-gradient(ellipse 60% 30% at 50% 58%, rgba(214,235,253,0.06), transparent 74%),
+        /* 어둠 vignette — 0.62는 광원을 다 먹었음. 0.52 → 0.46 으로 추가 완화해
+           상하단 가장자리의 crush를 덜어준다. */
+        radial-gradient(closest-side, rgba(0,0,0,0) 32%, rgba(0,0,0,0.46) 92%),
         url("./assets/hero-bg.png") center/cover no-repeat;
       /* bg 이미지 — 0.58은 거의 안 보였음. 0.70 으로 올려 텍스처가 은은히 살아나게.
          채도는 0.82 유지(다크 톤 보존). */
       filter: brightness(0.70) saturate(0.84);
       pointer-events: none; z-index: -1;
-      /* radial mask 영역을 좀 더 넓혀 광원이 헤드라인 영역까지 닿게 */
-      mask-image: radial-gradient(ellipse 78% 88% at center 28%, black 30%, transparent 82%);
-      -webkit-mask-image: radial-gradient(ellipse 78% 88% at center 28%, black 30%, transparent 82%);
+      /* radial mask 영역을 상하로 더 넓혀 광원이 nav/pill(상단)과 product-preview 직전(하단)
+         까지 닿게 한다. 중앙 peak는 그대로 두고(black 30%) 세로 ellipse(88%→96%)와
+         fade-out(82%→90%)만 키워 상하단만 추가로 살린다. */
+      mask-image: radial-gradient(ellipse 78% 96% at center 30%, black 30%, transparent 90%);
+      -webkit-mask-image: radial-gradient(ellipse 78% 96% at center 30%, black 30%, transparent 90%);
     }
     /* hero 헤드라인 바로 뒤 ambient halo — 헤드라인이 살짝 떠올라 보이도록.
        viewport 진입 시 한 번 0→1로 페이드되고, 이후 매우 느린 breathe.
@@ -768,11 +778,13 @@
       .pp-body { padding: 16px; gap: 14px; }
       .pp-big { font-size: 28px; }
       .pp-spark { height: 60px !important; }
-      /* 모바일 pp-stock: 종목명-차트가 자연 인접하도록 text 컬럼을 고정폭으로 두고,
-         차트는 종목명 직후 위치. 남는 가로 공간은 차트-수치 사이 spacer(1fr)가 흡수.
-         결과: 종목명-차트 gap=14px로 통일, 차트 시작 x 좌표는 전 행 동일.
-         자식이 4개(brand/text/spark/num)라 num이 마지막 1fr 컬럼에 우측 정렬로 박힌다. */
-      .pp-stock { grid-template-columns: 26px 100px 52px 1fr; padding: 0 12px; min-height: 50px; column-gap: 14px; }
+      /* 모바일 pp-stock: 자식 4개(brand/text/spark/num).
+         이전 grid(26px 100px 52px 1fr)는 마지막 1fr 이 차트-% 사이를 벌려
+         우측 정렬된 %가 차트에서 ~52px 떨어져 보였다(이슈 2).
+         flex 여백을 text(종목명) 컬럼으로 옮긴다: 26px | 1fr(종목명) | 52px(차트) | auto(%).
+         이러면 차트와 %가 14px(column-gap)로 인접하고, 남는 가로는 종목명 칸이 흡수한다.
+         차트 시작 x 좌표는 모든 행에서 동일(종목명 1fr 폭이 공유되므로). */
+      .pp-stock { grid-template-columns: 26px 1fr 52px auto; padding: 0 12px; min-height: 50px; column-gap: 14px; }
       .pp-stock .brand-mark { width: 26px; height: 26px; border-radius: 6px; }
       .pp-stock .brand-mark .logo { width: 14px; height: 14px; }
       .pp-stock .nm { font-size: 12.5px; }
@@ -792,9 +804,11 @@
       .feature, .feature > * { min-width: 0; }
       .ft-text, .ft-visual, .ft-stack, .ft-card { max-width: 100%; min-width: 0; }
       .ftc-port-row { min-width: 0; }
-      /* 모바일에서는 stockcell 폭을 줄여 row 폭 안에 들어오게 한다.
-         행 폭 ~304 - padding 24 - gaps 24 - spark 56 - w 36 - pl 50 = ~114px 가용. */
-      .ftc-port-row .stockcell { flex: 0 0 110px !important; width: 110px !important; min-width: 0; overflow: hidden; }
+      /* 모바일 stockcell: 고정폭(0 0 110px)이면 차트+비중+%가 좌측에 뭉치고
+         행 우측에 빈 공백이 남아 표가 좌측으로 쏠려 보였다(이슈 3).
+         flex: 1 1 auto 로 종목명 칸이 남는 가로를 흡수해 차트·비중·% 묶음을
+         카드 우측 가장자리까지 밀어준다. 종목명이 길면 ellipsis(overflow: hidden). */
+      .ftc-port-row .stockcell { flex: 1 1 auto !important; width: auto !important; min-width: 0; overflow: hidden; }
       .ftc-port-row .stockcell .nm,
       .ftc-port-row .stockcell .tk { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     }

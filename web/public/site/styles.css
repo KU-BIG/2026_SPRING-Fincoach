@@ -24,7 +24,13 @@
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
-html, body { height: 100%; }
+/* min-height (NOT height: 100%) — height: 100% 와 모바일 overflow-x: hidden 가 함께
+   걸리면 body 가 viewport 높이로 고정된 자체 스크롤 컨테이너가 되어버려
+   window 가 스크롤되지 않고, viewport 루트 IntersectionObserver 가 fold 아래
+   섹션의 .reveal.in 을 트리거하지 못해 모바일 애니메이션이 전부 죽었다.
+   min-height 로 두면 짧은 페이지는 viewport 를 채우되 콘텐츠가 길면 자연히 늘어나
+   window 가 정상 스크롤된다. */
+html, body { min-height: 100%; }
 body {
   font-family: "Pretendard Variable", Pretendard, Inter, system-ui, sans-serif;
   background: var(--bg-base);
