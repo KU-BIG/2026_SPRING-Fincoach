@@ -1,0 +1,186 @@
+/* 로그인/가입 모달 — site.css 토큰에 맞춘 다크 카드. */
+
+.auth-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(0, 0, 0, 0.66);
+  backdrop-filter: blur(6px);
+  animation: auth-fade 160ms ease both;
+}
+
+.auth-card {
+  position: relative;
+  width: 100%;
+  max-width: 384px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--frost);
+  border-radius: 18px;
+  padding: 32px 28px 26px;
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.6);
+  animation: auth-pop 200ms cubic-bezier(0.2, 0, 0.1, 1) both;
+}
+
+@keyframes auth-fade {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes auth-pop {
+  from { opacity: 0; transform: translateY(10px) scale(0.98); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+.auth-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: transparent;
+  color: var(--fg-muted);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  border-radius: 8px;
+  transition: background 150ms, color 150ms;
+}
+.auth-close:hover { background: rgba(255, 255, 255, 0.06); color: var(--fg-primary); }
+
+.auth-brand {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: -0.02em;
+  color: var(--fg-primary);
+}
+.auth-brand .logo {
+  width: 22px;
+  height: 22px;
+  border-radius: 6px;
+  background: var(--fg-primary);
+  display: grid;
+  place-items: center;
+}
+.auth-brand .logo::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  background: var(--bg-base);
+  border-radius: 1.5px;
+}
+
+.auth-title {
+  margin: 20px 0 6px;
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--fg-primary);
+}
+.auth-sub {
+  font-size: 13.5px;
+  line-height: 1.55;
+  color: var(--fg-muted);
+  margin-bottom: 22px;
+}
+
+.auth-form { display: flex; flex-direction: column; gap: 14px; }
+.auth-field { display: flex; flex-direction: column; gap: 7px; }
+.auth-field span {
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: var(--fg-muted);
+}
+.auth-field input {
+  background: var(--bg-base);
+  color: var(--fg-primary);
+  border: 1px solid var(--frost);
+  padding: 12px 14px;
+  border-radius: 11px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 150ms;
+}
+.auth-field input:focus { border-color: rgba(17, 255, 153, 0.5); }
+.auth-field input::placeholder { color: rgba(255, 255, 255, 0.28); }
+
+.auth-error {
+  font-size: 13px;
+  color: #ff6b6b;
+  background: rgba(240, 68, 82, 0.1);
+  border: 1px solid rgba(240, 68, 82, 0.3);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+.auth-notice {
+  font-size: 13px;
+  color: var(--green);
+  background: var(--green-soft);
+  border: 1px solid rgba(17, 255, 153, 0.3);
+  border-radius: 10px;
+  padding: 10px 12px;
+  line-height: 1.5;
+}
+
+.auth-submit {
+  margin-top: 4px;
+  padding: 13px;
+  background: var(--green);
+  color: var(--bg-base);
+  border: none;
+  border-radius: 11px;
+  font-size: 14.5px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 150ms;
+}
+.auth-submit:hover { opacity: 0.9; }
+.auth-submit:disabled { opacity: 0.55; cursor: default; }
+
+.auth-switch {
+  margin-top: 18px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--fg-muted);
+}
+.auth-switch button {
+  background: none;
+  border: none;
+  color: var(--blue);
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+}
+.auth-switch button:hover { text-decoration: underline; }
+
+/* 헤더 로그인 상태 */
+.nav-user {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  max-width: 160px;
+  font-size: 13px;
+  color: var(--fg-primary);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.nav-user .avatar {
+  width: 24px;
+  height: 24px;
+  border-radius: 999px;
+  background: linear-gradient(135deg, var(--blue), var(--green));
+  color: var(--bg-base);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
