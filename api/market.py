@@ -12,8 +12,12 @@ DEFAULT_TICKERS = ["005930.KS", "000660.KS", "AAPL", "NVDA"]
 
 
 @router.get("/api/market/summary")
-def market_summary() -> dict:
-    output = collect_market(DEFAULT_TICKERS)
+def market_summary(tickers: str | None = None) -> dict:
+    ticker_list = list(dict.fromkeys(t.strip().upper() for t in tickers.split(",") if t.strip())) if tickers else []
+    if not ticker_list:
+        ticker_list = DEFAULT_TICKERS
+
+    output = collect_market(ticker_list)
     return {
         "collected_at": output.collected_at.isoformat(),
         "market_date": output.market_date.isoformat(),
