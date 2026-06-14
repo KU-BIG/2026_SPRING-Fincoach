@@ -253,7 +253,14 @@
 
         outer: while (true) {
           const { done, value } = await reader.read();
-          if (done) break;
+          if (done) {
+            if (fullText) {
+              chatHistory.push({ role: "user", content: text });
+              chatHistory.push({ role: "assistant", content: fullText });
+              if (chatHistory.length > 20) chatHistory = chatHistory.slice(-20);
+            }
+            break;
+          }
           buf += dec.decode(value, { stream: true });
           const lines = buf.split("\n");
           buf = lines.pop();

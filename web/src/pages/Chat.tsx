@@ -125,14 +125,16 @@ export default function Chat() {
           { role: "assistant", content: acc },
         ];
         const currentUser = userRef.current;
-        if (currentUser && supabase) {
+        if (currentUser && supabase && acc) {
           supabase
             .from("chat_messages")
             .insert([
               { user_id: currentUser.id, role: "user" as const, content: text },
               { user_id: currentUser.id, role: "assistant" as const, content: acc },
             ])
-            .then();
+            .then(({ error }) => {
+              if (error) console.error("[chat] DB insert failed:", error.message);
+            });
         }
         finishCoach(bubble);
       })
@@ -156,7 +158,13 @@ export default function Chat() {
     historyRef.current = [];
     setSource("demo");
     if (user && supabase) {
-      supabase.from("chat_messages").delete().eq("user_id", user.id).then();
+      supabase
+        .from("chat_messages")
+        .delete()
+        .eq("user_id", user.id)
+        .then(({ error }) => {
+          if (error) console.error("[chat] DB delete failed:", error.message);
+        });
     }
   };
 
@@ -167,7 +175,9 @@ export default function Chat() {
       const { data } = await supabase
         .from("chat_messages")
         .select("role, content")
-        .order("created_at", { ascending: true });
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: true })
+        .limit(100);
       const msgs = messagesRef.current;
       if (!msgs || !aliveRef.current) return;
       msgs.innerHTML = "";
