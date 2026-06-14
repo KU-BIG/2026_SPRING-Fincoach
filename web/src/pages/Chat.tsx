@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 import { streamChat, type ChatMessage, type DataSource } from "../lib/api";
 import SourceBadge from "../components/SourceBadge";
+import { useAuth } from "../auth/context";
+import { supabase } from "../lib/supabase";
 
 /* /site/chat.html <main class="page-pad"> 를 그대로(verbatim) 이식하되, 메시지 전송은
    실제 /api/chat/stream (SSE) 에 연결한다. 백엔드가 없거나 실패하면 데모 응답으로
@@ -13,6 +15,11 @@ export default function Chat() {
   const aliveRef = useRef(true);
   const sendingRef = useRef(false);
   const [source, setSource] = useState<DataSource>("demo");
+  const { user, loading, configured } = useAuth();
+  const userRef = useRef(user);
+  useEffect(() => {
+    userRef.current = user;
+  }, [user]);
 
   useEffect(() => {
     aliveRef.current = true;
@@ -117,6 +124,16 @@ export default function Chat() {
           { role: "user", content: text },
           { role: "assistant", content: acc },
         ];
+        const currentUser = userRef.current;
+        if (currentUser && supabase) {
+          supabase
+            .from("chat_messages")
+            .insert([
+              { user_id: currentUser.id, role: "user" as const, content: text },
+              { user_id: currentUser.id, role: "assistant" as const, content: acc },
+            ])
+            .then();
+        }
         finishCoach(bubble);
       })
       .catch(() => {
@@ -132,13 +149,50 @@ export default function Chat() {
       });
   };
 
-  // 대화 비우기 → 메시지/히스토리 초기화
+  // 대화 비우기 → 메시지/히스토리 초기화 + 로그인 유저면 DB도 삭제
   const clearChat = () => {
     const msgs = messagesRef.current;
     if (msgs) msgs.innerHTML = "";
     historyRef.current = [];
     setSource("demo");
+    if (user && supabase) {
+      supabase.from("chat_messages").delete().eq("user_id", user.id).then();
+    }
   };
+
+  // 로그인 유저의 채팅 기록 복원
+  useEffect(() => {
+    if (!configured || loading || !user || !supabase) return;
+    (async () => {
+      const { data } = await supabase
+        .from("chat_messages")
+        .select("role, content")
+        .order("created_at", { ascending: true });
+      const msgs = messagesRef.current;
+      if (!msgs || !aliveRef.current) return;
+      msgs.innerHTML = "";
+      historyRef.current = [];
+      if (!data?.length) return;
+      for (const msg of data) {
+        const bubble = document.createElement("div");
+        bubble.className = `bubble ${msg.role === "user" ? "user" : "coach"}`;
+        bubble.textContent = msg.content;
+        if (msg.role === "assistant") {
+          const meta = document.createElement("div");
+          meta.className = "meta";
+          meta.textContent = "FC · 이전";
+          bubble.appendChild(meta);
+        }
+        msgs.appendChild(bubble);
+      }
+      historyRef.current = data.map((m) => ({
+        role: m.role as "user" | "assistant",
+        content: m.content,
+      }));
+      scrollToBottom();
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, loading, configured]);
 
   // Enter 키로 전송 (원본 keydown 핸들러 그대로)
   useEffect(() => {
