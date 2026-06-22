@@ -1,17 +1,35 @@
 import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
+import type { ReactNode } from "react";
+import { AuthContext, type AuthContextValue } from "../auth/context";
 import Portfolio from "./Portfolio";
+
+const mockAuth: AuthContextValue = {
+  configured: false,
+  session: null,
+  user: null,
+  loading: false,
+  signUp: async () => ({ error: null, needsConfirm: false }),
+  signIn: async () => ({ error: null }),
+  signOut: async () => {},
+  openAuth: () => {},
+  closeAuth: () => {},
+};
+
+function Wrapper({ children }: { children: ReactNode }) {
+  return (
+    <AuthContext.Provider value={mockAuth}>
+      <MemoryRouter>{children}</MemoryRouter>
+    </AuthContext.Provider>
+  );
+}
 
 describe("Portfolio (verbatim /site/portfolio.html 이식)", () => {
   afterEach(() => cleanup());
 
   it("page-head·KPI 카피와 면책 문구를 그대로 렌더한다", () => {
-    render(
-      <MemoryRouter>
-        <Portfolio />
-      </MemoryRouter>,
-    );
+    render(<Portfolio />, { wrapper: Wrapper });
     expect(screen.getByText("내 포트폴리오")).toBeInTheDocument();
     expect(screen.getByText("보유 종목 상세")).toBeInTheDocument();
     expect(screen.getByText("비중 분포")).toBeInTheDocument();
@@ -19,11 +37,7 @@ describe("Portfolio (verbatim /site/portfolio.html 이식)", () => {
   });
 
   it("보유 종목 표·도넛·차트가 동적으로 주입된다", () => {
-    const { container } = render(
-      <MemoryRouter>
-        <Portfolio />
-      </MemoryRouter>,
-    );
+    const { container } = render(<Portfolio />, { wrapper: Wrapper });
     const tbody = container.querySelector("#stockTable");
     expect(tbody).not.toBeNull();
     expect(tbody!.innerHTML).toContain("삼성전자");
@@ -39,11 +53,7 @@ describe("Portfolio (verbatim /site/portfolio.html 이식)", () => {
   });
 
   it("종목 행을 클릭하면 상세 패널이 펼쳐진다", () => {
-    const { container } = render(
-      <MemoryRouter>
-        <Portfolio />
-      </MemoryRouter>,
-    );
+    const { container } = render(<Portfolio />, { wrapper: Wrapper });
     const firstRow = container.querySelector<HTMLElement>(".stock-tr")!;
     fireEvent.click(firstRow);
     expect(firstRow.classList.contains("open")).toBe(true);

@@ -63,8 +63,31 @@ async function getJSON<T>(path: string, timeoutMs = 5000): Promise<T> {
   return (await res.json()) as T;
 }
 
+export interface HoldingInput {
+  ticker: string;
+  name: string;
+  shares: number;
+  avg_price: number;
+  currency?: string;
+}
+
+async function postJSON<T>(path: string, body: unknown, timeoutMs = 5000): Promise<T> {
+  const res = await fetch(API_BASE + path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    body: JSON.stringify(body),
+    signal: AbortSignal.timeout(timeoutMs),
+  });
+  if (!res.ok) throw new Error(`POST ${path} -> HTTP ${res.status}`);
+  return (await res.json()) as T;
+}
+
 export function getPortfolioSummary(): Promise<PortfolioSummary> {
   return getJSON<PortfolioSummary>("/api/portfolio/summary");
+}
+
+export function postPortfolioSummary(holdings: HoldingInput[]): Promise<PortfolioSummary> {
+  return postJSON<PortfolioSummary>("/api/portfolio/summary", { holdings });
 }
 
 /* The analysis endpoint is an LLM call (cached server-side). Without an API key
@@ -72,6 +95,13 @@ export function getPortfolioSummary(): Promise<PortfolioSummary> {
    callers should treat that as "demo" via isLiveAnalysis(). */
 export function getPortfolioAnalysis(timeoutMs = 30000): Promise<AnalysisReport> {
   return getJSON<AnalysisReport>("/api/portfolio/analysis", timeoutMs);
+}
+
+export function postPortfolioAnalysis(
+  holdings: HoldingInput[],
+  timeoutMs = 30000,
+): Promise<AnalysisReport> {
+  return postJSON<AnalysisReport>("/api/portfolio/analysis", { holdings }, timeoutMs);
 }
 
 export function isLiveAnalysis(r: AnalysisReport): boolean {

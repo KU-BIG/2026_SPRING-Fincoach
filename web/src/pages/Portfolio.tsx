@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import {
   stocks,
@@ -12,7 +12,17 @@ import {
   buildHeaderStats,
   buildChart,
 } from "../lib/portfolioCharts";
-import { getPortfolioAnalysis, isLiveAnalysis, type DataSource } from "../lib/api";
+import {
+  getPortfolioAnalysis,
+  postPortfolioAnalysis,
+  postPortfolioSummary,
+  isLiveAnalysis,
+  type DataSource,
+  type HoldingInput,
+  type PortfolioSummary,
+} from "../lib/api";
+import { useAuth } from "../auth/context";
+import { supabase } from "../lib/supabase";
 import SourceBadge from "../components/SourceBadge";
 
 /* AI 분석 카드 기본값 — 백엔드 미연결 시 보여주는 데모 쇼케이스.
@@ -35,6 +45,201 @@ const DEMO_ANALYSIS: AnalysisView = {
   suggestions: ["반도체 외 섹터 비중 검토", "방어주·배당주 일부 편입", "환율 시나리오 점검"],
 };
 
+/* ── helpers ──────────────────────────────────────────────────────────────── */
+
+function rowsToInputs(rows: HoldingRow[]): HoldingInput[] {
+  return rows
+    .filter((r) => r.ticker.trim())
+    .map((r) => ({
+      ticker: r.ticker.trim(),
+      name: r.name.trim() || r.ticker.trim(),
+      shares: Number(r.shares) || 0,
+      avg_price: Number(r.avg_price) || 0,
+      currency: r.currency || undefined,
+    }));
+}
+
+/* ── 내 종목 입력 폼 ─────────────────────────────────────────────────────── */
+
+interface HoldingRow {
+  ticker: string;
+  name: string;
+  shares: string;
+  avg_price: string;
+  currency: string;
+}
+
+const EMPTY_ROW: HoldingRow = { ticker: "", name: "", shares: "", avg_price: "", currency: "KRW" };
+
+function HoldingsForm({
+  rows,
+  setRows,
+  onSave,
+  saving,
+}: {
+  rows: HoldingRow[];
+  setRows: React.Dispatch<React.SetStateAction<HoldingRow[]>>;
+  onSave: () => void;
+  saving: boolean;
+}) {
+  const update = (i: number, field: keyof HoldingRow, value: string) => {
+    setRows((prev) => prev.map((r, j) => (j === i ? { ...r, [field]: value } : r)));
+  };
+  const addRow = () => setRows((prev) => [...prev, { ...EMPTY_ROW }]);
+  const removeRow = (i: number) => setRows((prev) => prev.filter((_, j) => j !== i));
+
+  return (
+    <section className="card c-12 reveal" style={{ padding: "28px", marginTop: "14px" }}>
+      <div className="subhead" style={{ fontSize: "17px", marginBottom: "14px" }}>
+        내 종목 입력
+      </div>
+      <div style={{ fontSize: "12px", color: "var(--fg-muted)", marginBottom: "14px" }}>
+        보유 종목을 입력하면 실제 포트폴리오 기반으로 분석합니다.
+      </div>
+      <table style={{ width: "100%", maxWidth: "760px", borderCollapse: "collapse" }}>
+        <thead>
+          <tr>
+            <th style={{ textAlign: "left", padding: "6px 8px", fontSize: "13px" }}>티커</th>
+            <th style={{ textAlign: "left", padding: "6px 8px", fontSize: "13px" }}>종목명</th>
+            <th style={{ textAlign: "right", padding: "6px 8px", fontSize: "13px" }}>수량</th>
+            <th style={{ textAlign: "right", padding: "6px 8px", fontSize: "13px" }}>평균단가</th>
+            <th style={{ textAlign: "center", padding: "6px 8px", fontSize: "13px" }}>통화</th>
+            <th style={{ width: "40px" }}></th>
+          </tr>
+        </thead>
+        <tbody>
+          {rows.map((r, i) => (
+            <tr key={i}>
+              <td style={{ padding: "4px 8px" }}>
+                <input
+                  type="text"
+                  placeholder="005930.KS"
+                  value={r.ticker}
+                  onChange={(e) => update(i, "ticker", e.target.value)}
+                  style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--fg)" }}
+                />
+              </td>
+              <td style={{ padding: "4px 8px" }}>
+                <input
+                  type="text"
+                  placeholder="삼성전자"
+                  value={r.name}
+                  onChange={(e) => update(i, "name", e.target.value)}
+                  style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--fg)" }}
+                />
+              </td>
+              <td style={{ padding: "4px 8px" }}>
+                <input
+                  type="number"
+                  placeholder="10"
+                  value={r.shares}
+                  onChange={(e) => update(i, "shares", e.target.value)}
+                  style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--fg)", textAlign: "right" }}
+                />
+              </td>
+              <td style={{ padding: "4px 8px" }}>
+                <input
+                  type="number"
+                  placeholder="70000"
+                  value={r.avg_price}
+                  onChange={(e) => update(i, "avg_price", e.target.value)}
+                  style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--fg)", textAlign: "right" }}
+                />
+              </td>
+              <td style={{ padding: "4px 8px", textAlign: "center" }}>
+                <select
+                  value={r.currency}
+                  onChange={(e) => update(i, "currency", e.target.value)}
+                  style={{ padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--fg)" }}
+                >
+                  <option value="KRW">KRW</option>
+                  <option value="USD">USD</option>
+                </select>
+              </td>
+              <td style={{ padding: "4px 8px", textAlign: "center" }}>
+                <button
+                  onClick={() => removeRow(i)}
+                  style={{ background: "none", border: "none", color: "var(--red, #e55)", cursor: "pointer", fontSize: "16px" }}
+                  title="삭제"
+                >
+                  x
+                </button>
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+      <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
+        <button className="toggle-btn" onClick={addRow}>+ 종목 추가</button>
+        <button
+          className="toggle-btn active"
+          onClick={onSave}
+          disabled={saving || (rows.length > 0 && rows.every((r) => !r.ticker.trim()))}
+        >
+          {saving ? "저장 중..." : "저장 & 분석"}
+        </button>
+      </div>
+    </section>
+  );
+}
+
+/* ── 유저 포트폴리오 요약 카드 ─────────────────────────────────────────── */
+
+function UserSummaryCard({ summary }: { summary: PortfolioSummary }) {
+  const fmt = (n: number) => n.toLocaleString("ko-KR");
+  const pnlClass = summary.pnl_pct >= 0 ? "pos" : "neg";
+
+  return (
+    <section className="card c-12 reveal" style={{ padding: "28px", marginTop: "14px" }}>
+      <div className="subhead" style={{ fontSize: "17px", marginBottom: "14px" }}>
+        내 포트폴리오 요약
+        <SourceBadge source="live" liveLabel="실시간" demoLabel="" />
+      </div>
+      <div style={{ display: "flex", gap: "32px", flexWrap: "wrap" }}>
+        <div>
+          <div style={{ fontSize: "12px", color: "var(--fg-muted)" }}>총 평가금액</div>
+          <div className="num" style={{ fontSize: "24px", fontWeight: 700 }}>
+            {fmt(summary.total_value_krw)}원
+          </div>
+        </div>
+        <div>
+          <div style={{ fontSize: "12px", color: "var(--fg-muted)" }}>총 손익</div>
+          <div className={`num ${pnlClass}`} style={{ fontSize: "24px", fontWeight: 700 }}>
+            {summary.total_pnl_krw >= 0 ? "+" : ""}{fmt(summary.total_pnl_krw)}원 ({summary.pnl_pct}%)
+          </div>
+        </div>
+      </div>
+      {summary.positions.length > 0 && (
+        <table style={{ width: "100%", maxWidth: "760px", marginTop: "16px", borderCollapse: "collapse" }}>
+          <thead>
+            <tr>
+              <th style={{ textAlign: "left", padding: "6px 8px", fontSize: "13px" }}>종목</th>
+              <th style={{ textAlign: "right", padding: "6px 8px", fontSize: "13px" }}>비중</th>
+              <th style={{ textAlign: "right", padding: "6px 8px", fontSize: "13px" }}>수익률</th>
+              <th style={{ textAlign: "right", padding: "6px 8px", fontSize: "13px" }}>평가금액</th>
+            </tr>
+          </thead>
+          <tbody>
+            {summary.positions.map((p) => (
+              <tr key={p.ticker}>
+                <td style={{ padding: "6px 8px" }}>
+                  <div style={{ fontWeight: 600 }}>{p.name}</div>
+                  <div style={{ fontSize: "11px", color: "var(--fg-muted)" }}>{p.ticker}</div>
+                </td>
+                <td style={{ textAlign: "right", padding: "6px 8px" }}>{p.weight}%</td>
+                <td style={{ textAlign: "right", padding: "6px 8px" }} className={`num ${p.pnl_pct >= 0 ? "pos" : "neg"}`}>
+                  {p.pnl_pct >= 0 ? "+" : ""}{p.pnl_pct}%
+                </td>
+                <td style={{ textAlign: "right", padding: "6px 8px" }}>{fmt(p.current_value_krw)}원</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+    </section>
+  );
+}
+
 /* /site/portfolio.html <main class="page-pad"> 를 그대로(verbatim) 이식.
    page-head / hero-card / KPI 4 / 보유 종목 표 / 도넛 + 라인차트 / AI 분석.
    인라인 <script> 의 동적 렌더(차트·표·도넛·KPI)는 useEffect 에서 원본과
@@ -44,10 +249,133 @@ export default function Portfolio() {
   const [analysis, setAnalysis] = useState<AnalysisView>(DEMO_ANALYSIS);
   const [analysisSource, setAnalysisSource] = useState<DataSource>("demo");
 
-  // AI 분석: /api/portfolio/analysis (LLM). 실 분석이 오면 카드를 덮어쓰고,
-  // 키 없음/백엔드 미연결이면 데모 쇼케이스를 그대로 둔다. 보유 종목 표/도넛은
-  // 백엔드 mock(2종목)과 디자인(10종목)이 달라 건드리지 않는다.
+  /* ── 유저 holdings 상태 ──────────────────────────────────────────────── */
+  const { user, configured, openAuth } = useAuth();
+  const [holdingRows, setHoldingRows] = useState<HoldingRow[]>([{ ...EMPTY_ROW }]);
+  const [saving, setSaving] = useState(false);
+  const [userSummary, setUserSummary] = useState<PortfolioSummary | null>(null);
+  const [holdingsLoaded, setHoldingsLoaded] = useState(false);
+
+  /* Supabase에서 유저 holdings 로드 */
   useEffect(() => {
+    if (!user || !supabase) {
+      setHoldingRows([{ ...EMPTY_ROW }]);
+      setUserSummary(null);
+      setHoldingsLoaded(false);
+      return;
+    }
+    setHoldingsLoaded(false);
+    let alive = true;
+    supabase
+      .from("holdings")
+      .select("ticker, name, shares, avg_price, currency")
+      .then(({ data, error }) => {
+        if (!alive) return;
+        if (error) {
+          setHoldingsLoaded(true);
+          return;
+        }
+        if (data && data.length > 0) {
+          setHoldingRows(
+            data.map((h: { ticker: string; name: string; shares: number; avg_price: number; currency: string }) => ({
+              ticker: h.ticker,
+              name: h.name,
+              shares: String(h.shares),
+              avg_price: String(h.avg_price),
+              currency: h.currency || "KRW",
+            })),
+          );
+        }
+        setHoldingsLoaded(true);
+      });
+    return () => { alive = false; };
+  }, [user]);
+
+  /* holdings 로드 후 자동으로 포트폴리오 요약 + 분석 호출 */
+  useEffect(() => {
+    if (!holdingsLoaded) return;
+    const inputs = rowsToInputs(holdingRows);
+    if (!inputs.length) return;
+
+    postPortfolioSummary(inputs)
+      .then(setUserSummary)
+      .catch(() => {});
+
+    postPortfolioAnalysis(inputs)
+      .then((r) => {
+        if (!isLiveAnalysis(r)) return;
+        setAnalysis({
+          sub: [r.portfolio_type, r.investor_match].filter(Boolean).join(" · "),
+          summary: r.summary,
+          characteristics: r.characteristics?.length ? r.characteristics : DEMO_ANALYSIS.characteristics,
+          strengths: r.strengths?.length ? r.strengths : DEMO_ANALYSIS.strengths,
+          risks: r.risks?.length ? r.risks : DEMO_ANALYSIS.risks,
+          suggestions: r.suggestions?.length ? r.suggestions : DEMO_ANALYSIS.suggestions,
+        });
+        setAnalysisSource("live");
+      })
+      .catch(() => {});
+  }, [holdingsLoaded, holdingRows]);
+
+  const handleSave = useCallback(async () => {
+    const inputs = rowsToInputs(holdingRows);
+    setSaving(true);
+    try {
+      /* Supabase에 저장 (로그인 + 환경 구성 시) */
+      if (user && supabase) {
+        if (inputs.length > 0) {
+          const rows = inputs.map((h) => ({
+            user_id: user.id,
+            ticker: h.ticker,
+            name: h.name,
+            shares: h.shares,
+            avg_price: h.avg_price,
+            currency: h.currency || "KRW",
+          }));
+          // upsert 먼저, delete 나중에 (실패 시 데이터 유실 방지)
+          await supabase.from("holdings").upsert(rows, { onConflict: "user_id,ticker" });
+          const keepTickers = rows.map((r) => r.ticker);
+          await supabase.from("holdings").delete().eq("user_id", user.id).not("ticker", "in", `(${keepTickers.join(",")})`);
+        } else {
+          // 전체 삭제
+          await supabase.from("holdings").delete().eq("user_id", user.id);
+        }
+      }
+
+      if (inputs.length === 0) {
+        setUserSummary(null);
+        setAnalysis(DEMO_ANALYSIS);
+        setAnalysisSource("demo");
+        return;
+      }
+
+      /* 포트폴리오 요약 */
+      const summary = await postPortfolioSummary(inputs);
+      setUserSummary(summary);
+
+      /* AI 분석 */
+      postPortfolioAnalysis(inputs)
+        .then((r) => {
+          if (!isLiveAnalysis(r)) return;
+          setAnalysis({
+            sub: [r.portfolio_type, r.investor_match].filter(Boolean).join(" · "),
+            summary: r.summary,
+            characteristics: r.characteristics?.length ? r.characteristics : DEMO_ANALYSIS.characteristics,
+            strengths: r.strengths?.length ? r.strengths : DEMO_ANALYSIS.strengths,
+            risks: r.risks?.length ? r.risks : DEMO_ANALYSIS.risks,
+            suggestions: r.suggestions?.length ? r.suggestions : DEMO_ANALYSIS.suggestions,
+          });
+          setAnalysisSource("live");
+        })
+        .catch(() => {});
+    } finally {
+      setSaving(false);
+    }
+  }, [holdingRows, user]);
+
+  // AI 분석 (데모): 유저 holdings가 없을 때만 GET으로 데모 분석 로드
+  useEffect(() => {
+    if (holdingsLoaded) return; // 유저 데이터가 있으면 POST 분석을 씀
     let alive = true;
     getPortfolioAnalysis()
       .then((r) => {
@@ -68,7 +396,7 @@ export default function Portfolio() {
     return () => {
       alive = false;
     };
-  }, []);
+  }, [holdingsLoaded]);
 
   useEffect(() => {
     // StrictMode 의 dev 이중 마운트에서도 출력은 동일하지만, 클릭 핸들러 중복 바인딩과
@@ -282,6 +610,30 @@ export default function Portfolio() {
           </div>
         </div>
       </div>
+
+      {/* ── 내 종목 입력 (로그인 유저) ─────────────────────────────────── */}
+      {configured && user ? (
+        <div className="grid grid-12">
+          <HoldingsForm
+            rows={holdingRows}
+            setRows={setHoldingRows}
+            onSave={handleSave}
+            saving={saving}
+          />
+          {userSummary && <UserSummaryCard summary={userSummary} />}
+        </div>
+      ) : configured ? (
+        <div className="grid grid-12" style={{ marginTop: "14px" }}>
+          <section className="card c-12 reveal" style={{ padding: "20px", textAlign: "center" }}>
+            <p style={{ fontSize: "14px", color: "var(--fg-muted)", margin: "0 0 12px" }}>
+              로그인하면 내 종목을 입력하고 실제 포트폴리오 기반 분석을 받을 수 있습니다.
+            </p>
+            <button className="toggle-btn active" onClick={() => openAuth("login")}>
+              로그인
+            </button>
+          </section>
+        </div>
+      ) : null}
 
       {/* 보유 종목 표 */}
       <div className="grid grid-12" style={{ marginTop: "14px" }}>

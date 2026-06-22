@@ -82,6 +82,48 @@ def test_portfolio_analysis_force_refresh():
     mock_fn.assert_called_once_with(force_refresh=True)
 
 
+# ── POST /api/portfolio/summary (유저 holdings) ─────────────────────────────
+
+USER_HOLDINGS = [
+    {"ticker": "005930.KS", "name": "삼성전자", "shares": 10, "avg_price": 70000},
+    {"ticker": "AAPL", "name": "Apple", "shares": 5, "avg_price": 180},
+]
+
+
+def test_post_portfolio_summary_200_and_keys():
+    res = client.post("/api/portfolio/summary", json={"holdings": USER_HOLDINGS})
+    assert res.status_code == 200
+    data = res.json()
+    assert "total_value_krw" in data
+    assert "total_pnl_krw" in data
+    assert "pnl_pct" in data
+    assert "positions" in data
+    assert len(data["positions"]) == 2
+
+
+def test_post_portfolio_summary_uses_user_data():
+    """유저 holdings 기반 계산 — mock과 다른 값이 나와야 함."""
+    demo = client.get("/api/portfolio/summary").json()
+    user = client.post("/api/portfolio/summary", json={"holdings": USER_HOLDINGS}).json()
+    # shares/avg_price가 다르므로 total_value_krw가 달라야 함
+    assert user["total_value_krw"] != demo["total_value_krw"]
+
+
+def test_post_portfolio_analysis_200_and_keys():
+    with patch("api.portfolio.get_analysis_report", return_value=MOCK_ANALYSIS):
+        res = client.post("/api/portfolio/analysis", json={"holdings": USER_HOLDINGS})
+    assert res.status_code == 200
+    data = res.json()
+    assert "summary" in data
+    assert "disclaimer" in data
+
+
+def test_post_portfolio_empty_holdings():
+    """빈 holdings 배열 → 200 (에러는 아님, mock fallback)."""
+    res = client.post("/api/portfolio/summary", json={"holdings": []})
+    assert res.status_code == 200
+
+
 # ── /api/chat ─────────────────────────────────────────────────────────────────
 
 

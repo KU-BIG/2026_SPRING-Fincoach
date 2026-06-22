@@ -12,13 +12,49 @@ from shared.mocks import (
     mock_portfolio,
     mock_stock_data,
 )
+from shared.models import Account, Holding
 
 
-def get_portfolio_data() -> dict:
-    """포트폴리오 요약 데이터 반환. 빠름, dashboard 상시 호출 OK."""
-    portfolio = mock_portfolio()
+def _holdings_to_accounts(holdings: list[dict]) -> list[Account]:
+    """프론트에서 받은 holdings 배열을 Account 리스트로 변환."""
+    parsed = []
+    for h in holdings:
+        # ticker 기반으로 currency/market 자동 판별
+        ticker = h.get("ticker", "")
+        if ticker.endswith(".KS") or ticker.endswith(".KQ"):
+            currency = "KRW"
+            market = "KR"
+        else:
+            currency = "USD"
+            market = "US"
+
+        raw_currency = h.get("currency", "")
+        parsed.append(Holding(
+            name=h.get("name", ticker),
+            ticker=ticker,
+            market=market,
+            quantity=float(h.get("shares", h.get("quantity", 0))),
+            avg_price=float(h.get("avg_price", 0)),
+            currency=raw_currency if raw_currency in ("KRW", "USD") else currency,
+        ))
+
+    return [Account(account_name="내 포트폴리오", holdings=parsed)]
+
+
+def get_portfolio_data(holdings: list[dict] | None = None) -> dict:
+    """포트폴리오 요약 데이터 반환.
+
+    Args:
+        holdings: 프론트에서 전달한 유저 holdings 배열. None이면 mock 사용.
+    """
+    if holdings is not None:
+        accounts = _holdings_to_accounts(holdings)
+    else:
+        portfolio = mock_portfolio()
+        accounts = portfolio.accounts
+
     stock_data = mock_stock_data()
-    return calculate_portfolio(portfolio.accounts, stock_data)
+    return calculate_portfolio(accounts, stock_data)
 
 
 def _fallback_analysis() -> dict:
@@ -94,10 +130,13 @@ def _call_llm_analysis(portfolio_data: dict) -> dict:
     return parsed
 
 
-def get_analysis_report(force_refresh: bool = False) -> dict:
+def get_analysis_report(
+    force_refresh: bool = False,
+    holdings: list[dict] | None = None,
+) -> dict:
     """LLM 분석 리포트 반환. 느린 함수, 요청 시만 호출."""
     try:
-        portfolio_data = get_portfolio_data()
+        portfolio_data = get_portfolio_data(holdings=holdings)
         return _call_llm_analysis(portfolio_data)
     except Exception:
         return _fallback_analysis()
