@@ -1,13 +1,11 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { streamChat, type ChatMessage, type DataSource } from "../lib/api";
 import SourceBadge from "../components/SourceBadge";
 import { useAuth } from "../auth/context";
 import { supabase } from "../lib/supabase";
 
-/* /site/chat.html <main class="page-pad"> 를 그대로(verbatim) 이식하되, 메시지 전송은
-   실제 /api/chat/stream (SSE) 에 연결한다. 백엔드가 없거나 실패하면 데모 응답으로
-   graceful fallback 하고, 상단 배지로 실시간/데모 출처를 표시한다.
-   초기 시드 버블은 디자인 쇼케이스이므로 LLM history 에는 포함하지 않는다. */
+type Conversation = { id: string; title: string };
+
 export default function Chat() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const messagesRef = useRef<HTMLDivElement | null>(null);
@@ -21,6 +19,13 @@ export default function Chat() {
     userRef.current = user;
   }, [user]);
 
+  const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [activeConvId, setActiveConvId] = useState<string | null>(null);
+  const activeConvIdRef = useRef<string | null>(null);
+  useEffect(() => {
+    activeConvIdRef.current = activeConvId;
+  }, [activeConvId]);
+
   useEffect(() => {
     aliveRef.current = true;
     return () => {
@@ -28,20 +33,11 @@ export default function Chat() {
     };
   }, []);
 
-  // 자주 묻는 질문 클릭 → 입력창에 채우고 포커스
-  const addQuestion = (q: string) => {
-    const input = inputRef.current;
-    if (!input) return;
-    input.value = q;
-    input.focus();
-  };
-
   const scrollToBottom = () => {
     const msgs = messagesRef.current;
     if (msgs) msgs.scrollTop = msgs.scrollHeight;
   };
 
-  // 코치 버블 + 타이핑 인디케이터 생성
   const appendCoachBubble = (): { bubble: HTMLDivElement; content: HTMLSpanElement } => {
     const msgs = messagesRef.current!;
     const bubble = document.createElement("div");
@@ -54,7 +50,6 @@ export default function Chat() {
     return { bubble, content };
   };
 
-  // 첫 델타 도착 시 타이핑 인디케이터를 본문 span 으로 교체
   const swapTypingToContent = (bubble: HTMLDivElement, content: HTMLSpanElement) => {
     bubble.innerHTML = "";
     bubble.appendChild(content);
@@ -68,7 +63,120 @@ export default function Chat() {
     scrollToBottom();
   };
 
-  // 보내기 → user 버블 추가 + 실시간 스트리밍 응답
+  const addQuestion = (q: string) => {
+    const input = inputRef.current;
+    if (!input) return;
+    input.value = q;
+    input.focus();
+  };
+
+  // 로그인 유저의 대화 세션 목록 로드
+  const loadConversations = useCallback(async (uid: string) => {
+    if (!supabase) return;
+    const { data } = await supabase
+      .from("conversations")
+      .select("id, title")
+      .eq("user_id", uid)
+      .order("updated_at", { ascending: false })
+      .limit(20);
+    if (data && aliveRef.current) {
+      setConversations(data);
+    }
+  }, []);
+
+  // 특정 세션의 메시지 로드
+  const loadConversation = useCallback(async (convId: string) => {
+    if (!supabase) return;
+    const { data } = await supabase
+      .from("chat_messages")
+      .select("role, content")
+      .eq("conversation_id", convId)
+      .order("created_at", { ascending: true })
+      .limit(100);
+    const msgs = messagesRef.current;
+    if (!msgs || !aliveRef.current) return;
+    if (convId !== activeConvIdRef.current) return;
+    msgs.innerHTML = "";
+    historyRef.current = [];
+    if (!data?.length) return;
+    for (const msg of data) {
+      const bubble = document.createElement("div");
+      bubble.className = `bubble ${msg.role === "user" ? "user" : "coach"}`;
+      bubble.textContent = msg.content;
+      if (msg.role === "assistant") {
+        const meta = document.createElement("div");
+        meta.className = "meta";
+        meta.textContent = "FC · 이전";
+        bubble.appendChild(meta);
+      }
+      msgs.appendChild(bubble);
+    }
+    historyRef.current = data.map((m) => ({
+      role: m.role as "user" | "assistant",
+      content: m.content,
+    }));
+    scrollToBottom();
+  }, []);
+
+  // 새 대화 세션 생성
+  const createConversation = useCallback(async (uid: string): Promise<string | null> => {
+    if (!supabase) return null;
+    const { data, error } = await supabase
+      .from("conversations")
+      .insert({ user_id: uid, title: "새 대화" })
+      .select("id")
+      .single();
+    if (error) {
+      console.error("[chat] conversation create failed:", error.message);
+      return null;
+    }
+    return data.id;
+  }, []);
+
+  // 로그인 시 최신 세션 목록 + 가장 최근 세션 복원
+  useEffect(() => {
+    if (!configured || loading || !user || !supabase) return;
+    (async () => {
+      await loadConversations(user.id);
+      const { data } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("user_id", user.id)
+        .order("updated_at", { ascending: false })
+        .limit(1);
+      if (data && data.length > 0 && aliveRef.current) {
+        setActiveConvId(data[0].id);
+        await loadConversation(data[0].id);
+      }
+    })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user?.id, loading, configured]);
+
+  // 사이드바 세션 클릭
+  const selectConversation = async (convId: string) => {
+    setActiveConvId(convId);
+    await loadConversation(convId);
+  };
+
+  // 새 대화 버튼
+  const startNewConversation = async () => {
+    const currentUser = userRef.current;
+    const msgs = messagesRef.current;
+    if (msgs) msgs.innerHTML = "";
+    historyRef.current = [];
+    setSource("demo");
+
+    if (currentUser && supabase) {
+      const newId = await createConversation(currentUser.id);
+      if (newId && aliveRef.current) {
+        setActiveConvId(newId);
+        setConversations((prev) => [{ id: newId, title: "새 대화" }, ...prev]);
+      }
+    } else {
+      setActiveConvId(null);
+    }
+  };
+
   const sendMessage = () => {
     const input = inputRef.current;
     const msgs = messagesRef.current;
@@ -76,11 +184,9 @@ export default function Chat() {
     const text = input.value.trim();
     if (!text) return;
 
-    // user 버블
     const bub = document.createElement("div");
     bub.className = "bubble user";
     bub.textContent = text;
-    // 기존 타이핑 인디케이터 제거
     const typing = msgs.querySelector(".bubble.coach .typing");
     if (typing) typing.parentElement!.remove();
     msgs.appendChild(bub);
@@ -89,6 +195,7 @@ export default function Chat() {
 
     sendingRef.current = true;
     const prior = [...historyRef.current];
+    const isFirstMsg = prior.length === 0;
     const { bubble, content } = appendCoachBubble();
     let acc = "";
     let swapped = false;
@@ -109,12 +216,10 @@ export default function Chat() {
         onText(`\n\n(응답 오류: ${msg})`);
       },
     })
-      .then(() => {
-        // 백엔드가 데모 모드 메시지를 보냈으면 demo, 아니면 live
+      .then(async () => {
         const isDemo = acc.includes("[데모 모드]") || acc === "";
         if (aliveRef.current) setSource(isDemo ? "demo" : "live");
         if (!swapped) {
-          // 델타가 전혀 없던 경우(빈 응답) — 데모 안내로 대체
           swapTypingToContent(bubble, content);
           content.textContent =
             "지금은 데모 모드예요. 백엔드를 연결하면 실시간으로 답해드릴게요.";
@@ -125,21 +230,52 @@ export default function Chat() {
           { role: "assistant", content: acc },
         ];
         const currentUser = userRef.current;
+        let convId = activeConvIdRef.current;
+
         if (currentUser && supabase && acc) {
-          supabase
-            .from("chat_messages")
-            .insert([
-              { user_id: currentUser.id, role: "user" as const, content: text },
-              { user_id: currentUser.id, role: "assistant" as const, content: acc },
-            ])
-            .then(({ error }) => {
-              if (error) console.error("[chat] DB insert failed:", error.message);
-            });
+          // 세션이 없으면 새로 생성
+          if (!convId) {
+            convId = await createConversation(currentUser.id);
+            if (convId) {
+              setActiveConvId(convId);
+              setConversations((prev) => [{ id: convId!, title: "새 대화" }, ...prev]);
+            }
+          }
+          if (convId) {
+            const updates: { title?: string; updated_at: string } = {
+              updated_at: new Date().toISOString(),
+            };
+            if (isFirstMsg) updates.title = text.slice(0, 20);
+            supabase
+              .from("conversations")
+              .update(updates)
+              .eq("id", convId)
+              .then(({ error }) => {
+                if (error) {
+                  console.error("[chat] conv update failed:", error.message);
+                } else {
+                  if (isFirstMsg && aliveRef.current) {
+                    setConversations((prev) =>
+                      prev.map((c) => (c.id === convId ? { ...c, title: updates.title! } : c))
+                    );
+                  }
+                  loadConversations(currentUser.id);
+                }
+              });
+            supabase
+              .from("chat_messages")
+              .insert([
+                { user_id: currentUser.id, conversation_id: convId, role: "user" as const, content: text },
+                { user_id: currentUser.id, conversation_id: convId, role: "assistant" as const, content: acc },
+              ])
+              .then(({ error }) => {
+                if (error) console.error("[chat] DB insert failed:", error.message);
+              });
+          }
         }
         finishCoach(bubble);
       })
       .catch(() => {
-        // 전송 실패(백엔드 없음/타임아웃) → 데모 응답으로 graceful fallback
         if (!swapped) swapTypingToContent(bubble, content);
         content.textContent =
           "지금은 데모 모드로 동작 중이에요. 백엔드(API)를 연결하면 보유 종목과 시장을 함께 보고 실시간으로 답해드립니다.";
@@ -151,60 +287,6 @@ export default function Chat() {
       });
   };
 
-  // 대화 비우기 → 메시지/히스토리 초기화 + 로그인 유저면 DB도 삭제
-  const clearChat = () => {
-    const msgs = messagesRef.current;
-    if (msgs) msgs.innerHTML = "";
-    historyRef.current = [];
-    setSource("demo");
-    if (user && supabase) {
-      supabase
-        .from("chat_messages")
-        .delete()
-        .eq("user_id", user.id)
-        .then(({ error }) => {
-          if (error) console.error("[chat] DB delete failed:", error.message);
-        });
-    }
-  };
-
-  // 로그인 유저의 채팅 기록 복원
-  useEffect(() => {
-    if (!configured || loading || !user || !supabase) return;
-    (async () => {
-      const { data } = await supabase
-        .from("chat_messages")
-        .select("role, content")
-        .eq("user_id", user.id)
-        .order("created_at", { ascending: true })
-        .limit(100);
-      const msgs = messagesRef.current;
-      if (!msgs || !aliveRef.current) return;
-      msgs.innerHTML = "";
-      historyRef.current = [];
-      if (!data?.length) return;
-      for (const msg of data) {
-        const bubble = document.createElement("div");
-        bubble.className = `bubble ${msg.role === "user" ? "user" : "coach"}`;
-        bubble.textContent = msg.content;
-        if (msg.role === "assistant") {
-          const meta = document.createElement("div");
-          meta.className = "meta";
-          meta.textContent = "FC · 이전";
-          bubble.appendChild(meta);
-        }
-        msgs.appendChild(bubble);
-      }
-      historyRef.current = data.map((m) => ({
-        role: m.role as "user" | "assistant",
-        content: m.content,
-      }));
-      scrollToBottom();
-    })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [user?.id, loading, configured]);
-
-  // Enter 키로 전송 (원본 keydown 핸들러 그대로)
   useEffect(() => {
     const input = inputRef.current;
     if (!input) return;
@@ -231,18 +313,34 @@ export default function Chat() {
       <div className="chat-layout">
         {/* SIDEBAR */}
         <aside className="card sidebar reveal">
-          <button className="new-chat" onClick={() => clearChat()}>
+          <button className="new-chat" onClick={() => startNewConversation()}>
             + 새 대화
           </button>
 
           <div className="side-label">최근 대화</div>
           <div className="side-list">
-            <a href="#" className="active">
-              PER이 높으면 무슨 의미예요?
-            </a>
-            <a href="#">반도체 사이클 어디쯤일까요?</a>
-            <a href="#">환율이 떨어지면 어떻게 되나요?</a>
-            <a href="#">NVIDIA 비중을 더 늘려도 될까요?</a>
+            {user && conversations.length > 0 ? (
+              conversations.map((conv) => (
+                <a
+                  key={conv.id}
+                  href="#"
+                  className={conv.id === activeConvId ? "active" : ""}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    selectConversation(conv.id);
+                  }}
+                >
+                  {conv.title}
+                </a>
+              ))
+            ) : (
+              <>
+                <a href="#" className="active">PER이 높으면 무슨 의미예요?</a>
+                <a href="#">반도체 사이클 어디쯤일까요?</a>
+                <a href="#">환율이 떨어지면 어떻게 되나요?</a>
+                <a href="#">NVIDIA 비중을 더 늘려도 될까요?</a>
+              </>
+            )}
           </div>
 
           <div className="side-label">자주 묻는 질문</div>
@@ -277,7 +375,7 @@ export default function Chat() {
               <button
                 className="nav-ghost"
                 style={{ padding: "5px 12px", fontSize: "12px" }}
-                onClick={() => clearChat()}
+                onClick={() => startNewConversation()}
               >
                 대화 비우기
               </button>

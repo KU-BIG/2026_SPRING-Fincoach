@@ -10,6 +10,17 @@
           }
         ]
       }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "python3 -c \"\nimport sys, json, subprocess, os\nfrom datetime import date\ndata = json.load(sys.stdin)\ncmd = data.get('tool_input', {}).get('command', '')\nif 'git commit' not in cmd: sys.exit(0)\nroot = subprocess.run(['git', 'rev-parse', '--show-toplevel'], capture_output=True, text=True).stdout.strip()\nif not root: sys.exit(0)\nlog_dir = os.path.join(root, 'docs/daily-logs/subin')\nlog_file = os.path.join(log_dir, date.today().strftime('%Y-%m-%d') + '.md')\nif not os.path.exists(log_file): sys.exit(0)\nresult = subprocess.run(['git', '-C', root, 'log', '--oneline', '-1'], capture_output=True, text=True)\nline = result.stdout.strip()\nif not line: sys.exit(0)\nparts = line.split(' ', 1)\nhash_ = parts[0]\nmsg = parts[1] if len(parts) > 1 else ''\nentry = f'{hash_} {msg}'\nwith open(log_file, 'r') as f: content = f.read()\nif hash_ in content: sys.exit(0)\nif '## 커밋' in content:\n    with open(log_file, 'a') as f: f.write(entry + '\\n')\nelse:\n    with open(log_file, 'a') as f: f.write(f'\\n## 커밋\\n\\n{entry}\\n')\nprint('daily log 업데이트:', entry)\n\" 2>/dev/null || true"
+          }
+        ]
+      }
     ]
   }
 }

@@ -18,17 +18,32 @@ create table if not exists public.holdings (
 
 create index if not exists holdings_user_id_idx on public.holdings (user_id);
 
--- ── chat_messages: a user's coach conversation history ──────────────────────
-create table if not exists public.chat_messages (
+-- ── conversations: chat session per user ────────────────────────────────────
+create table if not exists public.conversations (
   id         uuid primary key default gen_random_uuid(),
   user_id    uuid not null references auth.users (id) on delete cascade,
-  role       text not null check (role in ('user', 'assistant')),
-  content    text not null,
-  created_at timestamptz not null default now()
+  title      text not null default '새 대화',
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now()
+);
+
+create index if not exists conversations_user_id_updated_idx
+  on public.conversations (user_id, updated_at desc);
+
+-- ── chat_messages: a user's coach conversation history ──────────────────────
+create table if not exists public.chat_messages (
+  id              uuid primary key default gen_random_uuid(),
+  user_id         uuid not null references auth.users (id) on delete cascade,
+  conversation_id uuid references public.conversations (id) on delete cascade,
+  role            text not null check (role in ('user', 'assistant')),
+  content         text not null,
+  created_at      timestamptz not null default now()
 );
 
 create index if not exists chat_messages_user_id_created_idx
   on public.chat_messages (user_id, created_at);
+create index if not exists chat_messages_conv_id_idx
+  on public.chat_messages (conversation_id, created_at);
 
 -- ── Row Level Security ──────────────────────────────────────────────────────
 alter table public.holdings enable row level security;
@@ -49,6 +64,25 @@ create policy "holdings_update_own" on public.holdings
 
 drop policy if exists "holdings_delete_own" on public.holdings;
 create policy "holdings_delete_own" on public.holdings
+  for delete using (auth.uid() = user_id);
+
+-- conversations: owner-only access
+alter table public.conversations enable row level security;
+
+drop policy if exists "conversations_select_own" on public.conversations;
+create policy "conversations_select_own" on public.conversations
+  for select using (auth.uid() = user_id);
+
+drop policy if exists "conversations_insert_own" on public.conversations;
+create policy "conversations_insert_own" on public.conversations
+  for insert with check (auth.uid() = user_id);
+
+drop policy if exists "conversations_update_own" on public.conversations;
+create policy "conversations_update_own" on public.conversations
+  for update using (auth.uid() = user_id) with check (auth.uid() = user_id);
+
+drop policy if exists "conversations_delete_own" on public.conversations;
+create policy "conversations_delete_own" on public.conversations
   for delete using (auth.uid() = user_id);
 
 -- chat_messages: owner-only access
@@ -76,4 +110,9 @@ $$;
 drop trigger if exists holdings_touch_updated_at on public.holdings;
 create trigger holdings_touch_updated_at
   before update on public.holdings
+  for each row execute function public.touch_updated_at();
+
+drop trigger if exists conversations_touch_updated_at on public.conversations;
+create trigger conversations_touch_updated_at
+  before update on public.conversations
   for each row execute function public.touch_updated_at();

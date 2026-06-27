@@ -1,10 +1,10 @@
-import { render, screen, cleanup, fireEvent } from "@testing-library/react";
+import { render, screen, cleanup, fireEvent, within } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
 import Chat from "./Chat";
 import { AuthProvider } from "../auth/AuthProvider";
 
-describe("Chat (verbatim /site/chat.html 이식)", () => {
+describe("Chat", () => {
   afterEach(() => cleanup());
 
   it("초기 메시지·면책 문구를 그대로 렌더한다", () => {
@@ -50,5 +50,29 @@ describe("Chat (verbatim /site/chat.html 이식)", () => {
     const msgs = container.querySelector("#messages")!;
     expect(msgs.textContent).toContain("테스트 질문");
     expect(input.value).toBe("");
+  });
+
+  it("비로그인 시 사이드바에 데모 하드코딩 항목을 표시한다", () => {
+    const { container } = render(
+      <AuthProvider>
+        <MemoryRouter>
+          <Chat />
+        </MemoryRouter>
+      </AuthProvider>,
+    );
+    const sidebar = container.querySelector(".side-list") as HTMLElement;
+    expect(within(sidebar).getByText("PER이 높으면 무슨 의미예요?")).toBeInTheDocument();
+    expect(within(sidebar).getByText("반도체 사이클 어디쯤일까요?")).toBeInTheDocument();
+  });
+
+  it("+ 새 대화 버튼이 존재한다", () => {
+    render(
+      <AuthProvider>
+        <MemoryRouter>
+          <Chat />
+        </MemoryRouter>
+      </AuthProvider>,
+    );
+    expect(screen.getByText("+ 새 대화")).toBeInTheDocument();
   });
 });
