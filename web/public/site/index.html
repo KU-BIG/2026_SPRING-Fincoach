@@ -1324,6 +1324,24 @@
       }, { threshold: 0.3 });
       io.observe(bubble);
     })();
+
+    // ========= 실데이터 API 주입 =========
+    (async () => {
+      const API_BASE = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+        ? "http://localhost:8000" : "";
+      try {
+        const res = await fetch(API_BASE + "/api/portfolio/summary", { signal: AbortSignal.timeout(4000) });
+        if (!res.ok) throw new Error();
+        const data = await res.json();
+        // 홈의 포트폴리오 프리뷰 카운터 업데이트
+        if (data.total_value_krw) {
+          document.querySelectorAll("[data-counter]").forEach((el) => {
+            el.dataset.counter = data.total_value_krw;
+            el.textContent = Math.round(data.total_value_krw).toLocaleString();
+          });
+        }
+      } catch { /* fallback: 기존 하드코딩 유지 */ }
+    })();
   </script>
 </body>
 </html>

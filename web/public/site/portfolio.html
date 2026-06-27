@@ -418,7 +418,8 @@
         <div class="caption">PORTFOLIO / 2026.06.11</div>
         <h1 style="margin-top: 6px;">내 포트폴리오</h1>
       </div>
-      <div style="display: flex; gap: 6px;">
+      <div style="display: flex; gap: 6px; align-items: center;">
+        <span class="data-source-badge" style="font-size: 11px; font-family: 'JetBrains Mono', monospace; padding: 4px 10px; border: 1px solid rgba(255,255,255,0.1); border-radius: 999px; color: var(--fg-muted); letter-spacing: 0.06em;">데모</span>
         <button class="toggle-btn active">전체</button>
         <button class="toggle-btn">국내</button>
         <button class="toggle-btn">해외</button>
@@ -459,7 +460,7 @@
       </div>
       <div class="card kpi c-3 reveal" style="transition-delay:160ms">
         <div class="lbl">수익률</div>
-        <div class="val num pos">+4.05%</div>
+        <div class="val num pos" data-pnl>+4.05%</div>
         <div class="sub">vs KOSPI +1.20% · 8주 BEST</div>
         <div class="kpi-visual"><div class="chart-host" id="retGauge" style="height: 56px;"></div></div>
       </div>
@@ -584,8 +585,26 @@
 
   <script src="./app.js"></script>
   <script>
+    const API_BASE = (location.hostname === "localhost" || location.hostname === "127.0.0.1")
+      ? "http://localhost:8000" : "";
+
+    // 티커 → 브랜드/섹터 매핑 (API는 brand/sector를 반환하지 않음)
+    const TICKER_META = {
+      "005930.KS": { brand: "samsung",  sector: "반도체" },
+      "000660.KS": { brand: "skhynix",  sector: "반도체" },
+      "035720.KS": { brand: "kakao",    sector: "한국 플랫폼" },
+      "035420.KS": { brand: "naver",    sector: "한국 플랫폼" },
+      "AAPL":      { brand: "apple",    sector: "빅테크" },
+      "NVDA":      { brand: "nvidia",   sector: "반도체" },
+      "MSFT":      { brand: "microsoft",sector: "빅테크" },
+      "GOOGL":     { brand: "google",   sector: "빅테크" },
+      "TSLA":      { brand: "tesla",    sector: "EV" },
+      "CPNG":      { brand: "coupang",  sector: "한국 이커머스" },
+      "COIN":      { brand: "coinbase", sector: "가상자산" },
+    };
+
     const krw = (n) => n.toLocaleString();
-    const stocks = [
+    let stocks = [
       { name: "삼성전자", ticker: "005930.KS", weight: 22, value: 2717000, pnl: 5.2, brand: "samsung", sector: "반도체" },
       { name: "Apple", ticker: "AAPL", weight: 16, value: 1976000, pnl: 3.1, brand: "apple", sector: "빅테크" },
       { name: "NVIDIA", ticker: "NVDA", weight: 14, value: 1729000, pnl: 12.7, brand: "nvidia", sector: "반도체" },
@@ -1102,6 +1121,78 @@
       showBench: true,
       showVolume: true,
     });
+
+    // ========= 실데이터 API 주입 =========
+    function setSourceBadge(live) {
+      document.querySelectorAll(".data-source-badge").forEach((el) => {
+        el.textContent = live ? "실데이터" : "데모";
+        el.style.color = live ? "var(--green)" : "var(--fg-muted)";
+        el.style.borderColor = live ? "rgba(17,255,153,0.3)" : "rgba(255,255,255,0.1)";
+      });
+    }
+
+    function applyPortfolioData(data) {
+      // KPI: 총 평가금액
+      const totalEl = document.querySelector("[data-counter]");
+      if (totalEl && data.total_value_krw) {
+        totalEl.dataset.counter = data.total_value_krw;
+        totalEl.textContent = Math.round(data.total_value_krw).toLocaleString();
+      }
+      // KPI: 수익률 표시 (data-pnl 속성 있는 요소)
+      document.querySelectorAll("[data-pnl]").forEach((el) => {
+        if (data.pnl_pct !== undefined) {
+          const sign = data.pnl_pct >= 0 ? "+" : "";
+          el.textContent = sign + data.pnl_pct.toFixed(2) + "%";
+          el.className = el.className.replace(/\b(pos|neg)\b/g, "") +
+            " " + (data.pnl_pct >= 0 ? "pos" : "neg");
+        }
+      });
+      // 종목 표 교체 (API positions → stocks 포맷)
+      if (Array.isArray(data.positions) && data.positions.length > 0) {
+        stocks = data.positions.map((p) => {
+          const meta = TICKER_META[p.ticker] || { brand: "", sector: "" };
+          return {
+            name: p.name,
+            ticker: p.ticker,
+            weight: p.weight,
+            value: Math.round(p.current_value_krw || 0),
+            pnl: p.pnl_pct || 0,
+            brand: meta.brand,
+            sector: meta.sector,
+          };
+        });
+        // stockSeries는 기존 랜덤 워크 유지 (실 차트 데이터 없음)
+        const table = document.getElementById("stockTable");
+        if (table) {
+          table.innerHTML = stocks.map((s, i) => buildStockRow(s, i)).join("");
+          document.querySelectorAll(".stock-tr").forEach((tr) => {
+            tr.addEventListener("click", () => {
+              const idx = parseInt(tr.dataset.idx);
+              const panel = document.getElementById("ep" + idx);
+              const isOpen = tr.classList.toggle("open");
+              if (isOpen) {
+                if (!panel.innerHTML) panel.innerHTML = buildExpandPanel(stocks[idx], idx);
+                panel.classList.add("show");
+              } else {
+                panel.classList.remove("show");
+              }
+            });
+          });
+        }
+      }
+    }
+
+    (async () => {
+      try {
+        const res = await fetch(API_BASE + "/api/portfolio/summary", { signal: AbortSignal.timeout(4000) });
+        if (!res.ok) throw new Error("HTTP " + res.status);
+        const data = await res.json();
+        applyPortfolioData(data);
+        setSourceBadge(true);
+      } catch {
+        setSourceBadge(false);
+      }
+    })();
   </script>
 </body>
 </html>
