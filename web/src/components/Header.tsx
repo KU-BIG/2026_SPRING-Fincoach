@@ -12,8 +12,12 @@ export default function Header() {
     <header>
       <div className="nav-wrap">
         <div className="nav-left">
-          <NavLink to="/" className="brand">
-            <div className="logo"></div>FinCoach
+          <NavLink to="/" className="brand" aria-label="FinCoach">
+            <img
+              src="/logo.png"
+              alt="FinCoach"
+              style={{ height: "22px", width: "auto", display: "block" }}
+            />
           </NavLink>
           <nav className="menu">
             <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : undefined)}>
