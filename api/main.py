@@ -16,6 +16,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
 from api import chat, health, market, portfolio
+from api.ratelimit import RateLimitMiddleware
 
 
 def _allowed_origins() -> list[str]:
@@ -27,6 +28,10 @@ def _allowed_origins() -> list[str]:
 
 
 app = FastAPI(title="FinCoach API", version="0.1.0")
+
+# 레이트리밋을 CORS보다 먼저 등록(=안쪽) → CORS가 바깥에서 429 응답까지 감싸야
+# 브라우저가 429를 정상적으로 읽는다.
+app.add_middleware(RateLimitMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
