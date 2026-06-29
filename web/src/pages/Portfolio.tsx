@@ -170,7 +170,13 @@ function HoldingsForm({
         </tbody>
       </table>
       <div style={{ display: "flex", gap: "8px", marginTop: "12px" }}>
-        <button className="toggle-btn" onClick={addRow}>+ 종목 추가</button>
+        <button
+          className="toggle-btn"
+          onClick={addRow}
+          style={{ borderColor: "var(--blue)", color: "var(--blue)", fontWeight: 600 }}
+        >
+          + 종목 추가
+        </button>
         <button
           className="toggle-btn active"
           onClick={onSave}
@@ -243,7 +249,12 @@ function UserSummaryCard({ summary }: { summary: PortfolioSummary }) {
 /* /site/portfolio.html <main class="page-pad"> 를 그대로(verbatim) 이식.
    page-head / hero-card / KPI 4 / 보유 종목 표 / 도넛 + 라인차트 / AI 분석.
    인라인 <script> 의 동적 렌더(차트·표·도넛·KPI)는 useEffect 에서 원본과
-   같은 순서로 호출해 동일 DOM/SVG 를 주입한다. 종목 행 클릭 펼침도 동일 이식. */
+   같은 순서로 호출해 동일 DOM/SVG 를 주입한다. 종목 행 클릭 펼침도 동일 이식.
+
+   단, hero/KPI/보유종목상세/도넛/차트는 데모용 고정 데이터(예시)다. 실제 보유종목이
+   없을 때(비로그인/미입력)는 이 쇼케이스를 흐릿하게(블러) 처리하고 로그인/입력 유도
+   오버레이를 덮어 "예시"임을 분명히 한다. 로그인 + 종목 저장 시에는 쇼케이스를 숨기고
+   실데이터(내 포트폴리오 요약)를 보여준다. */
 export default function Portfolio() {
   const ranRef = useRef(false);
   const [analysis, setAnalysis] = useState<AnalysisView>(DEMO_ANALYSIS);
@@ -255,6 +266,10 @@ export default function Portfolio() {
   const [saving, setSaving] = useState(false);
   const [userSummary, setUserSummary] = useState<PortfolioSummary | null>(null);
   const [holdingsLoaded, setHoldingsLoaded] = useState(false);
+
+  /* 실제 보유종목 보유 여부 → 데모 쇼케이스 게이트 */
+  const hasRealPortfolio = !!user && holdingsLoaded && rowsToInputs(holdingRows).length > 0;
+  const showDemo = !hasRealPortfolio;
 
   /* Supabase에서 유저 holdings 로드 */
   useEffect(() => {
@@ -399,6 +414,8 @@ export default function Portfolio() {
   }, [holdingsLoaded]);
 
   useEffect(() => {
+    // 데모 쇼케이스가 렌더된 경우에만(예시 표시) 차트/표를 주입한다.
+    if (!showDemo) return;
     // StrictMode 의 dev 이중 마운트에서도 출력은 동일하지만, 클릭 핸들러 중복 바인딩과
     // 차트 hover 리스너 누적을 막기 위해 마운트당 1회만 구성한다.
     const stockTable = document.getElementById("stockTable");
@@ -484,7 +501,7 @@ export default function Portfolio() {
     return () => {
       rowHandlers.forEach(({ el, fn }) => el.removeEventListener("click", fn));
     };
-  }, []);
+  }, [showDemo]);
 
   return (
     <>
@@ -500,118 +517,7 @@ export default function Portfolio() {
         </div>
       </div>
 
-      {/* HERO CARD */}
-      <section className="hero-card reveal">
-        <div className="hero-card-inner">
-          <div>
-            <div className="label">총 평가금액</div>
-            <div className="big num">
-              <span data-counter="12350000">0</span>
-              <small>원</small>
-            </div>
-            <div className="diff num pos">+480,000원 · +4.05% (오늘)</div>
-            <div className="stats">
-              <div className="stat">
-                <div className="l">30D 최고</div>
-                <div className="v num pos" id="stHigh">
-                  —
-                </div>
-              </div>
-              <div className="stat">
-                <div className="l">30D 최저</div>
-                <div className="v num" id="stLow">
-                  —
-                </div>
-              </div>
-              <div className="stat">
-                <div className="l">평균</div>
-                <div className="v num" id="stAvg">
-                  —
-                </div>
-              </div>
-              <div className="stat">
-                <div className="l">변동성</div>
-                <div className="v num" id="stVol">
-                  —
-                </div>
-              </div>
-            </div>
-          </div>
-          <div className="chart-host" id="heroChart"></div>
-        </div>
-      </section>
-
-      {/* KPI */}
-      <div className="grid grid-12" style={{ marginTop: "14px" }}>
-        <div className="card kpi c-3 reveal">
-          <div className="lbl">평가금액</div>
-          <div className="val num">
-            <span data-counter="12350000">0</span>
-            <span
-              style={{
-                fontSize: "14px",
-                color: "var(--fg-muted)",
-                fontWeight: 500,
-                marginLeft: "2px",
-              }}
-            >
-              원
-            </span>
-          </div>
-          <div className="sub">7일 일일 변동</div>
-          <div className="kpi-visual">
-            <div className="sparkbars" id="bars7d"></div>
-          </div>
-        </div>
-        <div className="card kpi c-3 reveal" style={{ transitionDelay: "80ms" }}>
-          <div className="lbl">평가 손익</div>
-          <div className="val num pos">+480,000원</div>
-          <div className="sub">7일 일별 + 누적</div>
-          <div className="kpi-visual">
-            <div className="chart-host" id="pnlCombo" style={{ height: "56px" }}></div>
-          </div>
-        </div>
-        <div className="card kpi c-3 reveal" style={{ transitionDelay: "160ms" }}>
-          <div className="lbl">수익률</div>
-          <div className="val num pos">+4.05%</div>
-          <div className="sub">vs KOSPI +1.20% · 8주 BEST</div>
-          <div className="kpi-visual">
-            <div className="chart-host" id="retGauge" style={{ height: "56px" }}></div>
-          </div>
-        </div>
-        <div className="card kpi c-3 reveal" style={{ transitionDelay: "240ms" }}>
-          <div className="lbl">보유 종목</div>
-          <div className="val num">10개</div>
-          <div className="sub">국내 3 · 해외 7 · 6 섹터</div>
-          <div className="kpi-stocks">
-            <div className="brand-mark samsung" title="삼성전자">
-              <span className="logo"></span>
-            </div>
-            <div className="brand-mark apple" title="Apple">
-              <span className="logo"></span>
-            </div>
-            <div className="brand-mark nvidia" title="NVIDIA">
-              <span className="logo"></span>
-            </div>
-            <div className="brand-mark microsoft" title="Microsoft">
-              <span className="logo"></span>
-            </div>
-            <div className="more-mark" title="외 6개">
-              +6
-            </div>
-          </div>
-          <div className="kpi-split">
-            <span>국내 38%</span>
-            <div className="kpi-split-bar">
-              <div className="dom" style={{ width: "38%" }}></div>
-              <div className="ovr" style={{ width: "62%" }}></div>
-            </div>
-            <span>해외 62%</span>
-          </div>
-        </div>
-      </div>
-
-      {/* ── 내 종목 입력 (로그인 유저) ─────────────────────────────────── */}
+      {/* ── 내 종목 입력 + 실데이터 요약 (로그인 유저) ──────────────────── */}
       {configured && user ? (
         <div className="grid grid-12">
           <HoldingsForm
@@ -622,119 +528,289 @@ export default function Portfolio() {
           />
           {userSummary && <UserSummaryCard summary={userSummary} />}
         </div>
-      ) : configured ? (
-        <div className="grid grid-12" style={{ marginTop: "14px" }}>
-          <section className="card c-12 reveal" style={{ padding: "20px", textAlign: "center" }}>
-            <p style={{ fontSize: "14px", color: "var(--fg-muted)", margin: "0 0 12px" }}>
-              로그인하면 내 종목을 입력하고 실제 포트폴리오 기반 분석을 받을 수 있습니다.
-            </p>
-            <button className="toggle-btn active" onClick={() => openAuth("login")}>
-              로그인
-            </button>
-          </section>
-        </div>
       ) : null}
 
-      {/* 보유 종목 표 */}
-      <div className="grid grid-12" style={{ marginTop: "14px" }}>
-        <section className="card c-12 reveal stock-table-card">
+      {/* ── 데모 쇼케이스 (예시) — 실제 포트폴리오 없을 때만 흐릿하게 + 오버레이 ── */}
+      {showDemo ? (
+        <div style={{ position: "relative", marginTop: "14px" }}>
+          <div
+            aria-hidden="true"
+            style={{ filter: "blur(7px)", pointerEvents: "none", userSelect: "none", opacity: 0.5 }}
+          >
+            {/* HERO CARD */}
+            <section className="hero-card reveal">
+              <div className="hero-card-inner">
+                <div>
+                  <div className="label">총 평가금액</div>
+                  <div className="big num">
+                    <span data-counter="12350000">0</span>
+                    <small>원</small>
+                  </div>
+                  <div className="diff num pos">+480,000원 · +4.05% (오늘)</div>
+                  <div className="stats">
+                    <div className="stat">
+                      <div className="l">30D 최고</div>
+                      <div className="v num pos" id="stHigh">
+                        —
+                      </div>
+                    </div>
+                    <div className="stat">
+                      <div className="l">30D 최저</div>
+                      <div className="v num" id="stLow">
+                        —
+                      </div>
+                    </div>
+                    <div className="stat">
+                      <div className="l">평균</div>
+                      <div className="v num" id="stAvg">
+                        —
+                      </div>
+                    </div>
+                    <div className="stat">
+                      <div className="l">변동성</div>
+                      <div className="v num" id="stVol">
+                        —
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="chart-host" id="heroChart"></div>
+              </div>
+            </section>
+
+            {/* KPI */}
+            <div className="grid grid-12" style={{ marginTop: "14px" }}>
+              <div className="card kpi c-3 reveal">
+                <div className="lbl">평가금액</div>
+                <div className="val num">
+                  <span data-counter="12350000">0</span>
+                  <span
+                    style={{
+                      fontSize: "14px",
+                      color: "var(--fg-muted)",
+                      fontWeight: 500,
+                      marginLeft: "2px",
+                    }}
+                  >
+                    원
+                  </span>
+                </div>
+                <div className="sub">7일 일일 변동</div>
+                <div className="kpi-visual">
+                  <div className="sparkbars" id="bars7d"></div>
+                </div>
+              </div>
+              <div className="card kpi c-3 reveal" style={{ transitionDelay: "80ms" }}>
+                <div className="lbl">평가 손익</div>
+                <div className="val num pos">+480,000원</div>
+                <div className="sub">7일 일별 + 누적</div>
+                <div className="kpi-visual">
+                  <div className="chart-host" id="pnlCombo" style={{ height: "56px" }}></div>
+                </div>
+              </div>
+              <div className="card kpi c-3 reveal" style={{ transitionDelay: "160ms" }}>
+                <div className="lbl">수익률</div>
+                <div className="val num pos">+4.05%</div>
+                <div className="sub">vs KOSPI +1.20% · 8주 BEST</div>
+                <div className="kpi-visual">
+                  <div className="chart-host" id="retGauge" style={{ height: "56px" }}></div>
+                </div>
+              </div>
+              <div className="card kpi c-3 reveal" style={{ transitionDelay: "240ms" }}>
+                <div className="lbl">보유 종목</div>
+                <div className="val num">10개</div>
+                <div className="sub">국내 3 · 해외 7 · 6 섹터</div>
+                <div className="kpi-stocks">
+                  <div className="brand-mark samsung" title="삼성전자">
+                    <span className="logo"></span>
+                  </div>
+                  <div className="brand-mark apple" title="Apple">
+                    <span className="logo"></span>
+                  </div>
+                  <div className="brand-mark nvidia" title="NVIDIA">
+                    <span className="logo"></span>
+                  </div>
+                  <div className="brand-mark microsoft" title="Microsoft">
+                    <span className="logo"></span>
+                  </div>
+                  <div className="more-mark" title="외 6개">
+                    +6
+                  </div>
+                </div>
+                <div className="kpi-split">
+                  <span>국내 38%</span>
+                  <div className="kpi-split-bar">
+                    <div className="dom" style={{ width: "38%" }}></div>
+                    <div className="ovr" style={{ width: "62%" }}></div>
+                  </div>
+                  <span>해외 62%</span>
+                </div>
+              </div>
+            </div>
+
+            {/* 보유 종목 표 */}
+            <div className="grid grid-12" style={{ marginTop: "14px" }}>
+              <section className="card c-12 reveal stock-table-card">
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "baseline",
+                    justifyContent: "space-between",
+                    marginBottom: "14px",
+                  }}
+                >
+                  <div>
+                    <div className="subhead" style={{ fontSize: "17px" }}>
+                      보유 종목 상세
+                    </div>
+                    <div style={{ fontSize: "12px", color: "var(--fg-muted)", marginTop: "4px" }}>
+                      30일 가격 추이 · 점선 = 매수 평단
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: "4px" }}>
+                    <button className="toggle-btn">이름</button>
+                    <button className="toggle-btn active">수익률</button>
+                    <button className="toggle-btn">비중</button>
+                  </div>
+                </div>
+                <table
+                  style={{ tableLayout: "fixed", width: "100%", maxWidth: "860px", margin: "0 auto" }}
+                >
+                  <colgroup>
+                    <col style={{ width: "26%" }} />
+                    <col style={{ width: "16%" }} />
+                    <col style={{ width: "22%" }} />
+                    <col style={{ width: "10%" }} />
+                    <col style={{ width: "26%" }} />
+                  </colgroup>
+                  <thead>
+                    <tr>
+                      <th>종목</th>
+                      <th style={{ textAlign: "center" }}>30D 추이</th>
+                      <th style={{ textAlign: "right" }}>30D %</th>
+                      <th style={{ textAlign: "right", paddingRight: 0 }}>비중</th>
+                      <th style={{ textAlign: "right", paddingRight: "64px" }}>평가액</th>
+                    </tr>
+                  </thead>
+                  <tbody id="stockTable"></tbody>
+                </table>
+              </section>
+            </div>
+
+            {/* 도넛 + 라인 차트 */}
+            <div className="grid grid-12" style={{ marginTop: "14px" }}>
+              <section className="card c-5 donut-card reveal">
+                <div className="subhead" style={{ fontSize: "17px" }}>
+                  비중 분포
+                </div>
+                <div style={{ fontSize: "12px", color: "var(--fg-muted)", marginTop: "4px" }}>
+                  10개 종목 · 6 섹터
+                </div>
+                <div className="donut-wrap">
+                  <svg className="donut" viewBox="0 0 36 36" id="donutChart"></svg>
+                  <div className="legend" id="donutLegend"></div>
+                </div>
+              </section>
+
+              <section className="card c-7 reveal" style={{ transitionDelay: "100ms" }}>
+                <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
+                  <div>
+                    <div className="subhead" style={{ fontSize: "17px" }}>
+                      최근 30일 평가액
+                    </div>
+                    <div style={{ fontSize: "12px", color: "var(--fg-muted)", marginTop: "4px" }}>
+                      일일 종가 + 거래량
+                    </div>
+                  </div>
+                  <div style={{ display: "flex", gap: "4px" }}>
+                    <button className="toggle-btn">1D</button>
+                    <button className="toggle-btn">1W</button>
+                    <button className="toggle-btn active">1M</button>
+                    <button className="toggle-btn">3M</button>
+                    <button className="toggle-btn">1Y</button>
+                    <button className="toggle-btn">5Y</button>
+                  </div>
+                </div>
+                <div className="chart-host" id="lineChart" style={{ marginTop: "18px" }}></div>
+                <div className="chart-legend">
+                  <div className="leg">
+                    <span className="sw" style={{ background: "var(--green)" }}></span>내 포트폴리오 (+4.05%)
+                  </div>
+                  <div className="leg dashed">
+                    <span className="sw"></span>KOSPI 벤치마크 (+1.20%)
+                  </div>
+                  <div className="leg">
+                    <span className="sw" style={{ background: "var(--fg-muted)", opacity: 0.5 }}></span>
+                    거래량 (일별)
+                  </div>
+                </div>
+              </section>
+            </div>
+          </div>
+
+          {/* 예시 오버레이 (로그인 / 입력 유도) */}
           <div
             style={{
+              position: "absolute",
+              inset: 0,
               display: "flex",
-              alignItems: "baseline",
-              justifyContent: "space-between",
-              marginBottom: "14px",
+              alignItems: "center",
+              justifyContent: "center",
+              padding: "20px",
             }}
           >
-            <div>
-              <div className="subhead" style={{ fontSize: "17px" }}>
-                보유 종목 상세
+            <div
+              style={{
+                maxWidth: "440px",
+                width: "100%",
+                textAlign: "center",
+                background: "var(--bg-elevated)",
+                border: "1px solid var(--frost)",
+                borderRadius: "16px",
+                padding: "30px 26px",
+                boxShadow: "0 18px 50px rgba(0,0,0,0.45)",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "11px",
+                  letterSpacing: "0.1em",
+                  textTransform: "uppercase",
+                  color: "var(--blue)",
+                  fontWeight: 600,
+                  marginBottom: "12px",
+                }}
+              >
+                예시 미리보기
               </div>
-              <div style={{ fontSize: "12px", color: "var(--fg-muted)", marginTop: "4px" }}>
-                30일 가격 추이 · 점선 = 매수 평단
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "4px" }}>
-              <button className="toggle-btn">이름</button>
-              <button className="toggle-btn active">수익률</button>
-              <button className="toggle-btn">비중</button>
-            </div>
-          </div>
-          <table
-            style={{ tableLayout: "fixed", width: "100%", maxWidth: "860px", margin: "0 auto" }}
-          >
-            <colgroup>
-              {/* 데스크탑 col 폭(합 100):
-                   종목 26 / 추이 16 / 30D% 22 / 비중 10 / 평가액 26 */}
-              <col style={{ width: "26%" }} />
-              <col style={{ width: "16%" }} />
-              <col style={{ width: "22%" }} />
-              <col style={{ width: "10%" }} />
-              <col style={{ width: "26%" }} />
-            </colgroup>
-            <thead>
-              <tr>
-                <th>종목</th>
-                <th style={{ textAlign: "center" }}>30D 추이</th>
-                <th style={{ textAlign: "right" }}>30D %</th>
-                <th style={{ textAlign: "right", paddingRight: 0 }}>비중</th>
-                <th style={{ textAlign: "right", paddingRight: "64px" }}>평가액</th>
-              </tr>
-            </thead>
-            <tbody id="stockTable"></tbody>
-          </table>
-        </section>
-      </div>
-
-      {/* 도넛 + 라인 차트 */}
-      <div className="grid grid-12" style={{ marginTop: "14px" }}>
-        <section className="card c-5 donut-card reveal">
-          <div className="subhead" style={{ fontSize: "17px" }}>
-            비중 분포
-          </div>
-          <div style={{ fontSize: "12px", color: "var(--fg-muted)", marginTop: "4px" }}>
-            10개 종목 · 6 섹터
-          </div>
-          <div className="donut-wrap">
-            <svg className="donut" viewBox="0 0 36 36" id="donutChart"></svg>
-            <div className="legend" id="donutLegend"></div>
-          </div>
-        </section>
-
-        <section className="card c-7 reveal" style={{ transitionDelay: "100ms" }}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-            <div>
-              <div className="subhead" style={{ fontSize: "17px" }}>
-                최근 30일 평가액
-              </div>
-              <div style={{ fontSize: "12px", color: "var(--fg-muted)", marginTop: "4px" }}>
-                일일 종가 + 거래량
-              </div>
-            </div>
-            <div style={{ display: "flex", gap: "4px" }}>
-              <button className="toggle-btn">1D</button>
-              <button className="toggle-btn">1W</button>
-              <button className="toggle-btn active">1M</button>
-              <button className="toggle-btn">3M</button>
-              <button className="toggle-btn">1Y</button>
-              <button className="toggle-btn">5Y</button>
+              <h3 style={{ fontSize: "19px", margin: "0 0 10px", lineHeight: 1.4 }}>
+                {user ? "내 종목을 입력하면 실제 분석을 봐요" : "로그인하고 내 포트폴리오를 만들어보세요"}
+              </h3>
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: "var(--fg-muted)",
+                  lineHeight: 1.7,
+                  margin: "0 0 18px",
+                }}
+              >
+                {user
+                  ? "지금 화면은 예시 데이터예요. 위 입력란에 보유 종목을 추가하면 내 종목 기준 실제 분석으로 바뀝니다."
+                  : "지금 보이는 숫자는 예시예요. 로그인 후 종목을 입력하면 내 포트폴리오로 실제 분석을 받을 수 있어요."}
+              </p>
+              {!user && (
+                <button
+                  className="toggle-btn active"
+                  onClick={() => openAuth("login")}
+                  style={{ padding: "11px 22px", fontSize: "14px" }}
+                >
+                  로그인하고 시작하기
+                </button>
+              )}
             </div>
           </div>
-          <div className="chart-host" id="lineChart" style={{ marginTop: "18px" }}></div>
-          <div className="chart-legend">
-            <div className="leg">
-              <span className="sw" style={{ background: "var(--green)" }}></span>내 포트폴리오 (+4.05%)
-            </div>
-            <div className="leg dashed">
-              <span className="sw"></span>KOSPI 벤치마크 (+1.20%)
-            </div>
-            <div className="leg">
-              <span className="sw" style={{ background: "var(--fg-muted)", opacity: 0.5 }}></span>
-              거래량 (일별)
-            </div>
-          </div>
-        </section>
-      </div>
+        </div>
+      ) : null}
 
       {/* AI 분석 */}
       <div className="grid grid-12" style={{ marginTop: "14px" }}>
