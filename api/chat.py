@@ -12,6 +12,7 @@ from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from api.portfolio import HoldingIn
 from coach_chat.context_builder import build_context
 from shared.disclaimers import QA_DISCLAIMER
 from shared.models import ChatMessage, MarketOutput
@@ -31,6 +32,7 @@ class MessageIn(BaseModel):
 class ChatRequest(BaseModel):
     question: str
     history: list[MessageIn] = []
+    holdings: list[HoldingIn] | None = None
 
 
 class ChatResponse(BaseModel):
@@ -142,7 +144,8 @@ def chat(req: ChatRequest) -> ChatResponse:
         ChatMessage(role=m.role, content=m.content)  # type: ignore[arg-type]
         for m in req.history
     ]
-    ctx = build_context(req.question, history)
+    holdings = [h.model_dump() for h in req.holdings] if req.holdings is not None else None
+    ctx = build_context(req.question, history, holdings=holdings)
 
     system = _build_system_prompt(ctx.market, ctx.portfolio_data)
     raw_answer = _call_llm(system, req.history, req.question)
@@ -161,7 +164,8 @@ def chat_stream(req: ChatRequest) -> StreamingResponse:
         ChatMessage(role=m.role, content=m.content)  # type: ignore[arg-type]
         for m in req.history
     ]
-    ctx = build_context(req.question, history)
+    holdings = [h.model_dump() for h in req.holdings] if req.holdings is not None else None
+    ctx = build_context(req.question, history, holdings=holdings)
     system = _build_system_prompt(ctx.market, ctx.portfolio_data)
 
     return StreamingResponse(

@@ -18,14 +18,16 @@ def _tickers_from_portfolio(portfolio_data: dict) -> list[str]:
 def build_context(
     question: str,
     history: list[ChatMessage] | None = None,
+    holdings: list[dict] | None = None,
 ) -> ChatContext:
     """질문과 현재 데이터를 묶어 ChatContext를 반환한다.
 
     외부 모듈 호출이 실패해도 빈 컨텍스트로 fallback해 LLM 답변은 유지된다.
+    holdings가 전달되면 유저 실데이터를, 없으면 mock을 사용한다.
     """
     portfolio_data: dict | None = None
     try:
-        portfolio_data = get_portfolio_data()
+        portfolio_data = get_portfolio_data(holdings=holdings)
     except Exception as exc:
         logger.warning("portfolio 데이터 로드 실패: %s", exc)
 
@@ -39,7 +41,7 @@ def build_context(
     analysis_report: AnalysisReport | None = None
     try:
         if portfolio_data:
-            analysis_report = AnalysisReport(**get_analysis_report())
+            analysis_report = AnalysisReport(**get_analysis_report(holdings=holdings))
     except Exception as exc:
         logger.warning("analysis_report 로드 실패: %s", exc)
 

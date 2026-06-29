@@ -4,6 +4,7 @@ from datetime import datetime
 from unittest.mock import patch
 
 from coach_chat.context_builder import build_context
+from shared.mocks import mock_market_output
 from shared.models import AnalysisReport, ChatContext, ChatMessage, MarketOutput
 
 
@@ -50,6 +51,64 @@ def test_build_context_real_data_injected():
     positions = ctx.portfolio_data.get("positions", [])
     assert len(positions) > 0
     assert all("ticker" in p and "weight" in p for p in positions)
+
+
+SAMPLE_HOLDINGS = [
+    {"ticker": "005930.KS", "name": "삼성전자", "shares": 10, "avg_price": 70000, "currency": "KRW"},
+    {"ticker": "AAPL", "name": "Apple", "shares": 2, "avg_price": 180, "currency": "USD"},
+]
+
+MOCK_PORTFOLIO = {
+    "summary": {"total_value_krw": 1_000_000, "total_pnl_krw": 50000, "pnl_pct": 5.0},
+    "positions": [
+        {"ticker": "005930.KS", "name": "삼성전자", "weight": 70.0, "pnl_pct": 3.0},
+        {"ticker": "AAPL", "name": "Apple", "weight": 30.0, "pnl_pct": 8.0},
+    ],
+    "accounts": [],
+}
+
+MOCK_ANALYSIS = {
+    "summary": "기술주 혼합 포트폴리오",
+    "portfolio_type": "성장형",
+    "investor_match": "공격 투자자",
+    "strengths": [],
+    "risks": [],
+    "suggestions": [],
+    "disclaimer": "본 분석은 정보 제공 목적입니다.",
+}
+
+
+def test_build_context_holdings_passed_to_portfolio():
+    """holdings가 get_portfolio_data / get_analysis_report에 그대로 전달되는지 확인."""
+    with (
+        patch("coach_chat.context_builder.get_portfolio_data", return_value=MOCK_PORTFOLIO) as mock_pd,
+        patch("coach_chat.context_builder.get_analysis_report", return_value=MOCK_ANALYSIS),
+        patch("coach_chat.context_builder.collect_market", return_value=mock_market_output()),
+    ):
+        build_context("포트폴리오 알려줘", holdings=SAMPLE_HOLDINGS)
+    mock_pd.assert_called_once_with(holdings=SAMPLE_HOLDINGS)
+
+
+def test_build_context_empty_holdings_not_mock():
+    """holdings=[] (보유종목 0개 로그인 유저)는 mock 경로가 아닌 실데이터 경로로 처리된다."""
+    with (
+        patch("coach_chat.context_builder.get_portfolio_data", return_value=MOCK_PORTFOLIO) as mock_pd,
+        patch("coach_chat.context_builder.get_analysis_report", return_value=MOCK_ANALYSIS),
+        patch("coach_chat.context_builder.collect_market", return_value=mock_market_output()),
+    ):
+        build_context("포트폴리오 알려줘", holdings=[])
+    mock_pd.assert_called_once_with(holdings=[])
+
+
+def test_build_context_none_holdings_uses_mock_path():
+    """holdings=None (비로그인)은 get_portfolio_data(holdings=None)으로 mock 경로를 탄다."""
+    with (
+        patch("coach_chat.context_builder.get_portfolio_data", return_value=MOCK_PORTFOLIO) as mock_pd,
+        patch("coach_chat.context_builder.get_analysis_report", return_value=MOCK_ANALYSIS),
+        patch("coach_chat.context_builder.collect_market", return_value=mock_market_output()),
+    ):
+        build_context("포트폴리오 알려줘", holdings=None)
+    mock_pd.assert_called_once_with(holdings=None)
 
 
 def test_build_context_fallback_on_external_failure():

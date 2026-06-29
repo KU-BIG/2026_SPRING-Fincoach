@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, useCallback } from "react";
-import { streamChat, type ChatMessage, type DataSource } from "../lib/api";
+import { streamChat, type ChatMessage, type DataSource, type HoldingInput } from "../lib/api";
 import SourceBadge from "../components/SourceBadge";
 import { useAuth } from "../auth/context";
 import { supabase } from "../lib/supabase";
@@ -17,6 +17,30 @@ export default function Chat() {
   const userRef = useRef(user);
   useEffect(() => {
     userRef.current = user;
+  }, [user]);
+
+  const holdingsRef = useRef<HoldingInput[] | null>(null);
+
+  // 로그인 시 Supabase에서 holdings 로드
+  useEffect(() => {
+    if (!user || !supabase) {
+      holdingsRef.current = null;
+      return;
+    }
+    supabase
+      .from("holdings")
+      .select("ticker, name, shares, avg_price, currency")
+      .then(({ data }) => {
+        if (data !== null) {
+          holdingsRef.current = data.map((h: { ticker: string; name: string; shares: number; avg_price: number; currency: string }) => ({
+            ticker: h.ticker,
+            name: h.name,
+            shares: h.shares,
+            avg_price: h.avg_price,
+            currency: h.currency || "KRW",
+          }));
+        }
+      });
   }, [user]);
 
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -215,7 +239,7 @@ export default function Chat() {
       onError: (msg) => {
         onText(`\n\n(응답 오류: ${msg})`);
       },
-    })
+    }, 30000, holdingsRef.current ?? undefined)
       .then(async () => {
         const isDemo = acc.includes("[데모 모드]") || acc === "";
         if (aliveRef.current) setSource(isDemo ? "demo" : "live");

@@ -129,6 +129,7 @@ export async function streamChat(
   history: ChatMessage[],
   handlers: StreamHandlers,
   timeoutMs = 30000,
+  holdings?: HoldingInput[],
 ): Promise<void> {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), timeoutMs);
@@ -141,7 +142,7 @@ export async function streamChat(
     const res = await fetch(API_BASE + "/api/chat/stream", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ question, history }),
+      body: JSON.stringify({ question, history, holdings: holdings ?? null }),
       signal: ctrl.signal,
     });
     if (!res.ok || !res.body) throw new Error(`POST /api/chat/stream -> HTTP ${res.status}`);

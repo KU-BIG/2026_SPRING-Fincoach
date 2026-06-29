@@ -213,3 +213,68 @@ def test_stream_yields_tokens_and_disclaimer():
     full = "".join(e.get("delta", "") for e in events)
     assert "안녕하세요 반갑습니다" in full
     assert "FinCoach는 정보 제공 도구입니다" in full
+
+
+_SAMPLE_HOLDINGS_PAYLOAD = [
+    {"ticker": "005930.KS", "name": "삼성전자", "shares": 10, "avg_price": 70000, "currency": "KRW"},
+]
+
+
+def test_stream_holdings_passed_to_build_context():
+    """holdings 페이로드가 build_context에 그대로 전달되는지 확인."""
+    captured = {}
+
+    def fake_build_context(question, history, holdings=None):
+        captured["holdings"] = holdings
+        from shared.models import ChatContext
+        return ChatContext(market=None, portfolio_data=None, analysis_report=None, history=[])
+
+    with patch("api.chat.build_context", side_effect=fake_build_context), \
+            patch("api.chat._stream_llm", return_value=iter(["data: [DONE]\n\n"])), \
+            client.stream("POST", "/api/chat/stream", json={
+                "question": "내 종목 알려줘",
+                "holdings": _SAMPLE_HOLDINGS_PAYLOAD,
+            }) as res:
+        assert res.status_code == 200
+
+    assert captured["holdings"] is not None
+    assert len(captured["holdings"]) == 1
+    assert captured["holdings"][0]["ticker"] == "005930.KS"
+
+
+def test_stream_empty_holdings_not_none():
+    """holdings=[] (빈 배열)은 None으로 치환되지 않고 []로 build_context에 전달된다 (PR #138 버그픽스)."""
+    captured = {}
+
+    def fake_build_context(question, history, holdings=None):
+        captured["holdings"] = holdings
+        from shared.models import ChatContext
+        return ChatContext(market=None, portfolio_data=None, analysis_report=None, history=[])
+
+    with patch("api.chat.build_context", side_effect=fake_build_context), \
+            patch("api.chat._stream_llm", return_value=iter(["data: [DONE]\n\n"])), \
+            client.stream("POST", "/api/chat/stream", json={
+                "question": "내 종목 알려줘",
+                "holdings": [],
+            }) as res:
+        assert res.status_code == 200
+
+    assert captured["holdings"] is not None
+    assert captured["holdings"] == []
+
+
+def test_stream_no_holdings_field_passes_none():
+    """holdings 필드 없는 요청(비로그인)은 build_context에 None을 전달한다."""
+    captured = {}
+
+    def fake_build_context(question, history, holdings=None):
+        captured["holdings"] = holdings
+        from shared.models import ChatContext
+        return ChatContext(market=None, portfolio_data=None, analysis_report=None, history=[])
+
+    with patch("api.chat.build_context", side_effect=fake_build_context), \
+            patch("api.chat._stream_llm", return_value=iter(["data: [DONE]\n\n"])), \
+            client.stream("POST", "/api/chat/stream", json={"question": "안녕"}) as res:
+        assert res.status_code == 200
+
+    assert captured["holdings"] is None
