@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useAuth, type AuthMode } from "./context";
 
 /* 로그인 / 가입 모달. 디자인 토큰(site.css)에 맞춘 다크 카드.
@@ -11,11 +11,34 @@ export default function AuthModal({ initialMode }: { initialMode: AuthMode }) {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const cardRef = useRef<HTMLDivElement | null>(null);
 
-  // ESC 로 닫기
+  // ESC 로 닫기 + Tab 포커스 트랩(모달 밖으로 못 나가게)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") closeAuth();
+      if (e.key === "Escape") {
+        closeAuth();
+        return;
+      }
+      if (e.key !== "Tab") return;
+      const card = cardRef.current;
+      if (!card) return;
+      const focusable = card.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])',
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+      if (e.shiftKey) {
+        if (active === first || !card.contains(active)) {
+          e.preventDefault();
+          last.focus();
+        }
+      } else if (active === last) {
+        e.preventDefault();
+        first.focus();
+      }
     };
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
@@ -66,7 +89,14 @@ export default function AuthModal({ initialMode }: { initialMode: AuthMode }) {
 
   return (
     <div className="auth-overlay" onClick={closeAuth}>
-      <div className="auth-card" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
+      <div
+        ref={cardRef}
+        className="auth-card"
+        onClick={(e) => e.stopPropagation()}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="auth-title"
+      >
         <button className="auth-close" onClick={closeAuth} aria-label="닫기">
           ×
         </button>
@@ -78,7 +108,7 @@ export default function AuthModal({ initialMode }: { initialMode: AuthMode }) {
             style={{ height: "28px", width: "auto", display: "block" }}
           />
         </div>
-        <h2 className="auth-title">
+        <h2 id="auth-title" className="auth-title">
           {mode === "login" ? "다시 오셨네요" : "지금 시작하기"}
         </h2>
         <p className="auth-sub">

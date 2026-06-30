@@ -232,6 +232,13 @@ footer {
 .foot-col h6 { font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; color: var(--fg-muted); margin-bottom: 14px; font-family: "JetBrains Mono", monospace; }
 .foot-col a { display: block; font-size: 13px; color: var(--fg-secondary); padding: 4px 0; transition: color 150ms; }
 .foot-col a:hover { color: var(--fg-primary); }
+.foot-link-btn {
+  display: block; font-size: 13px; color: var(--fg-secondary); padding: 4px 0;
+  background: none; border: none; text-align: left; cursor: pointer;
+  font-family: inherit; transition: color 150ms;
+}
+.foot-link-btn:hover { color: var(--fg-primary); }
+.foot-link-muted { display: block; font-size: 13px; color: var(--fg-muted); padding: 4px 0; cursor: default; }
 .foot-col p { font-size: 13px; color: var(--fg-muted); line-height: 1.65; margin-top: 12px; max-width: 320px; }
 .foot-bottom {
   margin-top: 36px; padding-top: 20px; border-top: 1px solid var(--frost);

@@ -663,11 +663,6 @@ export default function Portfolio() {
           <div className="caption">PORTFOLIO / 2026.06.11</div>
           <h1 style={{ marginTop: "6px" }}>내 포트폴리오</h1>
         </div>
-        <div style={{ display: "flex", gap: "6px" }}>
-          <button className="toggle-btn active">전체</button>
-          <button className="toggle-btn">국내</button>
-          <button className="toggle-btn">해외</button>
-        </div>
       </div>
 
       {/* ── 내 종목 입력 + 실데이터 요약 (로그인 유저) ──────────────────── */}

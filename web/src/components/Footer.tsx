@@ -1,7 +1,12 @@
 import { Link } from "react-router-dom";
 
-/* /site/index.html <footer> 마크업을 그대로 이식.
-   SERVICE 내부 링크는 React Router 로, DATA/LEGAL placeholder 링크는 원본대로 href="#". */
+const DISCLAIMER =
+  "FinCoach는 정보 제공 도구이며, 특정 종목의 매수 또는 매도를 추천하지 않습니다. " +
+  "모든 데이터는 참고용이며 투자 판단과 그 결과에 대한 책임은 이용자 본인에게 있습니다.";
+
+/* /site/index.html <footer> 마크업을 이식.
+   SERVICE 내부 링크는 React Router, DATA 링크는 실제 출처 외부 링크,
+   LEGAL 의 "면책 조항"은 클릭 시 면책 문구를 표시한다. */
 export default function Footer() {
   return (
     <footer>
@@ -27,15 +32,31 @@ export default function Footer() {
         </div>
         <div className="foot-col">
           <h6>DATA</h6>
-          <a href="#">KRX 한국 주식</a>
-          <a href="#">yfinance 미국 주식</a>
-          <a href="#">RSS 뉴스</a>
+          <a href="https://www.krx.co.kr" target="_blank" rel="noopener noreferrer">
+            KRX 한국 주식
+          </a>
+          <a href="https://finance.yahoo.com" target="_blank" rel="noopener noreferrer">
+            yfinance 미국 주식
+          </a>
+          <a href="https://finance.yahoo.com/news/" target="_blank" rel="noopener noreferrer">
+            RSS 뉴스
+          </a>
         </div>
         <div className="foot-col">
           <h6>LEGAL</h6>
-          <a href="#">면책 조항</a>
-          <a href="#">서비스 약관</a>
-          <a href="#">개인정보 처리방침</a>
+          <button
+            type="button"
+            className="foot-link-btn"
+            onClick={() => window.alert(DISCLAIMER)}
+          >
+            면책 조항
+          </button>
+          <span className="foot-link-muted" aria-disabled="true">
+            서비스 약관 (준비 중)
+          </span>
+          <span className="foot-link-muted" aria-disabled="true">
+            개인정보 처리방침 (준비 중)
+          </span>
         </div>
       </div>
       <div className="foot-bottom">

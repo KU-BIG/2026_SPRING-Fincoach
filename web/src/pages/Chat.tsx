@@ -12,6 +12,7 @@ export default function Chat() {
   const historyRef = useRef<ChatMessage[]>([]);
   const aliveRef = useRef(true);
   const sendingRef = useRef(false);
+  const [sending, setSending] = useState(false);
   const [source, setSource] = useState<DataSource>("demo");
   const { user, loading, configured } = useAuth();
   const userRef = useRef(user);
@@ -218,6 +219,7 @@ export default function Chat() {
     scrollToBottom();
 
     sendingRef.current = true;
+    setSending(true);
     const prior = [...historyRef.current];
     const isFirstMsg = prior.length === 0;
     const { bubble, content } = appendCoachBubble();
@@ -308,6 +310,7 @@ export default function Chat() {
       })
       .finally(() => {
         sendingRef.current = false;
+        if (aliveRef.current) setSending(false);
       });
   };
 
@@ -359,10 +362,23 @@ export default function Chat() {
               ))
             ) : (
               <>
-                <a href="#" className="active">PER이 높으면 무슨 의미예요?</a>
-                <a href="#">반도체 사이클 어디쯤일까요?</a>
-                <a href="#">환율이 떨어지면 어떻게 되나요?</a>
-                <a href="#">NVIDIA 비중을 더 늘려도 될까요?</a>
+                {[
+                  "PER이 높으면 무슨 의미예요?",
+                  "반도체 사이클 어디쯤일까요?",
+                  "환율이 떨어지면 어떻게 되나요?",
+                  "NVIDIA 비중을 더 늘려도 될까요?",
+                ].map((q) => (
+                  <a
+                    key={q}
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      addQuestion(q);
+                    }}
+                  >
+                    {q}
+                  </a>
+                ))}
               </>
             )}
           </div>
@@ -434,8 +450,16 @@ export default function Chat() {
           </div>
 
           <div className="input-bar">
-            <input type="text" id="msgInput" ref={inputRef} placeholder="질문을 입력하세요" />
-            <button onClick={() => sendMessage()}>보내기</button>
+            <input
+              type="text"
+              id="msgInput"
+              ref={inputRef}
+              placeholder="질문을 입력하세요"
+              disabled={sending}
+            />
+            <button onClick={() => sendMessage()} disabled={sending} aria-busy={sending}>
+              {sending ? "전송 중…" : "보내기"}
+            </button>
           </div>
           <div className="disclaimer-bar">
             본 응답은 정보 제공 목적이며, 투자 권유에 해당하지 않습니다.
