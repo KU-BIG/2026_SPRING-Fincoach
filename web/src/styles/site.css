@@ -137,12 +137,15 @@ header.scrolled .nav-wrap { padding-top: 12px; padding-bottom: 12px; }
 }
 .brand .logo::after { content: ""; width: 8px; height: 8px; background: var(--bg-base); border-radius: 1.5px; }
 nav.menu { display: flex; align-items: center; gap: 0; }
+/* 메뉴(네비) — IBM Plex Sans KR 로 또렷하고 단정한 결 */
 nav.menu a {
+  font-family: "IBM Plex Sans KR", "Pretendard Variable", Pretendard, sans-serif;
   padding: 7px 14px; font-size: 14px; color: var(--fg-secondary);
-  letter-spacing: 0.35px; font-weight: 500;
+  letter-spacing: 0.2px; font-weight: 500;
   border-radius: 6px;
   transition: color 150ms, background 150ms;
 }
+.nav-cta, .nav-ghost { font-family: "IBM Plex Sans KR", "Pretendard Variable", Pretendard, sans-serif; }
 nav.menu a:hover { color: var(--fg-primary); background: rgba(255,255,255,0.04); }
 nav.menu a.active { color: var(--fg-primary); background: rgba(255,255,255,0.06); }
 .nav-right { display: flex; align-items: center; gap: 10px; }

@@ -7,8 +7,12 @@ export default function Footer() {
     <footer>
       <div className="foot-row">
         <div className="foot-col">
-          <Link to="/" className="brand" style={{ marginBottom: "12px" }}>
-            <div className="logo"></div>FinCoach
+          <Link to="/" className="brand" style={{ marginBottom: "12px" }} aria-label="FinCoach">
+            <img
+              src="/logo.png"
+              alt="FinCoach"
+              style={{ height: "26px", width: "auto", display: "block" }}
+            />
           </Link>
           <p>
             한국 주식과 미국 주식을 한 화면에. 정보 제공 도구이며, 매수와 매도는 추천하지 않습니다.
