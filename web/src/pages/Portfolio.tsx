@@ -96,7 +96,7 @@ function HoldingsForm({
       <div style={{ fontSize: "12px", color: "var(--fg-muted)", marginBottom: "14px" }}>
         보유 종목을 입력하면 실제 포트폴리오 기반으로 분석합니다.
       </div>
-      <table style={{ width: "100%", maxWidth: "760px", borderCollapse: "collapse" }}>
+      <table className="holdings-table" style={{ width: "100%", maxWidth: "760px", borderCollapse: "collapse" }}>
         <thead>
           <tr>
             <th style={{ textAlign: "left", padding: "6px 8px", fontSize: "13px" }}>티커</th>
@@ -395,7 +395,7 @@ export default function Portfolio() {
   const showDemo = !hasRealPortfolio;
 
   /* 예시를 잠깐(GATE_DELAY) 선명하게 보여준 뒤 블러 + 로그인 오버레이를 부드럽게 띄운다. */
-  const GATE_DELAY_MS = 4000;
+  const GATE_DELAY_MS = 7000;
   const [gateActive, setGateActive] = useState(false);
   useEffect(() => {
     if (!showDemo) {
@@ -962,7 +962,7 @@ export default function Portfolio() {
                   ? "지금 화면은 예시 데이터예요. 위 입력란에 보유 종목을 추가하면 내 종목 기준 실제 분석으로 바뀝니다."
                   : "지금 보이는 숫자는 예시예요. 로그인 후 종목을 입력하면 내 포트폴리오로 실제 분석을 받을 수 있어요."}
               </p>
-              {!user && (
+              {!user ? (
                 <button
                   className="toggle-btn active"
                   onClick={() => openAuth("login")}
@@ -970,13 +970,32 @@ export default function Portfolio() {
                 >
                   로그인하고 시작하기
                 </button>
+              ) : (
+                <button
+                  className="toggle-btn active"
+                  onClick={() =>
+                    document.querySelector(".holdings-table")?.scrollIntoView({ behavior: "smooth", block: "center" })
+                  }
+                  style={{ padding: "11px 22px", fontSize: "14px" }}
+                >
+                  종목 입력하러 가기
+                </button>
               )}
             </div>
           </div>
         </div>
       ) : null}
 
-      {/* AI 분석 — 성향 칩 + 집중도 미터 + 색상 카테고리 패널 */}
+      {/* AI 분석 — 데모(예시 미리보기)에선 쇼케이스와 함께 블러, 로그인하면 선명 */}
+      <div
+        aria-hidden={showDemo && gateActive}
+        style={{
+          filter: showDemo && gateActive ? "blur(7px)" : "none",
+          opacity: showDemo && gateActive ? 0.5 : 1,
+          pointerEvents: showDemo && gateActive ? "none" : "auto",
+          transition: "filter 0.6s ease, opacity 0.6s ease",
+        }}
+      >
       <div className="grid grid-12" style={{ marginTop: "14px" }}>
         <section className="card c-12 reveal" style={{ padding: "28px" }}>
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
@@ -984,76 +1003,127 @@ export default function Portfolio() {
               AI 분석
               <SourceBadge source={analysisSource} liveLabel="실시간 분석" demoLabel="데모 분석" />
             </div>
-            <Link to="/chat" style={{ fontSize: "13px", color: "var(--red)", fontWeight: 600 }}>
-              코치에게 자세히 묻기 →
-            </Link>
+            {analysis.sub && (
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                {analysis.sub.split(" · ").filter(Boolean).map((tag) => (
+                  <span key={tag} style={{ fontSize: "12px", fontWeight: 600, color: "var(--fg-secondary)", background: "var(--bg-elevated-2)", border: "1px solid var(--frost)", borderRadius: "999px", padding: "4px 12px" }}>{tag}</span>
+                ))}
+              </div>
+            )}
           </div>
 
-          {analysis.sub && (
-            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "14px" }}>
-              {analysis.sub.split(" · ").filter(Boolean).map((tag) => (
-                <span
-                  key={tag}
-                  style={{ fontSize: "12px", fontWeight: 600, color: "var(--fg-primary)", background: "var(--bg-elevated-2)", border: "1px solid var(--frost)", borderRadius: "999px", padding: "5px 13px" }}
-                >
-                  {tag}
-                </span>
-              ))}
-            </div>
-          )}
+          <p style={{ marginTop: "16px", fontSize: "16px", lineHeight: 1.7, color: "var(--fg-primary)", maxWidth: "780px", fontWeight: 500 }}>{analysis.summary}</p>
 
-          <p style={{ marginTop: "16px", fontSize: "15px", lineHeight: 1.75, color: "var(--fg-primary)" }}>{analysis.summary}</p>
-
-          {userSummary && userSummary.positions.length > 0 && (() => {
-            const top = [...userSummary.positions].sort((a, b) => b.weight - a.weight)[0];
-            const lvl = top.weight >= 40 ? "집중 높음" : top.weight >= 25 ? "보통" : "분산 양호";
-            const c = top.weight >= 40 ? "var(--red)" : top.weight >= 25 ? "var(--yellow)" : "var(--green)";
+          {(() => {
+            // 데이터 카드는 항상 노출 — 로그인+백엔드면 실데이터, 아니면 데모(stocks)로 폴백
+            const src = userSummary?.positions?.length
+              ? userSummary.positions
+              : stocks.map((s) => ({ ticker: s.ticker, name: s.name, weight: s.weight, pnl_pct: s.pnl, current_value_krw: s.value, pnl_krw: 0 }));
+            const ps = [...src].sort((a, b) => b.weight - a.weight);
+            const top = ps[0];
+            const isKR = (t: string) => /\.(KS|KQ)$/i.test(t) || /^\d{6}/.test(t);
+            const krW = Math.round(ps.filter((p) => isKR(p.ticker)).reduce((s, p) => s + p.weight, 0));
+            const usW = Math.max(0, 100 - krW);
+            const top3 = Math.round(ps.slice(0, 3).reduce((s, p) => s + p.weight, 0));
+            const conc = top.weight >= 40 ? { t: "집중 높음", c: "var(--red)" } : top.weight >= 25 ? { t: "보통", c: "var(--yellow)" } : { t: "분산 양호", c: "var(--green)" };
+            const div3 = top3 >= 70 ? { t: "편중", c: "var(--red)" } : top3 >= 50 ? { t: "보통", c: "var(--yellow)" } : { t: "고른 편", c: "var(--green)" };
             return (
-              <div style={{ marginTop: "20px", padding: "16px 18px", background: "var(--bg-elevated)", border: "1px solid var(--frost)", borderRadius: "12px" }}>
-                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "10px", gap: "10px", flexWrap: "wrap" }}>
-                  <span style={{ fontSize: "13px", color: "var(--fg-secondary)" }}>
-                    최대 종목 집중도 — <b style={{ color: "var(--fg-primary)" }}>{top.name}</b>
-                  </span>
-                  <span className="num" style={{ fontSize: "13px", fontWeight: 700, color: c }}>{top.weight}% · {lvl}</span>
+              <>
+                <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(210px, 1fr))", gap: "14px", marginTop: "20px" }}>
+                  <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--frost)", borderRadius: "14px", padding: "18px" }}>
+                    <div style={{ fontSize: "12px", color: "var(--fg-muted)", marginBottom: "12px" }}>최대 종목 집중도 · {top.name}</div>
+                    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "8px", marginBottom: "12px" }}>
+                      <div className="num" style={{ fontSize: "24px", fontWeight: 800 }}>{top.weight}%</div>
+                      <div style={{ fontSize: "12px", fontWeight: 700, color: conc.c }}>{conc.t}</div>
+                    </div>
+                    <div style={{ height: "8px", background: "var(--bg-elevated-2)", borderRadius: "999px", overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${Math.min(100, top.weight)}%`, background: conc.c, borderRadius: "999px" }} />
+                    </div>
+                  </div>
+                  <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--frost)", borderRadius: "14px", padding: "18px" }}>
+                    <div style={{ fontSize: "12px", color: "var(--fg-muted)", marginBottom: "12px" }}>국내 · 해외 비중</div>
+                    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "8px", marginBottom: "12px" }}>
+                      <div className="num" style={{ fontSize: "24px", fontWeight: 800 }}>{krW} : {usW}</div>
+                      <div style={{ fontSize: "12px", color: "var(--fg-muted)" }}>
+                        <span style={{ color: "var(--yellow)" }}>국내</span> / <span style={{ color: "var(--blue)" }}>해외</span>
+                      </div>
+                    </div>
+                    <div style={{ display: "flex", height: "8px", borderRadius: "999px", overflow: "hidden", gap: "2px" }}>
+                      <div style={{ width: `${krW}%`, background: "var(--yellow)" }} />
+                      <div style={{ width: `${usW}%`, background: "var(--blue)" }} />
+                    </div>
+                  </div>
+                  <div style={{ background: "var(--bg-elevated)", border: "1px solid var(--frost)", borderRadius: "14px", padding: "18px" }}>
+                    <div style={{ fontSize: "12px", color: "var(--fg-muted)", marginBottom: "12px" }}>상위 3종목 집중</div>
+                    <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: "8px", marginBottom: "12px" }}>
+                      <div className="num" style={{ fontSize: "24px", fontWeight: 800 }}>{top3}%</div>
+                      <div style={{ fontSize: "12px", fontWeight: 700, color: div3.c }}>{div3.t}</div>
+                    </div>
+                    <div style={{ height: "8px", background: "var(--bg-elevated-2)", borderRadius: "999px", overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${Math.min(100, top3)}%`, background: div3.c, borderRadius: "999px" }} />
+                    </div>
+                  </div>
                 </div>
-                <div style={{ height: "8px", background: "var(--bg-elevated-2)", borderRadius: "999px", overflow: "hidden" }}>
-                  <div style={{ height: "100%", width: `${Math.min(100, top.weight)}%`, background: c, borderRadius: "999px" }}></div>
+                <div style={{ fontSize: "11px", color: "var(--fg-muted)", marginTop: "10px", lineHeight: 1.5 }}>
+                  집중도가 높을수록 한 종목·한 시장의 움직임이 전체 수익률을 더 크게 좌우합니다.
                 </div>
-                <div style={{ fontSize: "11px", color: "var(--fg-muted)", marginTop: "9px", lineHeight: 1.5 }}>
-                  한 종목 비중이 높을수록 그 종목의 변동이 전체 수익률을 좌우합니다.
-                </div>
-              </div>
+              </>
             );
           })()}
 
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(248px, 1fr))", gap: "14px", marginTop: "18px" }}>
-            {[
-              { label: "특성", items: analysis.characteristics, color: "var(--blue)", soft: "var(--blue-soft)" },
-              { label: "강점", items: analysis.strengths, color: "var(--green)", soft: "var(--green-soft)" },
-              { label: "리스크", items: analysis.risks, color: "var(--red)", soft: "rgba(255,32,71,0.12)" },
-              { label: "점검 포인트", items: analysis.suggestions, color: "var(--yellow)", soft: "var(--yellow-soft)" },
-            ].map((cat) => (
-              <div key={cat.label} style={{ background: cat.soft, border: "1px solid var(--frost)", borderRadius: "12px", padding: "16px 18px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
-                  <span style={{ width: "9px", height: "9px", borderRadius: "3px", background: cat.color, flexShrink: 0 }}></span>
-                  <span style={{ fontSize: "13px", fontWeight: 700, color: cat.color }}>{cat.label}</span>
-                </div>
-                <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "9px", margin: 0, padding: 0 }}>
-                  {cat.items.map((t, i) => (
-                    <li key={i} style={{ fontSize: "13px", lineHeight: 1.55, color: "var(--fg-secondary)", paddingLeft: "15px", position: "relative" }}>
-                      <span style={{ position: "absolute", left: 0, top: "7px", width: "5px", height: "5px", borderRadius: "50%", background: cat.color, opacity: 0.7 }}></span>
-                      {t}
-                    </li>
-                  ))}
-                </ul>
+          {analysis.characteristics.length > 0 && (
+            <div style={{ marginTop: "22px" }}>
+              <div style={{ fontSize: "12px", color: "var(--fg-muted)", marginBottom: "10px" }}>포트폴리오 특성</div>
+              <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>
+                {analysis.characteristics.map((t, i) => (
+                  <span key={i} style={{ fontSize: "13px", color: "var(--fg-secondary)", background: "var(--bg-elevated)", border: "1px solid var(--frost)", borderRadius: "9px", padding: "8px 13px" }}>{t}</span>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          )}
 
-          <p style={{ marginTop: "16px", fontSize: "11px", color: "var(--fg-muted)" }}>
-            정보 제공 목적이며, 투자 권유가 아닙니다.
+          {analysis.strengths.length > 0 && (
+            <div style={{ marginTop: "18px", padding: "16px 18px", background: "var(--green-soft)", border: "1px solid var(--frost)", borderRadius: "14px", display: "flex", gap: "12px", alignItems: "baseline", flexWrap: "wrap" }}>
+              <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--green)", flexShrink: 0 }}>강점</span>
+              <span style={{ fontSize: "14px", color: "var(--fg-primary)", lineHeight: 1.65 }}>{analysis.strengths.join("    ·    ")}</span>
+            </div>
+          )}
+
+          {analysis.risks.length > 0 && (
+            <div style={{ marginTop: "14px", padding: "18px 20px", background: "rgba(255,32,71,0.10)", border: "1px solid var(--frost)", borderRadius: "14px" }}>
+              <div style={{ fontSize: "12px", fontWeight: 700, color: "var(--red)", marginBottom: "11px" }}>리스크</div>
+              <div style={{ fontSize: "15px", color: "var(--fg-primary)", lineHeight: 1.6, fontWeight: 500 }}>{analysis.risks[0]}</div>
+              {analysis.risks.length > 1 && (
+                <div style={{ marginTop: "12px", paddingTop: "12px", borderTop: "1px solid var(--frost-alt)", display: "flex", flexDirection: "column", gap: "9px" }}>
+                  {analysis.risks.slice(1).map((r, i) => (
+                    <div key={i} style={{ fontSize: "13px", color: "var(--fg-secondary)", lineHeight: 1.55 }}>{r}</div>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
+
+          {analysis.suggestions.length > 0 && (
+            <div style={{ marginTop: "18px", padding: "18px 20px", background: "var(--bg-elevated)", border: "1px solid var(--frost)", borderRadius: "14px" }}>
+              <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--yellow)", marginBottom: "14px" }}>다음 단계 · 점검 포인트</div>
+              <ol style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "13px", margin: 0, padding: 0 }}>
+                {analysis.suggestions.map((t, i) => (
+                  <li key={i} style={{ display: "flex", gap: "12px", alignItems: "flex-start" }}>
+                    <span className="num" style={{ flexShrink: 0, width: "23px", height: "23px", borderRadius: "8px", background: "var(--yellow-soft)", color: "var(--yellow)", fontSize: "12px", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
+                    <span style={{ fontSize: "14px", lineHeight: 1.6, color: "var(--fg-primary)" }}>{t}</span>
+                  </li>
+                ))}
+              </ol>
+            </div>
+          )}
+
+          <p style={{ marginTop: "20px", fontSize: "12px", color: "var(--fg-muted)" }}>
+            더 깊은 분석이나 근거가 궁금하면{" "}
+            <Link to="/chat" style={{ color: "var(--red)", fontWeight: 600 }}>코치에게 물어보세요 →</Link>
           </p>
+          <p style={{ marginTop: "8px", fontSize: "11px", color: "var(--fg-muted)" }}>정보 제공 목적이며, 투자 권유가 아닙니다.</p>
         </section>
+      </div>
       </div>
     </>
   );

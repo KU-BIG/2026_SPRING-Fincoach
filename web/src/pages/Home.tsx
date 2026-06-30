@@ -1,12 +1,14 @@
 import { useEffect, useMemo, useRef } from "react";
 import { Link } from "react-router-dom";
 import { genSeries, buildMiniChart, stocks } from "../lib/charts";
+import { useAuth } from "../auth/context";
 
 /* /site/index.html <main> 전체를 그대로(verbatim) 이식한 홈.
    - hero / product-preview / trust-strip / feature 1~3 / how / faq / cta
    - 차트·종목 리스트는 인라인 <script> 의 빌더를 그대로 사용해 동일 SVG 를 dangerouslySetInnerHTML 로 주입
    - 코치 두 번째 답변 타이핑 효과는 useEffect 로 이식(동작 동일) */
 export default function Home() {
+  const { configured, openAuth } = useAuth();
   // product-preview 큰 sparkline (한 달 추이)
   const ppSparkHtml = useMemo(() => {
     const ppSeries = genSeries(4.05, 30, 0.55, 42);
@@ -227,9 +229,15 @@ export default function Home() {
           <span style={{ whiteSpace: "nowrap" }}>AI 코치</span>에게 바로 물어볼 수 있어요.
         </p>
         <div className="hero-cta">
-          <Link to="/portfolio" className="btn-white">
-            무료로 시작
-          </Link>
+          {configured ? (
+            <button className="btn-white" onClick={() => openAuth("signup")}>
+              무료로 시작
+            </button>
+          ) : (
+            <Link to="/portfolio" className="btn-white">
+              무료로 시작
+            </Link>
+          )}
           <Link to="/portfolio" className="btn-frost">
             데모 보기
           </Link>
@@ -552,9 +560,15 @@ export default function Home() {
         </h2>
         <p>가입 5초. 신용카드 등록 없이 시작합니다.</p>
         <div className="actions">
-          <Link to="/portfolio" className="btn-white">
-            무료로 시작
-          </Link>
+          {configured ? (
+            <button className="btn-white" onClick={() => openAuth("signup")}>
+              무료로 시작
+            </button>
+          ) : (
+            <Link to="/portfolio" className="btn-white">
+              무료로 시작
+            </Link>
+          )}
           <Link to="/chat" className="btn-frost">
             코치에게 묻기
           </Link>

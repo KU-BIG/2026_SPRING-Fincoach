@@ -2,15 +2,18 @@ import { render, screen, cleanup } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, describe, expect, it } from "vitest";
 import Home from "./Home";
+import { AuthProvider } from "../auth/AuthProvider";
 
 describe("Home (verbatim /site/ 이식)", () => {
   afterEach(() => cleanup());
 
   it("hero 헤드라인·서브카피를 그대로 렌더한다", () => {
     render(
-      <MemoryRouter>
-        <Home />
-      </MemoryRouter>,
+      <AuthProvider>
+        <MemoryRouter>
+          <Home />
+        </MemoryRouter>
+      </AuthProvider>,
     );
     // hero 헤드라인 단어
     expect(screen.getByText("보유")).toBeInTheDocument();
@@ -24,9 +27,11 @@ describe("Home (verbatim /site/ 이식)", () => {
 
   it("종목 리스트(ppGrid/featPort)에 하드코딩 종목명이 들어간다", () => {
     const { container } = render(
-      <MemoryRouter>
-        <Home />
-      </MemoryRouter>,
+      <AuthProvider>
+        <MemoryRouter>
+          <Home />
+        </MemoryRouter>
+      </AuthProvider>,
     );
     const grid = container.querySelector("#ppGrid");
     expect(grid).not.toBeNull();
