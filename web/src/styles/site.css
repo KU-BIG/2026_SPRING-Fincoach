@@ -303,17 +303,6 @@ svg .spark-line.drawn, svg.spark.drawn .spark-line { stroke-dashoffset: 0; }
 /* SCROLL PROGRESS — 부드러운 그림자 */
 .scroll-progress .bar { box-shadow: 0 0 10px rgba(59,158,255,0.55), 0 0 2px rgba(59,158,255,0.8); }
 
-/* PREFERS-REDUCED-MOTION — 정중하게 모든 transform 애니메이션 비활성, transition 은 짧게 유지 */
-@media (prefers-reduced-motion: reduce) {
-  .reveal, .reveal.in,
-  .reveal.reveal-left, .reveal.reveal-left.in,
-  .reveal.reveal-right, .reveal.reveal-right.in,
-  .reveal.reveal-zoom, .reveal.reveal-zoom.in { transform: none; transition: opacity 200ms linear; }
-  .card:hover { transform: none; box-shadow: none; }
-  svg .spark-line, svg.spark .spark-line { stroke-dasharray: 0 !important; stroke-dashoffset: 0 !important; transition: none; }
-  tbody tr.stock-tr td:first-child::before { transition: none; }
-}
-
 /* 햄버거 + 모바일 드롭다운 (데스크탑에선 숨김) */
 .nav-burger {
   display: none;

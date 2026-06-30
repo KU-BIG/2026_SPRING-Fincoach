@@ -32,7 +32,6 @@ export function useSiteInteractions(deps: ReadonlyArray<unknown> = []) {
 
     // fade-in (+ inline stagger via data-reveal-stagger on parent)
     {
-      const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
       const io = new IntersectionObserver(
         (entries) => {
           entries.forEach((e) => {
@@ -40,7 +39,7 @@ export function useSiteInteractions(deps: ReadonlyArray<unknown> = []) {
             const el = e.target as HTMLElement;
             el.classList.add("in");
             const step = parseInt(el.dataset.revealStagger || "0", 10);
-            if (step > 0 && !reduced) {
+            if (step > 0) {
               el.querySelectorAll<HTMLElement>(".reveal-child").forEach((c, i) => {
                 c.style.transitionDelay = i * step + "ms";
                 requestAnimationFrame(() =>
@@ -58,9 +57,11 @@ export function useSiteInteractions(deps: ReadonlyArray<unknown> = []) {
     }
 
     // mini sparkline draw-in
+    // All animations are FORCED ON even under prefers-reduced-motion (product
+    // decision): the home sparklines must draw for everyone, and the always-on
+    // loops/hover micro-interactions are no longer suppressed via CSS either.
     {
-      const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (!reduced) {
+      {
         const observed = new WeakSet<Element>();
         const io = new IntersectionObserver(
           (entries) => {

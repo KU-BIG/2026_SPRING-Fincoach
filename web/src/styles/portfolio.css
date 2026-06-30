@@ -413,11 +413,3 @@ tbody tr.expand-tr td { padding: 0; border-bottom: none; }
   animation: barGrow 560ms cubic-bezier(0.2,0,0,1) 420ms both,
              barPulse 3.4s ease-in-out 1000ms infinite;
 }
-
-@media (prefers-reduced-motion: reduce) {
-  .kpi, .kpi:hover, .stock-tr, .stock-tr.open,
-  .sparkbars .bar, .sparkbars .bar:last-child { animation: none; transform: none; transition: none; }
-  .expand-panel.show .expand-stat { animation: none; opacity: 1; transform: none; }
-  .chart-draw, .mini-draw { animation: none; stroke-dasharray: none; stroke-dashoffset: 0; }
-  .donut { animation: none; transform: none; opacity: 1; }
-}

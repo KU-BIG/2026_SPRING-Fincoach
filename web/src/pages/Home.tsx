@@ -77,7 +77,8 @@ export default function Home() {
     const target = typeTargetRef.current;
     const bubble = typeBubbleRef.current;
     if (!target || !bubble) return;
-    const reduced = matchMedia("(prefers-reduced-motion: reduce)").matches;
+    // One-time coach typing intro is FORCED ON even under prefers-reduced-motion
+    // (product decision): the intro animation must play for everyone.
     const html =
       "현재 포트폴리오에서 반도체 비중은 약 <b>36%</b>로 비교적 높은 편이에요. 삼성전자 22%와 NVIDIA 14%가 큰 축을 차지하고 있어요. AI·HBM 사이클이 길어지면 유리하지만, 반대로 한 섹터에 무게가 쏠려있어 변동성도 큰 점을 같이 봐주세요.";
 
@@ -126,11 +127,6 @@ export default function Home() {
     let running = false;
     let timer: number | null = null;
 
-    function finishStatic() {
-      target!.innerHTML = html;
-      bubble!.classList.add("done");
-    }
-
     function cycle() {
       if (!inView) {
         running = false;
@@ -168,10 +164,6 @@ export default function Home() {
       (entries) => {
         entries.forEach((e) => {
           inView = e.isIntersecting;
-          if (reduced) {
-            if (inView) finishStatic();
-            return;
-          }
           if (inView && !running) {
             timer = window.setTimeout(cycle, 300);
           } else if (!inView) {

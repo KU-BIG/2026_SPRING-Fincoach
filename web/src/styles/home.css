@@ -233,23 +233,6 @@
       60% { transform: translateY(-2px) scale(1.02); opacity: 1; }
       100% { transform: translateY(0) scale(1); opacity: 1; }
     }
-    @media (prefers-reduced-motion: reduce) {
-      .hero-pill, .hero-pill .dot, .hero-glow, .hero-halo, .hero-headline em,
-      .hero-headline .word, .hero-sub, .hero-cta,
-      .hero-cta .btn-white, .hero-cta .btn-frost { animation: none; opacity: 1; transform: none; filter: none; }
-      /* shimmer 비활성: 글자 fill을 단색으로 */
-      .hero-headline .word {
-        background: none;
-        -webkit-text-fill-color: var(--fg-primary);
-        color: var(--fg-primary);
-      }
-      .hero-headline em.word, .hero-headline em {
-        background-image: linear-gradient(120deg, var(--red) 0%, #FF6B85 50%, var(--red) 100%);
-        -webkit-background-clip: text; background-clip: text;
-        -webkit-text-fill-color: transparent; color: transparent;
-      }
-    }
-
     /* SECTION TITLE REVEAL — feature title, sec-head h2 공통 패턴.
        reveal.in 진입 시: mask가 위→아래로 풀리며 등장 + 짧은 gradient sweep.
        Vercel/Apple 결의 절제된 mask reveal. 헤드라인 word-stagger와 다른 결로
@@ -333,20 +316,6 @@
       0% { opacity: 0; transform: translateY(14px); filter: blur(8px); }
       55% { filter: blur(0.5px); }
       100% { opacity: 1; transform: translateY(0); filter: blur(0); }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .reveal .ft-title, .reveal .sec-head h2, .reveal .cta-section h2,
-      .reveal.in .ft-title, .reveal.in .sec-head h2, .reveal.in .cta-section h2 {
-        opacity: 1; transform: none; transition: none; filter: none;
-        animation: none;
-        /* shimmer 비활성: 글자 fill을 단색으로 (background-clip: text 무효화) */
-        background: none;
-        -webkit-text-fill-color: var(--fg-primary);
-        color: var(--fg-primary);
-      }
-      .reveal.in .ftc-port-head .ttl,
-      .reveal.in .how-card .ttl,
-      .reveal.in .term-card .nm { animation: none; }
     }
     .hero-cta { margin-top: 36px; display: inline-flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
 
@@ -601,14 +570,8 @@
       .feature.reveal.in > .ft-text,
       .feature.reveal.in > .ft-visual { transform: translateY(0); }
     }
-    @media (prefers-reduced-motion: reduce) {
-      .feature.reveal > .ft-text,
-      .feature.reveal > .ft-visual,
-      .feature.reverse.reveal > .ft-text,
-      .feature.reverse.reveal > .ft-visual,
-      .feature.reveal.in > .ft-text,
-      .feature.reveal.in > .ft-visual { opacity: 1; transform: none; transition: opacity 200ms linear; }
-    }
+    /* feature 슬라이드 인은 1회성 인트로라 reduce-motion 에서도 풀 모션으로 등장 (제품 결정).
+       무한 루프가 없어 reduce 전용 비활성 규칙이 필요 없다. */
 
     .ft-mark {
       display: inline-flex; align-items: center; gap: 14px;
@@ -804,7 +767,6 @@
     /* product-preview 미세 floating */
     .product-preview { animation: ppFloat 8s ease-in-out infinite; }
     @keyframes ppFloat { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-6px); } }
-    @media (prefers-reduced-motion: reduce) { .product-preview { animation: none; } }
 
     /* pp-stock 행 hover — 미세한 보더 highlight + 살짝 떠오름 (이미 transform/border 정의됨, glow 추가) */
     .pp-stock { box-shadow: 0 0 0 0 transparent; }
@@ -861,11 +823,6 @@
       0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,0); }
       50% { box-shadow: 0 0 0 4px rgba(255,255,255,0.10); }
     }
-    @media (prefers-reduced-motion: reduce) {
-      .nav-cta::after { animation: none; }
-      .pp-stock, .ft-card, .how-card, .term-card { transition: none; }
-      .pp-stock:hover, .ft-card:hover, .how-card:hover, .term-card:hover { transform: none; box-shadow: none; }
-    }
 
     /* 카드/리스트 entrance stagger */
     .reveal.in .pp-stock,
@@ -904,11 +861,5 @@
       60% { filter: blur(0); }
       to { opacity: 1; transform: translateY(0); filter: blur(0); }
     }
-    @media (prefers-reduced-motion: reduce) {
-      .reveal.in .pp-stock,
-      .reveal.in .ftc-port-row,
-      .reveal.in .term-card,
-      .reveal.in .how-card,
-      .reveal.in .faq-item,
-      .reveal.in .bubble { animation: none; }
-    }
+    /* 카드/리스트 entrance stagger(rowIn) 는 1회성 인트로라 reduce-motion 에서도
+       풀 모션으로 등장 (제품 결정). 무한 루프가 없어 reduce 전용 비활성 규칙이 필요 없다. */
