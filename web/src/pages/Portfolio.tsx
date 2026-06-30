@@ -394,6 +394,18 @@ export default function Portfolio() {
   const hasRealPortfolio = !!user && holdingsLoaded && rowsToInputs(holdingRows).length > 0;
   const showDemo = !hasRealPortfolio;
 
+  /* 예시를 잠깐(GATE_DELAY) 선명하게 보여준 뒤 블러 + 로그인 오버레이를 부드럽게 띄운다. */
+  const GATE_DELAY_MS = 4000;
+  const [gateActive, setGateActive] = useState(false);
+  useEffect(() => {
+    if (!showDemo) {
+      setGateActive(false);
+      return;
+    }
+    const t = setTimeout(() => setGateActive(true), GATE_DELAY_MS);
+    return () => clearTimeout(t);
+  }, [showDemo]);
+
   /* Supabase에서 유저 holdings 로드 */
   useEffect(() => {
     if (!user || !supabase) {
@@ -670,8 +682,14 @@ export default function Portfolio() {
       {showDemo ? (
         <div style={{ position: "relative", marginTop: "14px" }}>
           <div
-            aria-hidden="true"
-            style={{ filter: "blur(7px)", pointerEvents: "none", userSelect: "none", opacity: 0.5 }}
+            aria-hidden={gateActive}
+            style={{
+              filter: gateActive ? "blur(7px)" : "none",
+              opacity: gateActive ? 0.5 : 1,
+              pointerEvents: gateActive ? "none" : "auto",
+              userSelect: gateActive ? "none" : "auto",
+              transition: "filter 0.6s ease, opacity 0.6s ease",
+            }}
           >
             {/* HERO CARD */}
             <section className="hero-card reveal">
@@ -884,7 +902,7 @@ export default function Portfolio() {
             </div>
           </div>
 
-          {/* 예시 오버레이 (로그인 / 입력 유도) */}
+          {/* 예시 오버레이 (로그인 / 입력 유도) — 잠깐 본 뒤 페이드인 */}
           <div
             style={{
               position: "absolute",
@@ -893,6 +911,9 @@ export default function Portfolio() {
               alignItems: "center",
               justifyContent: "center",
               padding: "20px",
+              opacity: gateActive ? 1 : 0,
+              pointerEvents: gateActive ? "auto" : "none",
+              transition: "opacity 0.5s ease",
             }}
           >
             <div
