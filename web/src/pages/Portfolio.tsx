@@ -116,7 +116,7 @@ function HoldingsForm({
                   placeholder="005930.KS"
                   value={r.ticker}
                   onChange={(e) => update(i, "ticker", e.target.value)}
-                  style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--fg)" }}
+                  style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--frost)", background: "var(--bg-elevated-2)", color: "var(--fg-primary)" }}
                 />
               </td>
               <td style={{ padding: "4px 8px" }}>
@@ -125,7 +125,7 @@ function HoldingsForm({
                   placeholder="삼성전자"
                   value={r.name}
                   onChange={(e) => update(i, "name", e.target.value)}
-                  style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--fg)" }}
+                  style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--frost)", background: "var(--bg-elevated-2)", color: "var(--fg-primary)" }}
                 />
               </td>
               <td style={{ padding: "4px 8px" }}>
@@ -134,7 +134,7 @@ function HoldingsForm({
                   placeholder="10"
                   value={r.shares}
                   onChange={(e) => update(i, "shares", e.target.value)}
-                  style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--fg)", textAlign: "right" }}
+                  style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--frost)", background: "var(--bg-elevated-2)", color: "var(--fg-primary)", textAlign: "right" }}
                 />
               </td>
               <td style={{ padding: "4px 8px" }}>
@@ -143,14 +143,14 @@ function HoldingsForm({
                   placeholder="70000"
                   value={r.avg_price}
                   onChange={(e) => update(i, "avg_price", e.target.value)}
-                  style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--fg)", textAlign: "right" }}
+                  style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--frost)", background: "var(--bg-elevated-2)", color: "var(--fg-primary)", textAlign: "right" }}
                 />
               </td>
               <td style={{ padding: "4px 8px", textAlign: "center" }}>
                 <select
                   value={r.currency}
                   onChange={(e) => update(i, "currency", e.target.value)}
-                  style={{ padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--border)", background: "var(--bg-card)", color: "var(--fg)" }}
+                  style={{ padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--frost)", background: "var(--bg-elevated-2)", color: "var(--fg-primary)", colorScheme: "dark" }}
                 >
                   <option value="KRW">KRW</option>
                   <option value="USD">USD</option>
@@ -643,10 +643,17 @@ export default function Portfolio() {
      렌더된 뒤 아직 노출 안 된 .reveal 에 .in 을 직접 부여해 자연스럽게 페이드인시킨다. */
   useEffect(() => {
     if (showDemo) return;
-    const id = requestAnimationFrame(() => {
+    const reveal = () =>
       document.querySelectorAll<HTMLElement>(".reveal:not(.in)").forEach((el) => el.classList.add("in"));
-    });
-    return () => cancelAnimationFrame(id);
+    const raf = requestAnimationFrame(reveal);
+    // 여러 타이밍에 한 번 더 — 요약/분석 응답이 늦게 도착해 뒤늦게 마운트되는 카드도 확실히 노출
+    const t1 = setTimeout(reveal, 200);
+    const t2 = setTimeout(reveal, 800);
+    return () => {
+      cancelAnimationFrame(raf);
+      clearTimeout(t1);
+      clearTimeout(t2);
+    };
   }, [showDemo, userSummary, holdingRows]);
 
   return (
@@ -969,65 +976,81 @@ export default function Portfolio() {
         </div>
       ) : null}
 
-      {/* AI 분석 */}
+      {/* AI 분석 — 성향 칩 + 집중도 미터 + 색상 카테고리 패널 */}
       <div className="grid grid-12" style={{ marginTop: "14px" }}>
         <section className="card c-12 reveal" style={{ padding: "28px" }}>
-          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between" }}>
-            <div>
-              <div
-                className="subhead"
-                style={{ fontSize: "17px", display: "flex", alignItems: "center", gap: "10px" }}
-              >
-                AI 분석
-                <SourceBadge source={analysisSource} liveLabel="실시간 분석" demoLabel="데모 분석" />
-              </div>
-              <div style={{ fontSize: "12px", color: "var(--fg-muted)", marginTop: "4px" }}>
-                {analysis.sub}
-              </div>
+          <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
+            <div className="subhead" style={{ fontSize: "17px", display: "flex", alignItems: "center", gap: "10px" }}>
+              AI 분석
+              <SourceBadge source={analysisSource} liveLabel="실시간 분석" demoLabel="데모 분석" />
             </div>
-            <Link
-              to="/chat"
-              style={{ fontSize: "13px", color: "var(--green)", fontWeight: 600 }}
-            >
+            <Link to="/chat" style={{ fontSize: "13px", color: "var(--red)", fontWeight: 600 }}>
               코치에게 자세히 묻기 →
             </Link>
           </div>
-          <p style={{ marginTop: "14px", fontSize: "15px", lineHeight: 1.7 }}>{analysis.summary}</p>
-          <div className="insight-grid">
-            <div className="insight">
-              <div className="label">특성</div>
-              <ul>
-                {analysis.characteristics.map((t, i) => (
-                  <li key={i}>{t}</li>
-                ))}
-              </ul>
+
+          {analysis.sub && (
+            <div style={{ display: "flex", gap: "8px", flexWrap: "wrap", marginTop: "14px" }}>
+              {analysis.sub.split(" · ").filter(Boolean).map((tag) => (
+                <span
+                  key={tag}
+                  style={{ fontSize: "12px", fontWeight: 600, color: "var(--fg-primary)", background: "var(--bg-elevated-2)", border: "1px solid var(--frost)", borderRadius: "999px", padding: "5px 13px" }}
+                >
+                  {tag}
+                </span>
+              ))}
             </div>
-            <div className="insight">
-              <div className="label">강점</div>
-              <ul>
-                {analysis.strengths.map((t, i) => (
-                  <li key={i}>{t}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="insight">
-              <div className="label">리스크</div>
-              <ul>
-                {analysis.risks.map((t, i) => (
-                  <li key={i}>{t}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="insight">
-              <div className="label">점검 포인트</div>
-              <ul>
-                {analysis.suggestions.map((t, i) => (
-                  <li key={i}>{t}</li>
-                ))}
-              </ul>
-            </div>
+          )}
+
+          <p style={{ marginTop: "16px", fontSize: "15px", lineHeight: 1.75, color: "var(--fg-primary)" }}>{analysis.summary}</p>
+
+          {userSummary && userSummary.positions.length > 0 && (() => {
+            const top = [...userSummary.positions].sort((a, b) => b.weight - a.weight)[0];
+            const lvl = top.weight >= 40 ? "집중 높음" : top.weight >= 25 ? "보통" : "분산 양호";
+            const c = top.weight >= 40 ? "var(--red)" : top.weight >= 25 ? "var(--yellow)" : "var(--green)";
+            return (
+              <div style={{ marginTop: "20px", padding: "16px 18px", background: "var(--bg-elevated)", border: "1px solid var(--frost)", borderRadius: "12px" }}>
+                <div style={{ display: "flex", justifyContent: "space-between", alignItems: "baseline", marginBottom: "10px", gap: "10px", flexWrap: "wrap" }}>
+                  <span style={{ fontSize: "13px", color: "var(--fg-secondary)" }}>
+                    최대 종목 집중도 — <b style={{ color: "var(--fg-primary)" }}>{top.name}</b>
+                  </span>
+                  <span className="num" style={{ fontSize: "13px", fontWeight: 700, color: c }}>{top.weight}% · {lvl}</span>
+                </div>
+                <div style={{ height: "8px", background: "var(--bg-elevated-2)", borderRadius: "999px", overflow: "hidden" }}>
+                  <div style={{ height: "100%", width: `${Math.min(100, top.weight)}%`, background: c, borderRadius: "999px" }}></div>
+                </div>
+                <div style={{ fontSize: "11px", color: "var(--fg-muted)", marginTop: "9px", lineHeight: 1.5 }}>
+                  한 종목 비중이 높을수록 그 종목의 변동이 전체 수익률을 좌우합니다.
+                </div>
+              </div>
+            );
+          })()}
+
+          <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fit, minmax(248px, 1fr))", gap: "14px", marginTop: "18px" }}>
+            {[
+              { label: "특성", items: analysis.characteristics, color: "var(--blue)", soft: "var(--blue-soft)" },
+              { label: "강점", items: analysis.strengths, color: "var(--green)", soft: "var(--green-soft)" },
+              { label: "리스크", items: analysis.risks, color: "var(--red)", soft: "rgba(255,32,71,0.12)" },
+              { label: "점검 포인트", items: analysis.suggestions, color: "var(--yellow)", soft: "var(--yellow-soft)" },
+            ].map((cat) => (
+              <div key={cat.label} style={{ background: cat.soft, border: "1px solid var(--frost)", borderRadius: "12px", padding: "16px 18px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "12px" }}>
+                  <span style={{ width: "9px", height: "9px", borderRadius: "3px", background: cat.color, flexShrink: 0 }}></span>
+                  <span style={{ fontSize: "13px", fontWeight: 700, color: cat.color }}>{cat.label}</span>
+                </div>
+                <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "9px", margin: 0, padding: 0 }}>
+                  {cat.items.map((t, i) => (
+                    <li key={i} style={{ fontSize: "13px", lineHeight: 1.55, color: "var(--fg-secondary)", paddingLeft: "15px", position: "relative" }}>
+                      <span style={{ position: "absolute", left: 0, top: "7px", width: "5px", height: "5px", borderRadius: "50%", background: cat.color, opacity: 0.7 }}></span>
+                      {t}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
           </div>
-          <p style={{ marginTop: "14px", fontSize: "11px", color: "var(--fg-muted)" }}>
+
+          <p style={{ marginTop: "16px", fontSize: "11px", color: "var(--fg-muted)" }}>
             정보 제공 목적이며, 투자 권유가 아닙니다.
           </p>
         </section>
