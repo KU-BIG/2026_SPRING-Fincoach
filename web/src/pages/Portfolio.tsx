@@ -189,60 +189,183 @@ function HoldingsForm({
   );
 }
 
-/* ── 유저 포트폴리오 요약 카드 ─────────────────────────────────────────── */
+/* ── 유저 실데이터 대시보드 ─────────────────────────────────────────────
+   로그인 + 종목 저장 시 데모 쇼케이스 대신 이 대시보드를 보여준다.
+   POST /api/portfolio/summary 의 실값(총평가·손익·종목별 비중/수익률/평가액)으로
+   히어로 + KPI 4 + 비중 도넛 + 보유종목 표를 채운다.
+   30일 시계열 차트는 가격 이력 API 부재로 현재 제외(후속 작업). */
 
-function UserSummaryCard({ summary }: { summary: PortfolioSummary }) {
-  const fmt = (n: number) => n.toLocaleString("ko-KR");
-  const pnlClass = summary.pnl_pct >= 0 ? "pos" : "neg";
+const DONUT_PALETTE = [
+  "#FF2047", "#3B9EFF", "#11FF99", "#FFC53D", "#A78BFA",
+  "#FF7E36", "#22D3EE", "#F472B6", "#84CC16", "#FB7185",
+];
+
+function fmtKRW(n: number): string {
+  return Math.round(n).toLocaleString("ko-KR");
+}
+function compactKRW(n: number): string {
+  const a = Math.abs(n);
+  if (a >= 1e8) return (n / 1e8).toFixed(1).replace(/\.0$/, "") + "억";
+  if (a >= 1e4) return Math.round(n / 1e4).toLocaleString("ko-KR") + "만";
+  return Math.round(n).toLocaleString("ko-KR");
+}
+
+function UserPortfolioDashboard({ summary }: { summary: PortfolioSummary }) {
+  const positions = [...summary.positions].sort((a, b) => b.weight - a.weight);
+  const pnlCls = summary.pnl_pct >= 0 ? "pos" : "neg";
+  const sign = (n: number) => (n >= 0 ? "+" : "");
+  const top = positions[0];
+
+  // 도넛 arcs (stroke-dasharray 누적, viewBox 36 · r=15.915 → 둘레 ≈ 100)
+  let offset = 0;
+  const arcs = positions.map((p, i) => {
+    const len = p.weight;
+    const gap = 0.6;
+    const el = (
+      <circle
+        key={p.ticker}
+        cx="18" cy="18" r="15.915" fill="transparent"
+        stroke={DONUT_PALETTE[i % DONUT_PALETTE.length]}
+        strokeWidth="3.6"
+        strokeDasharray={`${Math.max(0, len - gap).toFixed(2)} ${(100 - len + gap).toFixed(2)}`}
+        strokeDashoffset={(-offset).toFixed(2)}
+        transform="rotate(-90 18 18)"
+      />
+    );
+    offset += len;
+    return el;
+  });
+
+  const stats = [
+    { l: "보유 종목", v: `${positions.length}개`, c: "" },
+    { l: "최대 비중", v: top ? `${top.name} ${top.weight}%` : "—", c: "" },
+    { l: "평가 손익", v: `${sign(summary.total_pnl_krw)}${compactKRW(summary.total_pnl_krw)}원`, c: pnlCls },
+    { l: "수익률", v: `${sign(summary.pnl_pct)}${summary.pnl_pct}%`, c: pnlCls },
+  ];
 
   return (
-    <section className="card c-12 reveal" style={{ padding: "28px", marginTop: "14px" }}>
-      <div className="subhead" style={{ fontSize: "17px", marginBottom: "14px" }}>
-        내 포트폴리오 요약
-        <SourceBadge source="live" liveLabel="실시간" demoLabel="" />
-      </div>
-      <div style={{ display: "flex", gap: "32px", flexWrap: "wrap" }}>
-        <div>
-          <div style={{ fontSize: "12px", color: "var(--fg-muted)" }}>총 평가금액</div>
-          <div className="num" style={{ fontSize: "24px", fontWeight: 700 }}>
-            {fmt(summary.total_value_krw)}원
-          </div>
+    <>
+      {/* 히어로 — 실데이터 총평가 + 손익 + 요약 스탯 */}
+      <section className="card c-12 reveal" style={{ marginTop: "14px", padding: "28px" }}>
+        <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "12px", color: "var(--fg-muted)", marginBottom: "10px" }}>
+          내 총 평가금액
+          <SourceBadge source="live" liveLabel="실시간" demoLabel="" />
         </div>
-        <div>
-          <div style={{ fontSize: "12px", color: "var(--fg-muted)" }}>총 손익</div>
-          <div className={`num ${pnlClass}`} style={{ fontSize: "24px", fontWeight: 700 }}>
-            {summary.total_pnl_krw >= 0 ? "+" : ""}{fmt(summary.total_pnl_krw)}원 ({summary.pnl_pct}%)
+        <div className="num" style={{ fontSize: "40px", fontWeight: 800, letterSpacing: "-0.02em", lineHeight: 1.1 }}>
+          {fmtKRW(summary.total_value_krw)}
+          <span style={{ fontSize: "20px", color: "var(--fg-muted)", fontWeight: 600, marginLeft: "4px" }}>원</span>
+        </div>
+        <div className={`num ${pnlCls}`} style={{ fontSize: "16px", fontWeight: 600, marginTop: "8px" }}>
+          {sign(summary.total_pnl_krw)}{fmtKRW(summary.total_pnl_krw)}원 · {sign(summary.pnl_pct)}{summary.pnl_pct}%
+        </div>
+        <div style={{ display: "flex", gap: "30px", flexWrap: "wrap", marginTop: "22px", paddingTop: "20px", borderTop: "1px solid var(--frost-alt)" }}>
+          {stats.map((s) => (
+            <div key={s.l}>
+              <div style={{ fontSize: "11px", color: "var(--fg-muted)", marginBottom: "5px" }}>{s.l}</div>
+              <div className={`num ${s.c}`} style={{ fontSize: "15px", fontWeight: 700 }}>{s.v}</div>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {/* KPI — 실데이터 */}
+      <div className="grid grid-12" style={{ marginTop: "14px" }}>
+        <div className="card kpi c-3 reveal">
+          <div className="lbl">평가금액</div>
+          <div className="val num">
+            {fmtKRW(summary.total_value_krw)}
+            <span style={{ fontSize: "14px", color: "var(--fg-muted)", fontWeight: 500, marginLeft: "2px" }}>원</span>
           </div>
+          <div className="sub">현재 평가액</div>
+        </div>
+        <div className="card kpi c-3 reveal" style={{ transitionDelay: "80ms" }}>
+          <div className="lbl">평가 손익</div>
+          <div className={`val num ${pnlCls}`}>{sign(summary.total_pnl_krw)}{fmtKRW(summary.total_pnl_krw)}원</div>
+          <div className="sub">매수 평단 대비</div>
+        </div>
+        <div className="card kpi c-3 reveal" style={{ transitionDelay: "160ms" }}>
+          <div className="lbl">수익률</div>
+          <div className={`val num ${pnlCls}`}>{sign(summary.pnl_pct)}{summary.pnl_pct}%</div>
+          <div className="sub">전체 가중 수익률</div>
+        </div>
+        <div className="card kpi c-3 reveal" style={{ transitionDelay: "240ms" }}>
+          <div className="lbl">보유 종목</div>
+          <div className="val num">{positions.length}개</div>
+          <div className="sub">{top ? `최대 비중 ${top.name}` : "종목 없음"}</div>
         </div>
       </div>
-      {summary.positions.length > 0 && (
-        <table style={{ width: "100%", maxWidth: "760px", marginTop: "16px", borderCollapse: "collapse" }}>
-          <thead>
-            <tr>
-              <th style={{ textAlign: "left", padding: "6px 8px", fontSize: "13px" }}>종목</th>
-              <th style={{ textAlign: "right", padding: "6px 8px", fontSize: "13px" }}>비중</th>
-              <th style={{ textAlign: "right", padding: "6px 8px", fontSize: "13px" }}>수익률</th>
-              <th style={{ textAlign: "right", padding: "6px 8px", fontSize: "13px" }}>평가금액</th>
-            </tr>
-          </thead>
-          <tbody>
-            {summary.positions.map((p) => (
-              <tr key={p.ticker}>
-                <td style={{ padding: "6px 8px" }}>
-                  <div style={{ fontWeight: 600 }}>{p.name}</div>
-                  <div style={{ fontSize: "11px", color: "var(--fg-muted)" }}>{p.ticker}</div>
-                </td>
-                <td style={{ textAlign: "right", padding: "6px 8px" }}>{p.weight}%</td>
-                <td style={{ textAlign: "right", padding: "6px 8px" }} className={`num ${p.pnl_pct >= 0 ? "pos" : "neg"}`}>
-                  {p.pnl_pct >= 0 ? "+" : ""}{p.pnl_pct}%
-                </td>
-                <td style={{ textAlign: "right", padding: "6px 8px" }}>{fmt(p.current_value_krw)}원</td>
+
+      {/* 비중 도넛 + 보유 종목 표 — 실데이터 */}
+      <div className="grid grid-12" style={{ marginTop: "14px" }}>
+        <section className="card c-5 donut-card reveal">
+          <div className="subhead" style={{ fontSize: "17px" }}>비중 분포</div>
+          <div style={{ fontSize: "12px", color: "var(--fg-muted)", marginTop: "4px" }}>{positions.length}개 종목</div>
+          <div className="donut-wrap">
+            <svg className="donut" viewBox="0 0 36 36">
+              <circle cx="18" cy="18" r="15.915" fill="transparent" stroke="rgba(255,255,255,0.06)" strokeWidth="3.6" />
+              {arcs}
+              <text x="18" y="17" textAnchor="middle" style={{ fontFamily: "Inter", fontSize: "3.5px", fontWeight: 700, fill: "var(--fg-primary)" }}>
+                {positions.length}
+              </text>
+              <text x="18" y="21.2" textAnchor="middle" style={{ fontFamily: "JetBrains Mono", fontSize: "1.7px", fill: "var(--fg-muted)", letterSpacing: "0.08em" }}>
+                STOCKS
+              </text>
+            </svg>
+            <div className="legend">
+              {positions.map((p, i) => (
+                <div className="legend-row" key={p.ticker}>
+                  <span className="swatch" style={{ background: DONUT_PALETTE[i % DONUT_PALETTE.length] }}></span>
+                  {p.name}
+                  <span className="right num">{p.weight}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="card c-7 reveal" style={{ transitionDelay: "100ms" }}>
+          <div className="subhead" style={{ fontSize: "17px" }}>보유 종목</div>
+          <div style={{ fontSize: "12px", color: "var(--fg-muted)", marginTop: "4px" }}>비중 · 수익률 · 평가액</div>
+          <table style={{ width: "100%", marginTop: "16px", borderCollapse: "collapse" }}>
+            <thead>
+              <tr>
+                <th style={{ textAlign: "left", padding: "8px", fontSize: "13px", color: "var(--fg-muted)" }}>종목</th>
+                <th style={{ textAlign: "right", padding: "8px", fontSize: "13px", color: "var(--fg-muted)" }}>비중</th>
+                <th style={{ textAlign: "right", padding: "8px", fontSize: "13px", color: "var(--fg-muted)" }}>수익률</th>
+                <th style={{ textAlign: "right", padding: "8px", fontSize: "13px", color: "var(--fg-muted)" }}>평가액</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      )}
-    </section>
+            </thead>
+            <tbody>
+              {positions.map((p, i) => (
+                <tr key={p.ticker} style={{ borderTop: "1px solid var(--frost-alt)" }}>
+                  <td style={{ padding: "11px 8px" }}>
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span style={{ width: "8px", height: "8px", borderRadius: "2px", background: DONUT_PALETTE[i % DONUT_PALETTE.length], flexShrink: 0 }}></span>
+                      <div>
+                        <div style={{ fontWeight: 600 }}>{p.name}</div>
+                        <div style={{ fontSize: "11px", color: "var(--fg-muted)", fontFamily: "JetBrains Mono" }}>{p.ticker}</div>
+                      </div>
+                    </div>
+                  </td>
+                  <td style={{ textAlign: "right", padding: "11px 8px", verticalAlign: "middle" }}>
+                    <div className="num" style={{ fontWeight: 600 }}>{p.weight}%</div>
+                    <div style={{ height: "3px", background: "var(--bg-elevated-2)", borderRadius: "2px", marginTop: "5px", overflow: "hidden" }}>
+                      <div style={{ height: "100%", width: `${Math.min(100, p.weight)}%`, background: DONUT_PALETTE[i % DONUT_PALETTE.length] }}></div>
+                    </div>
+                  </td>
+                  <td className={`num ${p.pnl_pct >= 0 ? "pos" : "neg"}`} style={{ textAlign: "right", padding: "11px 8px", fontWeight: 600, verticalAlign: "middle" }}>
+                    {p.pnl_pct >= 0 ? "+" : ""}{p.pnl_pct}%
+                  </td>
+                  <td className="num" style={{ textAlign: "right", padding: "11px 8px", verticalAlign: "middle" }}>
+                    {fmtKRW(p.current_value_krw)}원
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </section>
+      </div>
+    </>
   );
 }
 
@@ -503,6 +626,17 @@ export default function Portfolio() {
     };
   }, [showDemo]);
 
+  /* 로그인 후 동적으로 마운트되는 카드(.reveal)는 라우트 진입 시점에 한 번 도는 전역
+     IntersectionObserver가 수집하지 못해 opacity:0 으로 남는다. 실데이터 뷰(showDemo=false)가
+     렌더된 뒤 아직 노출 안 된 .reveal 에 .in 을 직접 부여해 자연스럽게 페이드인시킨다. */
+  useEffect(() => {
+    if (showDemo) return;
+    const id = requestAnimationFrame(() => {
+      document.querySelectorAll<HTMLElement>(".reveal:not(.in)").forEach((el) => el.classList.add("in"));
+    });
+    return () => cancelAnimationFrame(id);
+  }, [showDemo, userSummary, holdingRows]);
+
   return (
     <>
       <div className="page-head reveal">
@@ -519,15 +653,17 @@ export default function Portfolio() {
 
       {/* ── 내 종목 입력 + 실데이터 요약 (로그인 유저) ──────────────────── */}
       {configured && user ? (
-        <div className="grid grid-12">
-          <HoldingsForm
-            rows={holdingRows}
-            setRows={setHoldingRows}
-            onSave={handleSave}
-            saving={saving}
-          />
-          {userSummary && <UserSummaryCard summary={userSummary} />}
-        </div>
+        <>
+          <div className="grid grid-12">
+            <HoldingsForm
+              rows={holdingRows}
+              setRows={setHoldingRows}
+              onSave={handleSave}
+              saving={saving}
+            />
+          </div>
+          {userSummary && <UserPortfolioDashboard summary={userSummary} />}
+        </>
       ) : null}
 
       {/* ── 데모 쇼케이스 (예시) — 실제 포트폴리오 없을 때만 흐릿하게 + 오버레이 ── */}
