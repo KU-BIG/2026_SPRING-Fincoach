@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, useCallback } from "react";
 import { streamChat, type ChatMessage, type DataSource, type HoldingInput } from "../lib/api";
 import SourceBadge from "../components/SourceBadge";
+import LoginGate from "../components/LoginGate";
 import { useAuth } from "../auth/context";
 import { supabase } from "../lib/supabase";
 
@@ -337,6 +338,11 @@ export default function Chat() {
         </span>
       </div>
 
+      <LoginGate
+        label="로그인 필요"
+        title="로그인하고 AI 코치에게 물어보세요"
+        description="내 포트폴리오를 아는 코치가 시장·종목·리스크를 설명해드려요."
+      >
       <div className="chat-layout">
         {/* SIDEBAR */}
         <aside className="card sidebar reveal">
@@ -466,6 +472,7 @@ export default function Chat() {
           </div>
         </section>
       </div>
+      </LoginGate>
     </>
   );
 }

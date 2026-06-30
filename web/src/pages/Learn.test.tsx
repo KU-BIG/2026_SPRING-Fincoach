@@ -2,7 +2,11 @@ import { render, screen, cleanup, fireEvent } from "@testing-library/react";
 import { MemoryRouter } from "react-router-dom";
 import { afterEach, beforeAll, describe, expect, it } from "vitest";
 import Learn from "./Learn";
+import { AuthProvider } from "../auth/AuthProvider";
 
+/* AuthProvider 로 감싼다 — Learn 이 LoginGate(useAuth) 를 쓰기 때문.
+   테스트 환경엔 Supabase env 가 없어 configured=false → gated=false →
+   용어집이 블러/오버레이 없이 그대로 보인다(비게이트 경로 회귀 검증). */
 describe("Learn (verbatim /site/learn.html 이식)", () => {
   beforeAll(() => {
     // jsdom 은 scrollTo 미구현 — TOC 클릭 핸들러가 호출하므로 stub
@@ -12,9 +16,11 @@ describe("Learn (verbatim /site/learn.html 이식)", () => {
 
   it("초기 PER 용어와 면책 문구를 그대로 렌더한다", () => {
     render(
-      <MemoryRouter>
-        <Learn />
-      </MemoryRouter>,
+      <AuthProvider>
+        <MemoryRouter>
+          <Learn />
+        </MemoryRouter>
+      </AuthProvider>,
     );
     expect(screen.getByText("금융 용어")).toBeInTheDocument();
     expect(screen.getByText("관련 종목 · 삼성전자 12.5배")).toBeInTheDocument();
@@ -25,9 +31,11 @@ describe("Learn (verbatim /site/learn.html 이식)", () => {
 
   it("TOC 항목을 클릭하면 본문이 해당 용어로 교체된다", () => {
     const { container } = render(
-      <MemoryRouter>
-        <Learn />
-      </MemoryRouter>,
+      <AuthProvider>
+        <MemoryRouter>
+          <Learn />
+        </MemoryRouter>
+      </AuthProvider>,
     );
     const fxLink = container.querySelector<HTMLAnchorElement>('.toc-list a[data-key="fx"]')!;
     fireEvent.click(fxLink);

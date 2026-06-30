@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import LoginGate from "../components/LoginGate";
 
 /* /site/learn.html <main class="page-pad"> 를 그대로(verbatim) 이식.
    page-head / learn-layout(toc + article) / 용어 본문 / 면책.
@@ -214,6 +215,11 @@ export default function Learn() {
         <div style={{ fontSize: "13px", color: "var(--fg-muted)" }}>총 8개 용어 · 3개 카테고리</div>
       </div>
 
+      <LoginGate
+        label="로그인 필요"
+        title="로그인하고 금융 용어를 확인하세요"
+        description="PER·ROE·반도체 사이클 등 핵심 용어를 내 포트폴리오와 연결해 풀어드려요."
+      >
       <div className="learn-layout">
         <aside className="card toc reveal">
           <h4>목차</h4>
@@ -305,6 +311,7 @@ export default function Learn() {
           </p>
         </main>
       </div>
+      </LoginGate>
     </>
   );
 }
