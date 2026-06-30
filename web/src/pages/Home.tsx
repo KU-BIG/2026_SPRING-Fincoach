@@ -238,7 +238,7 @@ export default function Home() {
               무료로 시작
             </Link>
           )}
-          <Link to="/portfolio" className="btn-frost">
+          <Link to="/portfolio?demo=1" className="btn-frost">
             데모 보기
           </Link>
         </div>

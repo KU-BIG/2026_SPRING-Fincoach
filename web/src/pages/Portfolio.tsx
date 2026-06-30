@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   stocks,
   buildStockRow,
@@ -45,6 +45,60 @@ const DEMO_ANALYSIS: AnalysisView = {
   suggestions: ["반도체 외 섹터 비중 검토", "방어주·배당주 일부 편입", "환율 시나리오 점검"],
 };
 
+/* ── 종목 카탈로그 (자동완성용) ────────────────────────────────────────────
+   한국 + 미국 인기 종목. aka 는 검색용 별칭(영문/한글/티커 변형). 입력칸에
+   타이핑하면 ticker/name/aka 부분일치로 드롭다운을 띄운다. */
+interface StockCatalogItem {
+  ticker: string;
+  name: string;
+  currency: string;
+  aka: string;
+}
+
+const STOCK_CATALOG: StockCatalogItem[] = [
+  { ticker: "005930.KS", name: "삼성전자", currency: "KRW", aka: "samsung 삼전" },
+  { ticker: "000660.KS", name: "SK하이닉스", currency: "KRW", aka: "sk hynix 하이닉스" },
+  { ticker: "035720.KS", name: "카카오", currency: "KRW", aka: "kakao" },
+  { ticker: "035420.KS", name: "NAVER", currency: "KRW", aka: "naver 네이버" },
+  { ticker: "005380.KS", name: "현대차", currency: "KRW", aka: "hyundai 현대자동차" },
+  { ticker: "000270.KS", name: "기아", currency: "KRW", aka: "kia" },
+  { ticker: "373220.KS", name: "LG에너지솔루션", currency: "KRW", aka: "lg energy solution 엘지엔솔" },
+  { ticker: "207940.KS", name: "삼성바이오로직스", currency: "KRW", aka: "samsung biologics 삼바" },
+  { ticker: "068270.KS", name: "셀트리온", currency: "KRW", aka: "celltrion" },
+  { ticker: "105560.KS", name: "KB금융", currency: "KRW", aka: "kb financial 케이비금융" },
+  { ticker: "055550.KS", name: "신한지주", currency: "KRW", aka: "shinhan 신한금융" },
+  { ticker: "005490.KS", name: "POSCO홀딩스", currency: "KRW", aka: "posco 포스코홀딩스" },
+  { ticker: "051910.KS", name: "LG화학", currency: "KRW", aka: "lg chem 엘지화학" },
+  { ticker: "006400.KS", name: "삼성SDI", currency: "KRW", aka: "samsung sdi" },
+  { ticker: "012330.KS", name: "현대모비스", currency: "KRW", aka: "hyundai mobis" },
+  { ticker: "AAPL", name: "Apple", currency: "USD", aka: "애플 apple" },
+  { ticker: "MSFT", name: "Microsoft", currency: "USD", aka: "마이크로소프트 microsoft" },
+  { ticker: "NVDA", name: "NVIDIA", currency: "USD", aka: "엔비디아 nvidia" },
+  { ticker: "GOOGL", name: "Alphabet", currency: "USD", aka: "구글 google alphabet" },
+  { ticker: "AMZN", name: "Amazon", currency: "USD", aka: "아마존 amazon" },
+  { ticker: "META", name: "Meta", currency: "USD", aka: "메타 meta facebook 페이스북" },
+  { ticker: "TSLA", name: "Tesla", currency: "USD", aka: "테슬라 tesla" },
+  { ticker: "AVGO", name: "Broadcom", currency: "USD", aka: "브로드컴 broadcom" },
+  { ticker: "AMD", name: "AMD", currency: "USD", aka: "에이엠디 amd" },
+  { ticker: "NFLX", name: "Netflix", currency: "USD", aka: "넷플릭스 netflix" },
+  { ticker: "PLTR", name: "Palantir", currency: "USD", aka: "팔란티어 palantir" },
+  { ticker: "COIN", name: "Coinbase", currency: "USD", aka: "코인베이스 coinbase" },
+  { ticker: "CPNG", name: "Coupang", currency: "USD", aka: "쿠팡 coupang" },
+  { ticker: "TSM", name: "TSMC", currency: "USD", aka: "tsmc 티에스엠씨" },
+  { ticker: "QCOM", name: "Qualcomm", currency: "USD", aka: "퀄컴 qualcomm" },
+];
+
+function searchCatalog(query: string, limit = 6): StockCatalogItem[] {
+  const q = query.trim().toLowerCase();
+  if (!q) return [];
+  return STOCK_CATALOG.filter(
+    (s) =>
+      s.ticker.toLowerCase().includes(q) ||
+      s.name.toLowerCase().includes(q) ||
+      s.aka.toLowerCase().includes(q),
+  ).slice(0, limit);
+}
+
 /* ── helpers ──────────────────────────────────────────────────────────────── */
 
 function rowsToInputs(rows: HoldingRow[]): HoldingInput[] {
@@ -88,8 +142,92 @@ function HoldingsForm({
   const addRow = () => setRows((prev) => [...prev, { ...EMPTY_ROW }]);
   const removeRow = (i: number) => setRows((prev) => prev.filter((_, j) => j !== i));
 
+  /* 자동완성 드롭다운 상태: 어느 행/어느 칼럼(ticker|name)에서 열렸는지 + 검색어 */
+  const [openAt, setOpenAt] = useState<{ row: number; field: "ticker" | "name" } | null>(null);
+  const wrapRef = useRef<HTMLElement | null>(null);
+
+  /* 바깥 클릭 시 드롭다운 닫기 */
+  useEffect(() => {
+    if (!openAt) return;
+    const onDocClick = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) setOpenAt(null);
+    };
+    document.addEventListener("mousedown", onDocClick);
+    return () => document.removeEventListener("mousedown", onDocClick);
+  }, [openAt]);
+
+  const pick = (i: number, item: StockCatalogItem) => {
+    setRows((prev) =>
+      prev.map((r, j) =>
+        j === i ? { ...r, ticker: item.ticker, name: item.name, currency: item.currency } : r,
+      ),
+    );
+    setOpenAt(null);
+  };
+
+  const matches =
+    openAt != null ? searchCatalog(rows[openAt.row]?.[openAt.field] ?? "") : [];
+
+  const Dropdown = ({ i }: { i: number }) =>
+    openAt && openAt.row === i && matches.length > 0 ? (
+      <div
+        role="listbox"
+        style={{
+          position: "absolute",
+          top: "100%",
+          left: 0,
+          right: 0,
+          zIndex: 30,
+          marginTop: "4px",
+          background: "var(--bg-elevated)",
+          border: "1px solid var(--frost)",
+          borderRadius: "8px",
+          boxShadow: "0 14px 40px rgba(0,0,0,0.45)",
+          overflow: "hidden",
+        }}
+      >
+        {matches.map((item) => (
+          <button
+            type="button"
+            key={item.ticker}
+            role="option"
+            aria-selected={false}
+            onMouseDown={(e) => {
+              // mousedown 으로 처리: input blur 전에 선택을 확정해 드롭다운이 먼저 닫히는 것을 방지
+              e.preventDefault();
+              pick(i, item);
+            }}
+            style={{
+              display: "flex",
+              alignItems: "baseline",
+              justifyContent: "space-between",
+              gap: "10px",
+              width: "100%",
+              padding: "9px 12px",
+              background: "transparent",
+              border: "none",
+              borderBottom: "1px solid var(--frost-alt)",
+              color: "var(--fg-primary)",
+              textAlign: "left",
+              fontSize: "13px",
+            }}
+            onMouseEnter={(e) => (e.currentTarget.style.background = "var(--bg-elevated-2)")}
+            onMouseLeave={(e) => (e.currentTarget.style.background = "transparent")}
+          >
+            <span style={{ fontWeight: 600 }}>{item.name}</span>
+            <span
+              className="num"
+              style={{ fontSize: "11px", color: "var(--fg-muted)", fontFamily: "JetBrains Mono" }}
+            >
+              {item.ticker}
+            </span>
+          </button>
+        ))}
+      </div>
+    ) : null;
+
   return (
-    <section className="card c-12 reveal" style={{ padding: "28px", marginTop: "14px" }}>
+    <section ref={wrapRef} className="card c-12 reveal" style={{ padding: "28px", marginTop: "14px" }}>
       <div className="subhead" style={{ fontSize: "17px", marginBottom: "14px" }}>
         내 종목 입력
       </div>
@@ -110,23 +248,35 @@ function HoldingsForm({
         <tbody>
           {rows.map((r, i) => (
             <tr key={i}>
-              <td style={{ padding: "4px 8px" }}>
+              <td style={{ padding: "4px 8px", position: "relative" }}>
                 <input
                   type="text"
-                  placeholder="005930.KS"
+                  placeholder="종목명·티커 검색 (예: 삼성, AAPL)"
                   value={r.ticker}
-                  onChange={(e) => update(i, "ticker", e.target.value)}
+                  autoComplete="off"
+                  onChange={(e) => {
+                    update(i, "ticker", e.target.value);
+                    setOpenAt({ row: i, field: "ticker" });
+                  }}
+                  onFocus={() => setOpenAt({ row: i, field: "ticker" })}
                   style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--frost)", background: "var(--bg-elevated-2)", color: "var(--fg-primary)" }}
                 />
+                {openAt?.field === "ticker" && <Dropdown i={i} />}
               </td>
-              <td style={{ padding: "4px 8px" }}>
+              <td style={{ padding: "4px 8px", position: "relative" }}>
                 <input
                   type="text"
                   placeholder="삼성전자"
                   value={r.name}
-                  onChange={(e) => update(i, "name", e.target.value)}
+                  autoComplete="off"
+                  onChange={(e) => {
+                    update(i, "name", e.target.value);
+                    setOpenAt({ row: i, field: "name" });
+                  }}
+                  onFocus={() => setOpenAt({ row: i, field: "name" })}
                   style={{ width: "100%", padding: "6px 8px", borderRadius: "6px", border: "1px solid var(--frost)", background: "var(--bg-elevated-2)", color: "var(--fg-primary)" }}
                 />
+                {openAt?.field === "name" && <Dropdown i={i} />}
               </td>
               <td style={{ padding: "4px 8px" }}>
                 <input
@@ -383,6 +533,12 @@ export default function Portfolio() {
   const [analysis, setAnalysis] = useState<AnalysisView>(DEMO_ANALYSIS);
   const [analysisSource, setAnalysisSource] = useState<DataSource>("demo");
 
+  /* 데모 모드: 홈 "데모 보기"(/portfolio?demo=1)에서 진입. 로그인 여부와 무관하게
+     예시 포트폴리오를 블러 없이 탐색하게 한다(로그인 폼/오버레이/게이트 블러 모두 비활성). */
+  const [searchParams] = useSearchParams();
+  const demoMode = searchParams.get("demo") === "1";
+  const navigate = useNavigate();
+
   /* ── 유저 holdings 상태 ──────────────────────────────────────────────── */
   const { user, configured, openAuth } = useAuth();
   const [holdingRows, setHoldingRows] = useState<HoldingRow[]>([{ ...EMPTY_ROW }]);
@@ -393,6 +549,8 @@ export default function Portfolio() {
   /* 실제 보유종목 보유 여부 → 데모 쇼케이스 게이트 */
   const hasRealPortfolio = !!user && holdingsLoaded && rowsToInputs(holdingRows).length > 0;
   const showDemo = !hasRealPortfolio;
+  /* 쇼케이스(예시 차트/표/도넛) 표시 여부 — 데모 모드면 로그인·실데이터 여부와 무관하게 무조건 표시 */
+  const showShowcase = showDemo || demoMode;
 
   /* 예시를 잠깐(GATE_DELAY) 선명하게 보여준 뒤 블러 + 로그인 오버레이를 부드럽게 띄운다. */
   const GATE_DELAY_MS = 7000;
@@ -550,7 +708,7 @@ export default function Portfolio() {
 
   useEffect(() => {
     // 데모 쇼케이스가 렌더된 경우에만(예시 표시) 차트/표를 주입한다.
-    if (!showDemo) return;
+    if (!showShowcase) return;
     // StrictMode 의 dev 이중 마운트에서도 출력은 동일하지만, 클릭 핸들러 중복 바인딩과
     // 차트 hover 리스너 누적을 막기 위해 마운트당 1회만 구성한다.
     const stockTable = document.getElementById("stockTable");
@@ -636,7 +794,7 @@ export default function Portfolio() {
     return () => {
       rowHandlers.forEach(({ el, fn }) => el.removeEventListener("click", fn));
     };
-  }, [showDemo]);
+  }, [showShowcase]);
 
   /* 로그인 후 동적으로 마운트되는 카드(.reveal)는 라우트 진입 시점에 한 번 도는 전역
      IntersectionObserver가 수집하지 못해 opacity:0 으로 남는다. 실데이터 뷰(showDemo=false)가
@@ -665,8 +823,53 @@ export default function Portfolio() {
         </div>
       </div>
 
-      {/* ── 내 종목 입력 + 실데이터 요약 (로그인 유저) ──────────────────── */}
-      {configured && user ? (
+      {/* ── 데모 모드 배너 (예시 포트폴리오 탐색 중) ──────────────────────── */}
+      {demoMode && (
+        <div
+          className="reveal in"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            flexWrap: "wrap",
+            gap: "12px",
+            marginTop: "14px",
+            padding: "14px 18px",
+            background: "var(--bg-elevated)",
+            border: "1px solid var(--frost)",
+            borderRadius: "12px",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", fontSize: "14px" }}>
+            <span
+              style={{
+                width: "8px",
+                height: "8px",
+                borderRadius: "999px",
+                background: "var(--red)",
+                boxShadow: "0 0 8px rgba(255,32,71,0.7)",
+                flexShrink: 0,
+              }}
+            />
+            <span style={{ fontWeight: 600, color: "var(--fg-primary)" }}>데모 모드</span>
+            <span style={{ color: "var(--fg-muted)" }}>·</span>
+            <span style={{ color: "var(--fg-secondary)" }}>예시 포트폴리오예요</span>
+          </div>
+          <button
+            className="toggle-btn active"
+            onClick={() => {
+              if (configured) openAuth("signup");
+              else navigate("/portfolio");
+            }}
+            style={{ fontWeight: 600 }}
+          >
+            내 포트폴리오 만들기
+          </button>
+        </div>
+      )}
+
+      {/* ── 내 종목 입력 + 실데이터 요약 (로그인 유저) — 데모 모드에선 숨김 ──── */}
+      {configured && user && !demoMode ? (
         <>
           <div className="grid grid-12">
             <HoldingsForm
@@ -680,16 +883,17 @@ export default function Portfolio() {
         </>
       ) : null}
 
-      {/* ── 데모 쇼케이스 (예시) — 실제 포트폴리오 없을 때만 흐릿하게 + 오버레이 ── */}
-      {showDemo ? (
+      {/* ── 데모 쇼케이스 (예시) — 실제 포트폴리오 없을 때만 흐릿하게 + 오버레이.
+           데모 모드(?demo=1)면 블러/오버레이 없이 그대로 탐색하게 한다. ── */}
+      {showShowcase ? (
         <div style={{ position: "relative", marginTop: "14px" }}>
           <div
-            aria-hidden={gateActive}
+            aria-hidden={showDemo && gateActive && !demoMode}
             style={{
-              filter: gateActive ? "blur(7px)" : "none",
-              opacity: gateActive ? 0.5 : 1,
-              pointerEvents: gateActive ? "none" : "auto",
-              userSelect: gateActive ? "none" : "auto",
+              filter: showDemo && gateActive && !demoMode ? "blur(7px)" : "none",
+              opacity: showDemo && gateActive && !demoMode ? 0.5 : 1,
+              pointerEvents: showDemo && gateActive && !demoMode ? "none" : "auto",
+              userSelect: showDemo && gateActive && !demoMode ? "none" : "auto",
               transition: "filter 0.6s ease, opacity 0.6s ease",
             }}
           >
@@ -904,7 +1108,8 @@ export default function Portfolio() {
             </div>
           </div>
 
-          {/* 예시 오버레이 (로그인 / 입력 유도) — 잠깐 본 뒤 페이드인 */}
+          {/* 예시 오버레이 (로그인 / 입력 유도) — 잠깐 본 뒤 페이드인. 데모 모드면 렌더 안 함 */}
+          {!demoMode && (
           <div
             style={{
               position: "absolute",
@@ -978,16 +1183,17 @@ export default function Portfolio() {
               )}
             </div>
           </div>
+          )}
         </div>
       ) : null}
 
-      {/* AI 분석 — 데모(예시 미리보기)에선 쇼케이스와 함께 블러, 로그인하면 선명 */}
+      {/* AI 분석 — 데모(예시 미리보기)에선 쇼케이스와 함께 블러, 데모 모드/로그인하면 선명 */}
       <div
-        aria-hidden={showDemo && gateActive}
+        aria-hidden={showDemo && gateActive && !demoMode}
         style={{
-          filter: showDemo && gateActive ? "blur(7px)" : "none",
-          opacity: showDemo && gateActive ? 0.5 : 1,
-          pointerEvents: showDemo && gateActive ? "none" : "auto",
+          filter: showDemo && gateActive && !demoMode ? "blur(7px)" : "none",
+          opacity: showDemo && gateActive && !demoMode ? 0.5 : 1,
+          pointerEvents: showDemo && gateActive && !demoMode ? "none" : "auto",
           transition: "filter 0.6s ease, opacity 0.6s ease",
         }}
       >
