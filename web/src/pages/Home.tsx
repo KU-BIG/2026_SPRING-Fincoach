@@ -173,7 +173,7 @@ export default function Home() {
             return;
           }
           if (inView && !running) {
-            timer = window.setTimeout(cycle, 450);
+            timer = window.setTimeout(cycle, 300);
           } else if (!inView) {
             if (timer) {
               clearTimeout(timer);
@@ -183,7 +183,10 @@ export default function Home() {
           }
         });
       },
-      { threshold: 0.3 },
+      // Lower threshold + a small bottom rootMargin so the type-in reliably
+      // fires while the bubble is scrolling into view (the previous 0.3 could be
+      // skipped on a fast scroll-past, which read as "the typing disappeared").
+      { threshold: 0.2, rootMargin: "0px 0px -10% 0px" },
     );
     io.observe(bubble);
     return () => {

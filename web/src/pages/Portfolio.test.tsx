@@ -25,22 +25,28 @@ function Wrapper({ children }: { children: ReactNode }) {
   );
 }
 
-/* 데모 모드(?demo=1) + 로그인 유저: 폼은 숨고 예시 쇼케이스는 블러 없이 보여야 한다 */
-function DemoLoggedInWrapper({ children }: { children: ReactNode }) {
-  const loggedIn: AuthContextValue = {
+/* 데모 모드(?demo=1) 방문자(비로그인): 배너를 보이고 입력 폼은 숨고 예시 쇼케이스는
+   블러 없이 보여야 한다. 로그인 유저는 데모를 무시하고 실콘텐츠를 보므로(useDemoMode)
+   데모 탐색 경로는 비로그인 방문자가 정확한 시나리오다. */
+function DemoVisitorWrapper({ children }: { children: ReactNode }) {
+  const visitor: AuthContextValue = {
     ...mockAuth,
     configured: true,
-    user: { id: "u1" } as AuthContextValue["user"],
+    user: null,
   };
   return (
-    <AuthContext.Provider value={loggedIn}>
+    <AuthContext.Provider value={visitor}>
       <MemoryRouter initialEntries={["/portfolio?demo=1"]}>{children}</MemoryRouter>
     </AuthContext.Provider>
   );
 }
 
 describe("Portfolio (verbatim /site/portfolio.html 이식)", () => {
-  afterEach(() => cleanup());
+  afterEach(() => {
+    cleanup();
+    // useDemoMode persists the demo flag in sessionStorage; clear between tests
+    window.sessionStorage.clear();
+  });
 
   it("page-head·KPI 카피와 면책 문구를 그대로 렌더한다", () => {
     render(<Portfolio />, { wrapper: Wrapper });
@@ -77,7 +83,7 @@ describe("Portfolio (verbatim /site/portfolio.html 이식)", () => {
   });
 
   it("데모 모드(?demo=1)에서는 배너를 보이고 로그인 폼을 숨기며 쇼케이스를 블러 없이 렌더한다", () => {
-    const { container } = render(<Portfolio />, { wrapper: DemoLoggedInWrapper });
+    const { container } = render(<Portfolio />, { wrapper: DemoVisitorWrapper });
     // 데모 배너
     expect(screen.getByText("데모 모드")).toBeInTheDocument();
     expect(screen.getByText("내 포트폴리오 만들기")).toBeInTheDocument();

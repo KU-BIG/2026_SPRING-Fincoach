@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Link, useNavigate, useSearchParams } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   stocks,
   buildStockRow,
@@ -22,6 +22,7 @@ import {
   type PortfolioSummary,
 } from "../lib/api";
 import { useAuth } from "../auth/context";
+import { useDemoMode, DEMO_STORAGE_KEY } from "../lib/demo";
 import { supabase } from "../lib/supabase";
 import SourceBadge from "../components/SourceBadge";
 
@@ -533,10 +534,11 @@ export default function Portfolio() {
   const [analysis, setAnalysis] = useState<AnalysisView>(DEMO_ANALYSIS);
   const [analysisSource, setAnalysisSource] = useState<DataSource>("demo");
 
-  /* 데모 모드: 홈 "데모 보기"(/portfolio?demo=1)에서 진입. 로그인 여부와 무관하게
-     예시 포트폴리오를 블러 없이 탐색하게 한다(로그인 폼/오버레이/게이트 블러 모두 비활성). */
-  const [searchParams] = useSearchParams();
-  const demoMode = searchParams.get("demo") === "1";
+  /* 데모 모드: 홈 "데모 보기"(/portfolio?demo=1)에서 진입. 공유 useDemoMode 훅을 써서
+     ?demo=1 또는 sessionStorage 플래그가 있으면 true가 된다(페이지 이동해도 유지되어
+     /chat·/learn 도 데모로 탐색). 로그인하면 데모는 무시되고 플래그도 제거된다.
+     데모 모드에서는 예시 포트폴리오를 블러 없이 탐색하게 한다(폼/오버레이/게이트 블러 비활성). */
+  const demoMode = useDemoMode();
   const navigate = useNavigate();
 
   /* ── 유저 holdings 상태 ──────────────────────────────────────────────── */
@@ -858,6 +860,8 @@ export default function Portfolio() {
           <button
             className="toggle-btn active"
             onClick={() => {
+              // Leaving demo to build a real portfolio — drop the demo flag.
+              window.sessionStorage.removeItem(DEMO_STORAGE_KEY);
               if (configured) openAuth("signup");
               else navigate("/portfolio");
             }}
@@ -1115,47 +1119,48 @@ export default function Portfolio() {
               position: "absolute",
               inset: 0,
               display: "flex",
-              alignItems: "center",
+              alignItems: "flex-start",
               justifyContent: "center",
-              padding: "20px",
+              padding: "90px 20px 20px",
+              background: gateActive ? "rgba(0,0,0,0.45)" : "transparent",
               opacity: gateActive ? 1 : 0,
               pointerEvents: gateActive ? "auto" : "none",
-              transition: "opacity 0.5s ease",
+              transition: "opacity 0.5s ease, background 0.5s ease",
             }}
           >
             <div
               style={{
-                maxWidth: "440px",
+                maxWidth: "540px",
                 width: "100%",
                 textAlign: "center",
                 background: "var(--bg-elevated)",
                 border: "1px solid var(--frost)",
-                borderRadius: "16px",
-                padding: "30px 26px",
-                boxShadow: "0 18px 50px rgba(0,0,0,0.45)",
+                borderRadius: "18px",
+                padding: "40px 36px",
+                boxShadow: "0 24px 60px rgba(0,0,0,0.55)",
               }}
             >
               <div
                 style={{
-                  fontSize: "11px",
+                  fontSize: "12px",
                   letterSpacing: "0.1em",
                   textTransform: "uppercase",
-                  color: "var(--blue)",
-                  fontWeight: 600,
-                  marginBottom: "12px",
+                  color: "var(--red)",
+                  fontWeight: 700,
+                  marginBottom: "14px",
                 }}
               >
                 예시 미리보기
               </div>
-              <h3 style={{ fontSize: "19px", margin: "0 0 10px", lineHeight: 1.4 }}>
+              <h3 style={{ fontSize: "24px", margin: "0 0 12px", lineHeight: 1.35 }}>
                 {user ? "내 종목을 입력하면 실제 분석을 봐요" : "로그인하고 내 포트폴리오를 만들어보세요"}
               </h3>
               <p
                 style={{
-                  fontSize: "13px",
-                  color: "var(--fg-muted)",
+                  fontSize: "15px",
+                  color: "var(--fg-secondary)",
                   lineHeight: 1.7,
-                  margin: "0 0 18px",
+                  margin: "0 0 22px",
                 }}
               >
                 {user
@@ -1166,7 +1171,7 @@ export default function Portfolio() {
                 <button
                   className="toggle-btn active"
                   onClick={() => openAuth("login")}
-                  style={{ padding: "11px 22px", fontSize: "14px" }}
+                  style={{ padding: "13px 30px", fontSize: "15px" }}
                 >
                   로그인하고 시작하기
                 </button>
@@ -1176,7 +1181,7 @@ export default function Portfolio() {
                   onClick={() =>
                     document.querySelector(".holdings-table")?.scrollIntoView({ behavior: "smooth", block: "center" })
                   }
-                  style={{ padding: "11px 22px", fontSize: "14px" }}
+                  style={{ padding: "13px 30px", fontSize: "15px" }}
                 >
                   종목 입력하러 가기
                 </button>

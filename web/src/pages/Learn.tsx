@@ -215,13 +215,19 @@ export default function Learn() {
         <div style={{ fontSize: "13px", color: "var(--fg-muted)" }}>총 8개 용어 · 3개 카테고리</div>
       </div>
 
+      {/* Intro reveal: 헤더(0) → 목차(80ms) → 본문 카드(160ms) 순차 진입.
+         홈과 같은 reveal 시스템(.reveal + IntersectionObserver → .in)을 재사용하고
+         transitionDelay 로 Corporate stagger(~80ms)를 준다. 본문(#article)은 TOC 클릭 시
+         innerHTML 이 교체되므로 reveal 은 카드 컨테이너(.article) 레벨에만 둔다 —
+         교체 후에도 카드는 이미 .in 상태라 깜빡임이 없다. prefers-reduced-motion 자동 존중. */}
+
       <LoginGate
         label="로그인 필요"
         title="로그인하고 금융 용어를 확인하세요"
         description="PER·ROE·반도체 사이클 등 핵심 용어를 내 포트폴리오와 연결해 풀어드려요."
       >
       <div className="learn-layout">
-        <aside className="card toc reveal">
+        <aside className="card toc reveal" style={{ transitionDelay: "80ms" }}>
           <h4>목차</h4>
           <div className="toc-section">
             <h5>종목 분석</h5>
@@ -266,7 +272,7 @@ export default function Learn() {
 
         <main
           className="card article reveal"
-          style={{ transitionDelay: "100ms" }}
+          style={{ transitionDelay: "160ms" }}
           id="article"
           ref={articleRef}
         >

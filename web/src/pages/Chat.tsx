@@ -338,6 +338,13 @@ export default function Chat() {
         </span>
       </div>
 
+      {/* Intro reveal: 헤더(0) → 사이드바(80ms) → 채팅 본문 카드(160ms) 순차 진입.
+         메시지 영역과 입력바는 chat-main 카드 안에 있어 카드가 진입할 때 함께 등장한다
+         (입력바를 별도 .reveal 로 두면 fold 아래라 .in 이 안 붙어 보이지 않는 문제 → 카드 단위로).
+         홈과 동일한 Corporate ease-out(cubic-bezier(0.2,0,0.1,1)) reveal 시스템을 재사용하고
+         transitionDelay 로 stagger(~80ms)를 준다. prefers-reduced-motion 은 site.css 의
+         reveal 규칙이 transform 을 끄고 짧은 opacity 만 남겨 자동 존중된다. */}
+
       <LoginGate
         label="로그인 필요"
         title="로그인하고 AI 코치에게 물어보세요"
@@ -345,7 +352,7 @@ export default function Chat() {
       >
       <div className="chat-layout">
         {/* SIDEBAR */}
-        <aside className="card sidebar reveal">
+        <aside className="card sidebar reveal" style={{ transitionDelay: "80ms" }}>
           <button className="new-chat" onClick={() => startNewConversation()}>
             + 새 대화
           </button>
@@ -407,7 +414,7 @@ export default function Chat() {
         </aside>
 
         {/* MAIN CHAT */}
-        <section className="card chat-main reveal" style={{ transitionDelay: "100ms" }}>
+        <section className="card chat-main reveal" style={{ transitionDelay: "160ms" }}>
           <div className="chat-top">
             <div className="info">
               <div className="av">FC</div>

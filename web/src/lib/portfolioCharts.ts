@@ -255,7 +255,7 @@ export function buildPnlCombo(): string {
         <svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" style="width:100%; height:${H}px;">
           <line x1="${pad}" x2="${W - pad}" y1="${H * 0.55}" y2="${H * 0.55}" stroke="rgba(255,255,255,0.10)" stroke-width="1"/>
           ${bars}
-          <path d="${cumPath}" fill="none" stroke="#F04452" stroke-width="1.8"/>
+          <path class="mini-draw" pathLength="1" d="${cumPath}" fill="none" stroke="#F04452" stroke-width="1.8"/>
           <circle cx="${endX}" cy="${endY}" r="3" fill="#F04452"/>
           <circle cx="${endX}" cy="${endY}" r="6" fill="#F04452" opacity="0.28"/>
         </svg>
@@ -303,7 +303,7 @@ export function buildRetGauge(): string {
             </linearGradient>
           </defs>
           <path d="${bgPath}" fill="none" stroke="rgba(255,255,255,0.08)" stroke-width="6" stroke-linecap="round"/>
-          <path d="${valPath}" fill="none" stroke="url(#gaugeG)" stroke-width="6" stroke-linecap="round"/>
+          <path class="mini-draw" pathLength="1" d="${valPath}" fill="none" stroke="url(#gaugeG)" stroke-width="6" stroke-linecap="round"/>
           <line x1="${bx.toFixed(1)}" y1="${(by - 7).toFixed(1)}" x2="${bx.toFixed(1)}" y2="${(by + 4).toFixed(1)}" stroke="rgba(255,255,255,0.6)" stroke-width="1.4" stroke-dasharray="2 2"/>
           <text x="${bx.toFixed(1)}" y="${(by - 10).toFixed(1)}" text-anchor="middle" style="font-family: 'JetBrains Mono'; font-size: 8px; fill: rgba(255,255,255,0.5);">KOSPI</text>
           <text x="${pt(valToAngle(minR))[0].toFixed(1)}" y="${(cy + 12).toFixed(1)}" text-anchor="middle" style="font-family: 'JetBrains Mono'; font-size: 8px; fill: var(--fg-muted);">${minR}%</text>
@@ -362,7 +362,7 @@ export function buildDonut(): { donut: string; legend: string } {
   const arcs = stocks.map((s) => {
     const len = s.weight;
     const gap = 0.4;
-    const arc = `<circle cx="18" cy="18" r="15.915" fill="transparent" stroke="${palette[s.brand]}" stroke-width="3.6" stroke-dasharray="${(len - gap).toFixed(2)} ${(C - len + gap).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}" transform="rotate(-90 18 18)"/>`;
+    const arc = `<circle class="donut-arc" cx="18" cy="18" r="15.915" fill="transparent" stroke="${palette[s.brand]}" stroke-width="3.6" stroke-dasharray="${(len - gap).toFixed(2)} ${(C - len + gap).toFixed(2)}" stroke-dashoffset="${(-offset).toFixed(2)}" transform="rotate(-90 18 18)"/>`;
     offset += len;
     return arc;
   });
@@ -522,7 +522,7 @@ export function buildChart(host: ChartHost, opts: ChartOpts): void {
             .join("")}
           ${showBench ? `<path class="chart-bench" d="${benchPath}" />` : ""}
           <path d="${areaPath}" fill="url(#${gid})" />
-          <path class="chart-line" d="${linePath}" style="stroke:${lineColor === "var(--green)" ? "#F04452" : lineColor};" />
+          <path class="chart-line chart-draw" pathLength="1" d="${linePath}" style="stroke:${lineColor === "var(--green)" ? "#F04452" : lineColor};" />
           ${
             showVolume
               ? `

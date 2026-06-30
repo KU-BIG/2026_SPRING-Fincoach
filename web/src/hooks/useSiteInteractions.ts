@@ -72,11 +72,22 @@ export function useSiteInteractions(deps: ReadonlyArray<unknown> = []) {
                 try {
                   const L = p.getTotalLength();
                   if (!L) return;
+                  // Commit the hidden (fully offset) state WITHOUT a transition first.
+                  // The CSS rule `.in svg .spark-line { stroke-dashoffset: 0 }` reveals
+                  // the line as soon as an ancestor .reveal gains .in (which happens on
+                  // the first frame for above-the-fold charts). If we set the transition
+                  // and the L offset in the same block, the jump 0 -> L itself animates
+                  // and the follow-up -> 0 cancels it, so no visible draw-in (the home
+                  // regression). Disabling the transition + forcing a reflow pins the
+                  // hidden state, then we re-enable the transition and draw to 0.
+                  p.style.transition = "none";
                   p.style.strokeDasharray = String(L);
                   p.style.strokeDashoffset = String(L);
-                  p.style.transition = `stroke-dashoffset 1100ms cubic-bezier(0.2,0,0.1,1) ${idx * 50}ms`;
+                  // force reflow so offset=L is flushed before the transition is armed
+                  void p.getBoundingClientRect();
                   requestAnimationFrame(() =>
                     requestAnimationFrame(() => {
+                      p.style.transition = `stroke-dashoffset 1100ms cubic-bezier(0.2,0,0.1,1) ${idx * 50}ms`;
                       p.style.strokeDashoffset = "0";
                     }),
                   );

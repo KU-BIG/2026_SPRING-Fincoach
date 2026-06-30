@@ -372,8 +372,52 @@ tbody tr.expand-tr td { padding: 0; border-bottom: none; }
 .legend .swatch { transition: transform 200ms cubic-bezier(0.4,1.4,0.6,1), box-shadow 200ms; }
 .legend-row:hover .swatch { transform: scale(1.18); }
 
+/* === 차트 인트로 애니메이션 (첫 등장 1회) ===
+   Motion personality: Corporate (토스 결) — 스내피 ease-out cubic-bezier(0.2,0,0,1),
+   오버슈트 0. UI 마이크로 200-400ms, 차트 draw-in 은 600-900ms. CSS animation 이라
+   요소가 DOM 에 주입될 때(첫 렌더) 1회만 돌고 끝난다. 데모/실사용 동일(같은 빌더).
+
+   라인차트 / KPI 미니 라인 — stroke-dashoffset draw-in.
+   pathLength="1" 로 경로 길이를 1 로 정규화해서 실제 길이와 무관하게 일관 draw-in. */
+.chart-draw { animation: chartDraw 1300ms cubic-bezier(0.2,0,0,1) both; }
+.mini-draw { animation: chartDraw 1000ms cubic-bezier(0.2,0,0,1) both; }
+@keyframes chartDraw {
+  from { stroke-dasharray: 1; stroke-dashoffset: 1; }
+  to { stroke-dasharray: 1; stroke-dashoffset: 0; }
+}
+
+/* 비중 도넛 — arc 가 시계방향으로 그려지듯 회전 reveal + 페이드. arc 별 dashoffset 은
+   그대로 두고(누적 비중), SVG 전체를 -90deg 에서 제자리로 풀어 "그려지는" 인상을 준다. */
+.donut { animation: donutReveal 1200ms cubic-bezier(0.2,0,0,1) both; transform-origin: 50% 50%; }
+@keyframes donutReveal {
+  from { transform: rotate(-90deg) scale(0.94); opacity: 0; }
+  60% { opacity: 1; }
+  to { transform: rotate(0deg) scale(1); opacity: 1; }
+}
+
+/* 스파크바 — 바닥에서 차례로 grow. 마지막 막대의 상시 barPulse 와 충돌 없이 1회 grow. */
+.sparkbars .bar { animation: barGrow 560ms cubic-bezier(0.2,0,0,1) both; transform-origin: bottom center; }
+.sparkbars .bar:nth-child(1) { animation-delay: 0ms; }
+.sparkbars .bar:nth-child(2) { animation-delay: 70ms; }
+.sparkbars .bar:nth-child(3) { animation-delay: 140ms; }
+.sparkbars .bar:nth-child(4) { animation-delay: 210ms; }
+.sparkbars .bar:nth-child(5) { animation-delay: 280ms; }
+.sparkbars .bar:nth-child(6) { animation-delay: 350ms; }
+.sparkbars .bar:nth-child(7) { animation-delay: 420ms; }
+@keyframes barGrow {
+  from { transform: scaleY(0); opacity: 0; }
+  to { transform: scaleY(1); opacity: 1; }
+}
+/* 마지막 막대는 grow 가 끝난 뒤 상시 pulse 로 자연 전환 (grow 280ms 후 시작) */
+.sparkbars .bar:last-child {
+  animation: barGrow 560ms cubic-bezier(0.2,0,0,1) 420ms both,
+             barPulse 3.4s ease-in-out 1000ms infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .kpi, .kpi:hover, .stock-tr, .stock-tr.open,
-  .sparkbars .bar:last-child { animation: none; transform: none; transition: none; }
+  .sparkbars .bar, .sparkbars .bar:last-child { animation: none; transform: none; transition: none; }
   .expand-panel.show .expand-stat { animation: none; opacity: 1; transform: none; }
+  .chart-draw, .mini-draw { animation: none; stroke-dasharray: none; stroke-dashoffset: 0; }
+  .donut { animation: none; transform: none; opacity: 1; }
 }
