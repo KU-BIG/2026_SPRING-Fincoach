@@ -16,7 +16,7 @@ export default function Header() {
             <img
               src="/logo.png"
               alt="FinCoach"
-              style={{ height: "22px", width: "auto", display: "block" }}
+              style={{ height: "30px", width: "auto", display: "block" }}
             />
           </NavLink>
           <nav className="menu">

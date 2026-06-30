@@ -145,20 +145,21 @@ nav.menu a {
 }
 nav.menu a:hover { color: var(--fg-primary); background: rgba(255,255,255,0.04); }
 nav.menu a.active { color: var(--fg-primary); background: rgba(255,255,255,0.06); }
-.nav-right { display: flex; align-items: center; gap: 6px; }
+.nav-right { display: flex; align-items: center; gap: 10px; }
+/* 시작하기: 브랜드 빨강 솔리드 (제너릭 흰 pill 대신 — 상승장 톤과 일관) */
 .nav-cta {
-  padding: 6px 14px; background: var(--fg-primary); color: var(--bg-base);
-  border-radius: 9999px; font-size: 13px; font-weight: 500; border: none;
-  transition: background 150ms;
+  padding: 7px 16px; background: var(--red); color: #ffffff;
+  border-radius: 8px; font-size: 13px; font-weight: 600; border: none;
+  transition: background 150ms, transform 150ms;
 }
-.nav-cta:hover { background: #ffffff; }
+.nav-cta:hover { background: #ff3a5e; transform: translateY(-1px); }
+/* 로그인: 고스트 pill 대신 조용한 텍스트 링크 (헤더 2-pill 클리셰 제거) */
 .nav-ghost {
-  padding: 6px 14px; background: transparent; color: var(--fg-primary);
-  border: 1px solid var(--frost);
-  border-radius: 9999px; font-size: 13px; font-weight: 500;
-  transition: background 150ms;
+  padding: 6px 8px; background: transparent; color: var(--fg-secondary);
+  border: none; border-radius: 6px; font-size: 13px; font-weight: 500;
+  transition: color 150ms;
 }
-.nav-ghost:hover { background: rgba(255,255,255,0.06); }
+.nav-ghost:hover { color: var(--fg-primary); }
 
 /* BUTTONS */
 .btn-white {

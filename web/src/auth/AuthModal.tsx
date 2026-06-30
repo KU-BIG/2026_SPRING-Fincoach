@@ -72,7 +72,11 @@ export default function AuthModal({ initialMode }: { initialMode: AuthMode }) {
         </button>
 
         <div className="auth-brand">
-          <span className="logo"></span>FinCoach
+          <img
+            src="/logo.png"
+            alt="FinCoach"
+            style={{ height: "28px", width: "auto", display: "block" }}
+          />
         </div>
         <h2 className="auth-title">
           {mode === "login" ? "다시 오셨네요" : "지금 시작하기"}
