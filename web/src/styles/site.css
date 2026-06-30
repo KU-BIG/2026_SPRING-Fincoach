@@ -307,15 +307,49 @@ svg .spark-line.drawn, svg.spark.drawn .spark-line { stroke-dashoffset: 0; }
   tbody tr.stock-tr td:first-child::before { transition: none; }
 }
 
+/* 햄버거 + 모바일 드롭다운 (데스크탑에선 숨김) */
+.nav-burger {
+  display: none;
+  flex-direction: column; align-items: center; justify-content: center; gap: 5px;
+  width: 42px; height: 42px; padding: 0;
+  background: transparent; border: 1px solid var(--frost); border-radius: 10px;
+  cursor: pointer;
+}
+.nav-burger span {
+  display: block; width: 18px; height: 2px; border-radius: 2px;
+  background: var(--fg-primary); transition: transform 180ms, opacity 160ms;
+}
+.nav-burger span.x:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+.nav-burger span.x:nth-child(2) { opacity: 0; }
+.nav-burger span.x:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+.mobile-menu-backdrop { position: fixed; inset: 0; z-index: 48; background: rgba(0,0,0,0.45); }
+.mobile-menu {
+  position: fixed; top: 62px; left: 0; right: 0; z-index: 49;
+  background: #050507; border-bottom: 1px solid var(--frost);
+  padding: 10px 18px 20px;
+  display: flex; flex-direction: column;
+  box-shadow: 0 24px 48px -24px rgba(0,0,0,0.85);
+}
+.mobile-nav { display: flex; flex-direction: column; }
+.mobile-nav a { padding: 13px 10px; font-size: 16px; font-weight: 500; color: var(--fg-secondary); border-radius: 9px; }
+.mobile-nav a.active { color: var(--fg-primary); background: rgba(255,255,255,0.06); }
+.mobile-auth {
+  display: flex; flex-direction: column; gap: 10px;
+  margin-top: 10px; padding-top: 14px; border-top: 1px solid var(--frost-alt);
+}
+.mobile-auth .nav-user { display: flex; align-items: center; gap: 10px; padding: 6px 10px; font-size: 14px; color: var(--fg-secondary); min-width: 0; }
+.mobile-auth .nav-user-email { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.mobile-auth .nav-ghost, .mobile-auth .nav-cta { width: 100%; text-align: center; padding: 13px; font-size: 15px; border-radius: 10px; }
+
 /* 모바일 공통 */
 @media (max-width: 640px) {
   nav.menu { display: none; }
-  .nav-wrap { padding: 14px 18px; }
+  .nav-right { display: none; }
+  .nav-burger { display: inline-flex; }
+  .nav-wrap { padding: 13px 18px; }
   main { padding: 0 18px; }
   .page-head { padding: 16px 0 22px; flex-direction: column; align-items: flex-start; }
   .page-head h1 { font-size: 28px; }
-  .nav-right { gap: 4px; }
-  .nav-ghost, .nav-cta { padding: 5px 11px; font-size: 12px; }
   footer { padding: 36px 18px 24px; }
   .foot-row { grid-template-columns: 1fr 1fr; gap: 24px; }
   .grid-12 { grid-template-columns: 1fr; }

@@ -1,72 +1,93 @@
+import { useState } from "react";
 import { NavLink } from "react-router-dom";
 import { useAuth } from "../auth/context";
 
-/* /site/index.html <header> 마크업을 그대로 이식.
-   nav 링크는 React Router 로(/, /portfolio, /chat, /learn).
-   .scrolled 토글은 useSiteInteractions 가 처리한다.
-   nav-right: 인증이 구성된 실서비스 빌드에서만 실제 로그인/가입/로그아웃으로 동작.
-   데모 빌드(Supabase env 없음)는 기존 placeholder 그대로 유지. */
+/* 헤더. 데스크탑은 로고 + 가로 메뉴 + 우측 인증.
+   모바일(<=640px)은 메뉴/인증을 햄버거 드롭다운으로 접는다 — 바에 이메일을 욱여넣지 않아
+   글자 잘림이 없고, 모바일에서도 네비 이동이 된다.
+   드롭다운은 header 의 backdrop-filter/mask 에 클리핑되지 않도록 header 바깥 sibling 으로 둔다. */
 export default function Header() {
   const { configured, user, openAuth, signOut } = useAuth();
+  const [open, setOpen] = useState(false);
+  const close = () => setOpen(false);
+
+  const links = (
+    <>
+      <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : undefined)} onClick={close}>
+        홈
+      </NavLink>
+      <NavLink to="/portfolio" className={({ isActive }) => (isActive ? "active" : undefined)} onClick={close}>
+        포트폴리오
+      </NavLink>
+      <NavLink to="/chat" className={({ isActive }) => (isActive ? "active" : undefined)} onClick={close}>
+        AI 코치
+      </NavLink>
+      <NavLink to="/learn" className={({ isActive }) => (isActive ? "active" : undefined)} onClick={close}>
+        금융 용어
+      </NavLink>
+    </>
+  );
+
+  const auth = !configured ? (
+    <>
+      <button className="nav-ghost">로그인</button>
+      <NavLink to="/portfolio" className="nav-cta" onClick={close}>
+        시작하기
+      </NavLink>
+    </>
+  ) : user ? (
+    <>
+      <span className="nav-user" title={user.email ?? undefined}>
+        <span className="avatar">{(user.email ?? "?").charAt(0).toUpperCase()}</span>
+        <span className="nav-user-email">{user.email}</span>
+      </span>
+      <button className="nav-ghost" onClick={() => { signOut(); close(); }}>
+        로그아웃
+      </button>
+    </>
+  ) : (
+    <>
+      <button className="nav-ghost" onClick={() => { openAuth("login"); close(); }}>
+        로그인
+      </button>
+      <button className="nav-cta" onClick={() => { openAuth("signup"); close(); }}>
+        시작하기
+      </button>
+    </>
+  );
+
   return (
-    <header>
-      <div className="nav-wrap">
-        <div className="nav-left">
-          <NavLink to="/" className="brand" aria-label="FinCoach">
-            <img
-              src="/logo.png"
-              alt="FinCoach"
-              style={{ height: "36px", width: "auto", display: "block" }}
-            />
-          </NavLink>
-          <nav className="menu">
-            <NavLink to="/" end className={({ isActive }) => (isActive ? "active" : undefined)}>
-              홈
+    <>
+      <header>
+        <div className="nav-wrap">
+          <div className="nav-left">
+            <NavLink to="/" className="brand" aria-label="FinCoach" onClick={close}>
+              <img src="/logo.png" alt="FinCoach" style={{ height: "36px", width: "auto", display: "block" }} />
             </NavLink>
-            <NavLink
-              to="/portfolio"
-              className={({ isActive }) => (isActive ? "active" : undefined)}
-            >
-              포트폴리오
-            </NavLink>
-            <NavLink to="/chat" className={({ isActive }) => (isActive ? "active" : undefined)}>
-              AI 코치
-            </NavLink>
-            <NavLink to="/learn" className={({ isActive }) => (isActive ? "active" : undefined)}>
-              금융 용어
-            </NavLink>
-          </nav>
+            <nav className="menu">{links}</nav>
+          </div>
+          <div className="nav-right">{auth}</div>
+          <button
+            className="nav-burger"
+            aria-label="메뉴"
+            aria-expanded={open}
+            onClick={() => setOpen((v) => !v)}
+          >
+            <span className={open ? "x" : undefined}></span>
+            <span className={open ? "x" : undefined}></span>
+            <span className={open ? "x" : undefined}></span>
+          </button>
         </div>
-        <div className="nav-right">
-          {!configured ? (
-            <>
-              <button className="nav-ghost">로그인</button>
-              <NavLink to="/portfolio" className="nav-cta">
-                시작하기
-              </NavLink>
-            </>
-          ) : user ? (
-            <>
-              <span className="nav-user" title={user.email ?? undefined}>
-                <span className="avatar">{(user.email ?? "?").charAt(0).toUpperCase()}</span>
-                {user.email}
-              </span>
-              <button className="nav-ghost" onClick={() => signOut()}>
-                로그아웃
-              </button>
-            </>
-          ) : (
-            <>
-              <button className="nav-ghost" onClick={() => openAuth("login")}>
-                로그인
-              </button>
-              <button className="nav-cta" onClick={() => openAuth("signup")}>
-                시작하기
-              </button>
-            </>
-          )}
-        </div>
-      </div>
-    </header>
+      </header>
+      {open && (
+        <>
+          <div className="mobile-menu-backdrop" onClick={close} />
+          <div className="mobile-menu" role="dialog" aria-modal="true">
+            <nav className="mobile-nav">{links}</nav>
+            <div className="mobile-auth">{auth}</div>
+          </div>
+        </>
+      )}
+    </>
   );
 }
