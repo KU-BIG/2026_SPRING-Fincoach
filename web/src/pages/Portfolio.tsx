@@ -186,7 +186,18 @@ async function ensureFullCatalog(): Promise<void> {
     if (!res.ok) return;
     const data = (await res.json()) as StockCatalogItem[];
     if (Array.isArray(data) && data.length > STOCK_CATALOG.length) {
-      ACTIVE_CATALOG = data;
+      // Carry the built-in aka aliases (테슬라→TSLA, 엔비디아→NVDA, 삼전→삼성전자, ...) onto the
+      // full list, which has no aliases — otherwise Korean names for US tickers and
+      // abbreviations would stop matching once the full list loads.
+      const akaByTicker = new Map(
+        STOCK_CATALOG.filter((s) => s.aka).map((s) => [s.ticker, s.aka] as const),
+      );
+      const fullTickers = new Set(data.map((s) => s.ticker));
+      const merged: StockCatalogItem[] = data.map((s) =>
+        akaByTicker.has(s.ticker) ? { ...s, aka: akaByTicker.get(s.ticker) } : s,
+      );
+      for (const s of STOCK_CATALOG) if (!fullTickers.has(s.ticker)) merged.push(s);
+      ACTIVE_CATALOG = merged;
     }
   } catch {
     /* keep the built-in fallback */
