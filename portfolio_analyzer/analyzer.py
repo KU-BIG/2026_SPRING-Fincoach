@@ -41,6 +41,28 @@ def _holdings_to_accounts(holdings: list[dict]) -> list[Account]:
     return [Account(account_name="내 포트폴리오", holdings=parsed)]
 
 
+def _resolve_stock_data(holdings: list[dict]) -> dict:
+    """Look up quotes for user holdings. The real service (FINCOACH_LIVE_PRICES set)
+    uses yfinance live quotes; tests/offline fall back to the mock so CI never hits
+    the network. If the live lookup fails wholesale, fall back to the mock so at least
+    some values render (a per-symbol miss is handled by calculator's avg-price fallback).
+    """
+    # Live on Render (which auto-sets RENDER=1) or when explicitly enabled; mock otherwise
+    # so CI/local stay offline. RENDER covers us if the blueprint env var isn't synced.
+    if not (os.getenv("FINCOACH_LIVE_PRICES") or os.getenv("RENDER")):
+        return mock_stock_data()
+    tickers = [h.get("ticker", "") for h in holdings if h.get("ticker")]
+    if not tickers:
+        return mock_stock_data()
+    try:
+        from portfolio_analyzer.price_fetcher import fetch_stock_data
+
+        live = fetch_stock_data(tickers)
+    except Exception:
+        live = {}
+    return live or mock_stock_data()
+
+
 def get_portfolio_data(holdings: list[dict] | None = None) -> dict:
     """포트폴리오 요약 데이터 반환.
 
@@ -49,11 +71,12 @@ def get_portfolio_data(holdings: list[dict] | None = None) -> dict:
     """
     if holdings is not None:
         accounts = _holdings_to_accounts(holdings)
+        stock_data = _resolve_stock_data(holdings)
     else:
         portfolio = mock_portfolio()
         accounts = portfolio.accounts
+        stock_data = mock_stock_data()
 
-    stock_data = mock_stock_data()
     return calculate_portfolio(accounts, stock_data)
 
 

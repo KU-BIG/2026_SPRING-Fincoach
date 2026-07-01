@@ -112,7 +112,7 @@ describe("Portfolio (verbatim /site/portfolio.html 이식)", () => {
         </MemoryRouter>
       </AuthContext.Provider>,
     );
-    const tickerInput = screen.getByPlaceholderText("종목명·티커 검색 (예: 삼성, AAPL)");
+    const tickerInput = screen.getByPlaceholderText("종목명·코드·티커 (예: 삼성전자, 005930, NVDA)");
     fireEvent.change(tickerInput, { target: { value: "삼성" } });
     const options = screen.getAllByRole("option");
     expect(options.length).toBeGreaterThan(0);

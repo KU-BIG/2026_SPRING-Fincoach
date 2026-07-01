@@ -53,51 +53,161 @@ interface StockCatalogItem {
   ticker: string;
   name: string;
   currency: string;
-  aka: string;
+  aka?: string;
 }
 
 const STOCK_CATALOG: StockCatalogItem[] = [
+  // ── 코스피 대형주 (.KS) ──
   { ticker: "005930.KS", name: "삼성전자", currency: "KRW", aka: "samsung 삼전" },
   { ticker: "000660.KS", name: "SK하이닉스", currency: "KRW", aka: "sk hynix 하이닉스" },
   { ticker: "035720.KS", name: "카카오", currency: "KRW", aka: "kakao" },
   { ticker: "035420.KS", name: "NAVER", currency: "KRW", aka: "naver 네이버" },
-  { ticker: "005380.KS", name: "현대차", currency: "KRW", aka: "hyundai 현대자동차" },
+  { ticker: "005380.KS", name: "현대차", currency: "KRW", aka: "hyundai 현대자동차 현차" },
   { ticker: "000270.KS", name: "기아", currency: "KRW", aka: "kia" },
-  { ticker: "373220.KS", name: "LG에너지솔루션", currency: "KRW", aka: "lg energy solution 엘지엔솔" },
+  { ticker: "373220.KS", name: "LG에너지솔루션", currency: "KRW", aka: "lg energy solution 엘지엔솔 lgensol" },
   { ticker: "207940.KS", name: "삼성바이오로직스", currency: "KRW", aka: "samsung biologics 삼바" },
   { ticker: "068270.KS", name: "셀트리온", currency: "KRW", aka: "celltrion" },
   { ticker: "105560.KS", name: "KB금융", currency: "KRW", aka: "kb financial 케이비금융" },
   { ticker: "055550.KS", name: "신한지주", currency: "KRW", aka: "shinhan 신한금융" },
   { ticker: "005490.KS", name: "POSCO홀딩스", currency: "KRW", aka: "posco 포스코홀딩스" },
   { ticker: "051910.KS", name: "LG화학", currency: "KRW", aka: "lg chem 엘지화학" },
-  { ticker: "006400.KS", name: "삼성SDI", currency: "KRW", aka: "samsung sdi" },
-  { ticker: "012330.KS", name: "현대모비스", currency: "KRW", aka: "hyundai mobis" },
+  { ticker: "006400.KS", name: "삼성SDI", currency: "KRW", aka: "samsung sdi 삼성에스디아이" },
+  { ticker: "012330.KS", name: "현대모비스", currency: "KRW", aka: "hyundai mobis 모비스" },
+  { ticker: "028260.KS", name: "삼성물산", currency: "KRW", aka: "samsung c&t 삼성물산" },
+  { ticker: "032830.KS", name: "삼성생명", currency: "KRW", aka: "samsung life 삼성생명" },
+  { ticker: "017670.KS", name: "SK텔레콤", currency: "KRW", aka: "sk telecom skt 에스케이텔레콤" },
+  { ticker: "030200.KS", name: "KT", currency: "KRW", aka: "kt 케이티 telecom" },
+  { ticker: "066570.KS", name: "LG전자", currency: "KRW", aka: "lg electronics 엘지전자" },
+  { ticker: "009150.KS", name: "삼성전기", currency: "KRW", aka: "samsung electro-mechanics 삼성전기 semco" },
+  { ticker: "003670.KS", name: "포스코퓨처엠", currency: "KRW", aka: "posco future m 포스코케미칼 퓨처엠" },
+  { ticker: "323410.KS", name: "카카오뱅크", currency: "KRW", aka: "kakaobank 카뱅 카카오은행" },
+  { ticker: "259960.KS", name: "크래프톤", currency: "KRW", aka: "krafton 배그 pubg" },
+  { ticker: "352820.KS", name: "하이브", currency: "KRW", aka: "hybe bts 방탄 빅히트" },
+  { ticker: "034020.KS", name: "두산에너빌리티", currency: "KRW", aka: "doosan enerbility 두산중공업 원전" },
+  { ticker: "454910.KS", name: "두산로보틱스", currency: "KRW", aka: "doosan robotics 두산로봇 로보틱스" },
+  { ticker: "042700.KS", name: "한미반도체", currency: "KRW", aka: "hanmi semiconductor 한미 hbm" },
+  { ticker: "015760.KS", name: "한국전력", currency: "KRW", aka: "kepco 한전 한국전력공사" },
+  { ticker: "096770.KS", name: "SK이노베이션", currency: "KRW", aka: "sk innovation 에스케이이노베이션" },
+  { ticker: "086790.KS", name: "하나금융지주", currency: "KRW", aka: "hana financial 하나금융 하나은행" },
+  { ticker: "316140.KS", name: "우리금융지주", currency: "KRW", aka: "woori financial 우리금융 우리은행" },
+  { ticker: "033780.KS", name: "KT&G", currency: "KRW", aka: "ktg 케이티앤지 담배 인삼공사" },
+  { ticker: "010130.KS", name: "고려아연", currency: "KRW", aka: "korea zinc 고려아연 zinc" },
+  { ticker: "011200.KS", name: "HMM", currency: "KRW", aka: "hmm 현대상선 해운" },
+  { ticker: "090430.KS", name: "아모레퍼시픽", currency: "KRW", aka: "amorepacific 아모레 화장품" },
+  { ticker: "018260.KS", name: "삼성에스디에스", currency: "KRW", aka: "samsung sds 삼성sds" },
+  { ticker: "010950.KS", name: "S-Oil", currency: "KRW", aka: "s-oil 에쓰오일 에스오일 정유" },
+  { ticker: "086280.KS", name: "현대글로비스", currency: "KRW", aka: "hyundai glovis 글로비스 물류" },
+  { ticker: "047810.KS", name: "한국항공우주", currency: "KRW", aka: "kai 한국항공우주 방산 항공우주" },
+  { ticker: "064350.KS", name: "현대로템", currency: "KRW", aka: "hyundai rotem 로템 방산 철도" },
+  { ticker: "138040.KS", name: "메리츠금융지주", currency: "KRW", aka: "meritz 메리츠금융" },
+  { ticker: "011070.KS", name: "LG이노텍", currency: "KRW", aka: "lg innotek 엘지이노텍 카메라모듈" },
+  // ── 한화 계열 + 조선/방산 (.KS) ──
+  { ticker: "042660.KS", name: "한화오션", currency: "KRW", aka: "hanwha ocean 대우조선 한화오션 조선" },
+  { ticker: "012450.KS", name: "한화에어로스페이스", currency: "KRW", aka: "hanwha aerospace 한화에어로 방산 항공" },
+  { ticker: "009830.KS", name: "한화솔루션", currency: "KRW", aka: "hanwha solutions 한화솔루션 태양광" },
+  { ticker: "272210.KS", name: "한화시스템", currency: "KRW", aka: "hanwha systems 한화시스템 방산" },
+  { ticker: "000880.KS", name: "한화", currency: "KRW", aka: "hanwha 한화그룹 지주" },
+  { ticker: "329180.KS", name: "HD현대중공업", currency: "KRW", aka: "hd hyundai heavy 현대중공업 조선" },
+  { ticker: "009540.KS", name: "HD한국조선해양", currency: "KRW", aka: "hd korea shipbuilding 한국조선해양 현대중공업지주 조선" },
+  { ticker: "010140.KS", name: "삼성중공업", currency: "KRW", aka: "samsung heavy 삼성중공업 조선" },
+  { ticker: "079550.KS", name: "LIG넥스원", currency: "KRW", aka: "lig nex1 넥스원 방산 미사일" },
+  { ticker: "077970.KS", name: "STX엔진", currency: "KRW", aka: "stx engine stx엔진 방산 엔진" },
+  // ── 코스닥 (.KQ) ──
+  { ticker: "247540.KQ", name: "에코프로비엠", currency: "KRW", aka: "ecopro bm 에코프로비엠 양극재 2차전지" },
+  { ticker: "086520.KQ", name: "에코프로", currency: "KRW", aka: "ecopro 에코프로 2차전지" },
+  { ticker: "196170.KQ", name: "알테오젠", currency: "KRW", aka: "alteogen 알테오젠 바이오" },
+  { ticker: "028300.KQ", name: "HLB", currency: "KRW", aka: "hlb 에이치엘비 바이오 리보세라닙" },
+  { ticker: "058470.KQ", name: "리노공업", currency: "KRW", aka: "leeno 리노공업 반도체 테스트" },
+  { ticker: "035900.KQ", name: "JYP Ent.", currency: "KRW", aka: "jyp 제이와이피 엔터 스트레이키즈" },
+  { ticker: "041510.KQ", name: "에스엠", currency: "KRW", aka: "sm entertainment 에스엠 sm 엔터" },
+  { ticker: "277810.KQ", name: "레인보우로보틱스", currency: "KRW", aka: "rainbow robotics 레인보우 로봇 휴머노이드" },
+  { ticker: "112040.KQ", name: "위메이드", currency: "KRW", aka: "wemade 위메이드 위믹스 게임" },
+  { ticker: "091990.KQ", name: "셀트리온헬스케어", currency: "KRW", aka: "celltrion healthcare 셀트리온헬스케어" },
+  { ticker: "078600.KQ", name: "대주전자재료", currency: "KRW", aka: "daejoo 대주전자재료 실리콘음극재" },
+  { ticker: "357780.KQ", name: "솔브레인", currency: "KRW", aka: "soulbrain 솔브레인 반도체 소재" },
+  { ticker: "066970.KQ", name: "엘앤에프", currency: "KRW", aka: "l&f 엘앤에프 양극재 2차전지" },
+  { ticker: "263750.KQ", name: "펄어비스", currency: "KRW", aka: "pearl abyss 펄어비스 검은사막 게임" },
+  { ticker: "293490.KQ", name: "카카오게임즈", currency: "KRW", aka: "kakao games 카카오게임즈 게임" },
+  { ticker: "095340.KQ", name: "ISC", currency: "KRW", aka: "isc 아이에스씨 반도체 테스트소켓" },
+  { ticker: "240810.KQ", name: "원익IPS", currency: "KRW", aka: "wonik ips 원익 반도체 장비" },
+  { ticker: "086900.KQ", name: "메디톡스", currency: "KRW", aka: "medytox 메디톡스 보톡스 바이오" },
+  // ── 미국 빅테크/성장주 (접미사 없음) ──
   { ticker: "AAPL", name: "Apple", currency: "USD", aka: "애플 apple" },
-  { ticker: "MSFT", name: "Microsoft", currency: "USD", aka: "마이크로소프트 microsoft" },
+  { ticker: "MSFT", name: "Microsoft", currency: "USD", aka: "마이크로소프트 microsoft ms" },
   { ticker: "NVDA", name: "NVIDIA", currency: "USD", aka: "엔비디아 nvidia" },
-  { ticker: "GOOGL", name: "Alphabet", currency: "USD", aka: "구글 google alphabet" },
+  { ticker: "GOOGL", name: "Alphabet", currency: "USD", aka: "구글 google alphabet 알파벳" },
   { ticker: "AMZN", name: "Amazon", currency: "USD", aka: "아마존 amazon" },
   { ticker: "META", name: "Meta", currency: "USD", aka: "메타 meta facebook 페이스북" },
   { ticker: "TSLA", name: "Tesla", currency: "USD", aka: "테슬라 tesla" },
   { ticker: "AVGO", name: "Broadcom", currency: "USD", aka: "브로드컴 broadcom" },
-  { ticker: "AMD", name: "AMD", currency: "USD", aka: "에이엠디 amd" },
+  { ticker: "AMD", name: "AMD", currency: "USD", aka: "에이엠디 amd advanced micro devices" },
   { ticker: "NFLX", name: "Netflix", currency: "USD", aka: "넷플릭스 netflix" },
   { ticker: "PLTR", name: "Palantir", currency: "USD", aka: "팔란티어 palantir" },
-  { ticker: "COIN", name: "Coinbase", currency: "USD", aka: "코인베이스 coinbase" },
+  { ticker: "COIN", name: "Coinbase", currency: "USD", aka: "코인베이스 coinbase 코인" },
   { ticker: "CPNG", name: "Coupang", currency: "USD", aka: "쿠팡 coupang" },
-  { ticker: "TSM", name: "TSMC", currency: "USD", aka: "tsmc 티에스엠씨" },
+  { ticker: "TSM", name: "TSMC", currency: "USD", aka: "tsmc 티에스엠씨 대만반도체" },
   { ticker: "QCOM", name: "Qualcomm", currency: "USD", aka: "퀄컴 qualcomm" },
+  { ticker: "INTC", name: "Intel", currency: "USD", aka: "인텔 intel" },
+  { ticker: "MU", name: "Micron", currency: "USD", aka: "마이크론 micron" },
+  { ticker: "ARM", name: "Arm Holdings", currency: "USD", aka: "arm 암홀딩스 암" },
+  { ticker: "SMCI", name: "Super Micro", currency: "USD", aka: "슈퍼마이크로 supermicro smci" },
+  { ticker: "CRM", name: "Salesforce", currency: "USD", aka: "세일즈포스 salesforce" },
+  { ticker: "ORCL", name: "Oracle", currency: "USD", aka: "오라클 oracle" },
+  { ticker: "ADBE", name: "Adobe", currency: "USD", aka: "어도비 adobe" },
+  { ticker: "UBER", name: "Uber", currency: "USD", aka: "우버 uber" },
+  { ticker: "DIS", name: "Disney", currency: "USD", aka: "디즈니 disney" },
+  { ticker: "PYPL", name: "PayPal", currency: "USD", aka: "페이팔 paypal" },
+  { ticker: "SHOP", name: "Shopify", currency: "USD", aka: "쇼피파이 shopify" },
+  { ticker: "MSTR", name: "MicroStrategy", currency: "USD", aka: "마이크로스트래티지 microstrategy 비트코인" },
+  { ticker: "JPM", name: "JPMorgan", currency: "USD", aka: "제이피모건 jpmorgan jp모건" },
+  { ticker: "BRK-B", name: "Berkshire Hathaway", currency: "USD", aka: "버크셔 berkshire 워런버핏 buffett" },
+  { ticker: "V", name: "Visa", currency: "USD", aka: "비자 visa" },
+  { ticker: "KO", name: "Coca-Cola", currency: "USD", aka: "코카콜라 coca cola 코카" },
+  { ticker: "LLY", name: "Eli Lilly", currency: "USD", aka: "일라이릴리 eli lilly 릴리 비만치료제" },
+  { ticker: "COST", name: "Costco", currency: "USD", aka: "코스트코 costco" },
+  // ── 미국 대표 ETF (접미사 없음) ──
+  { ticker: "SPY", name: "SPDR S&P 500 ETF", currency: "USD", aka: "spy 에스앤피 s&p500 sp500 spdr etf" },
+  { ticker: "QQQ", name: "Invesco QQQ", currency: "USD", aka: "qqq 나스닥100 nasdaq 큐큐큐 etf" },
+  { ticker: "VOO", name: "Vanguard S&P 500 ETF", currency: "USD", aka: "voo 뱅가드 vanguard s&p500 etf" },
+  { ticker: "SCHD", name: "Schwab US Dividend ETF", currency: "USD", aka: "schd 슈드 배당 dividend etf" },
 ];
 
-function searchCatalog(query: string, limit = 6): StockCatalogItem[] {
+/* STOCK_CATALOG is a fast built-in fallback; on first use we load the full
+   KOSPI+KOSDAQ+US list (web/public/stocks.json, ~2,800 names) so almost any listed
+   stock is searchable. If the fetch fails we keep the built-in list. */
+let ACTIVE_CATALOG: StockCatalogItem[] = STOCK_CATALOG;
+let catalogLoadStarted = false;
+
+async function ensureFullCatalog(): Promise<void> {
+  if (catalogLoadStarted) return;
+  catalogLoadStarted = true;
+  try {
+    const res = await fetch("/stocks.json");
+    if (!res.ok) return;
+    const data = (await res.json()) as StockCatalogItem[];
+    if (Array.isArray(data) && data.length > STOCK_CATALOG.length) {
+      ACTIVE_CATALOG = data;
+    }
+  } catch {
+    /* keep the built-in fallback */
+  }
+}
+
+function searchCatalog(query: string, limit = 8): StockCatalogItem[] {
   const q = query.trim().toLowerCase();
   if (!q) return [];
-  return STOCK_CATALOG.filter(
-    (s) =>
-      s.ticker.toLowerCase().includes(q) ||
-      s.name.toLowerCase().includes(q) ||
-      s.aka.toLowerCase().includes(q),
-  ).slice(0, limit);
+  // Rank prefix matches (name/ticker) above substring matches so "삼성" surfaces 삼성전자 first.
+  const hits: { item: StockCatalogItem; rank: number }[] = [];
+  for (const s of ACTIVE_CATALOG) {
+    const name = s.name.toLowerCase();
+    const ticker = s.ticker.toLowerCase();
+    let rank = -1;
+    if (name.startsWith(q) || ticker.startsWith(q)) rank = 0;
+    else if (name.includes(q) || ticker.includes(q) || (s.aka ?? "").toLowerCase().includes(q)) rank = 1;
+    if (rank >= 0) hits.push({ item: s, rank });
+  }
+  hits.sort((a, b) => a.rank - b.rank);
+  return hits.slice(0, limit).map((h) => h.item);
 }
 
 /* ── helpers ──────────────────────────────────────────────────────────────── */
@@ -146,6 +256,13 @@ function HoldingsForm({
   /* 자동완성 드롭다운 상태: 어느 행/어느 칼럼(ticker|name)에서 열렸는지 + 검색어 */
   const [openAt, setOpenAt] = useState<{ row: number; field: "ticker" | "name" } | null>(null);
   const wrapRef = useRef<HTMLElement | null>(null);
+
+  /* 전체 종목 목록(stocks.json)을 폼이 처음 뜰 때 한 번 로드. 실패하면 내장 목록 유지.
+     로드되면 리렌더를 유발해 열려 있는 드롭다운도 전체 목록으로 갱신한다. */
+  const [, setCatalogReady] = useState(false);
+  useEffect(() => {
+    ensureFullCatalog().then(() => setCatalogReady(true));
+  }, []);
 
   /* 바깥 클릭 시 드롭다운 닫기 */
   useEffect(() => {
@@ -233,7 +350,8 @@ function HoldingsForm({
         내 종목 입력
       </div>
       <div style={{ fontSize: "12px", color: "var(--fg-muted)", marginBottom: "14px" }}>
-        보유 종목을 입력하면 실제 포트폴리오 기반으로 분석합니다.
+        보유 종목을 입력하면 실제 포트폴리오 기반으로 분석합니다. 목록에 없는 종목은
+        6자리 종목코드(예: 005930)나 티커(예: NVDA)를 직접 입력하면 됩니다.
       </div>
       <table className="holdings-table" style={{ width: "100%", maxWidth: "760px", borderCollapse: "collapse" }}>
         <thead>
@@ -252,7 +370,7 @@ function HoldingsForm({
               <td style={{ padding: "4px 8px", position: "relative" }}>
                 <input
                   type="text"
-                  placeholder="종목명·티커 검색 (예: 삼성, AAPL)"
+                  placeholder="종목명·코드·티커 (예: 삼성전자, 005930, NVDA)"
                   value={r.ticker}
                   autoComplete="off"
                   onChange={(e) => {

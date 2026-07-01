@@ -24,6 +24,9 @@ services:
         value: "https://fincoach.bsghcal.com,https://fincoach-app.pages.dev"
       - key: LLM_MODEL
         value: "claude-haiku-4-5-20251001"
+      # Live yfinance quotes for user holdings. Unset => mock prices (keeps CI/local offline-safe).
+      - key: FINCOACH_LIVE_PRICES
+        value: "1"
       # Set this in the Render dashboard (Environment -> Secret). Not in repo.
       # Without it the chat/analysis endpoints return demo responses.
       - key: ANTHROPIC_API_KEY
