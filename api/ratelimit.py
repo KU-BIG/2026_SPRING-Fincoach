@@ -74,7 +74,10 @@ class RateLimitMiddleware:
         window_seconds: int | None = None,
     ) -> None:
         self.app = app
-        self.limit = limit if limit is not None else _env_int("RATE_LIMIT_LLM_PER_MIN", 20)
+        # 60/min: /api/portfolio/summary (cheap price fetch) shares this bucket with the LLM
+        # endpoints and the dashboard auto-loads it on every visit/save, so 20 was too tight for
+        # an active session. Still bounds abuse. Override with RATE_LIMIT_LLM_PER_MIN in prod.
+        self.limit = limit if limit is not None else _env_int("RATE_LIMIT_LLM_PER_MIN", 60)
         self.window = (
             window_seconds
             if window_seconds is not None
