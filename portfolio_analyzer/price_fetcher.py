@@ -10,7 +10,7 @@ in a process-local TTL cache and fetched in parallel.
 from __future__ import annotations
 
 import time
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from datetime import date
 
 from shared.models import Market, StockData
@@ -18,6 +18,11 @@ from shared.models import Market, StockData
 # ticker -> (StockData, monotonic timestamp). Shared across requests in one process.
 _CACHE: dict[str, tuple[StockData, float]] = {}
 _TTL_SECONDS = 600  # 10 min — quotes barely move intraday for this use, and it caps yfinance calls.
+# Hard cap on distinct tickers held in the cache. The TTL alone only gates reads;
+# without an eviction step the dict grows monotonically as new tickers are queried
+# (a slow memory leak). On insert we sweep expired entries and, if still over the
+# cap, drop the oldest so memory stays bounded.
+_MAX_CACHED_TICKERS = 5_000
 
 # Per-symbol network timeout and an overall wall-clock cap for one batch. yfinance has
 # no timeout of its own, so a stalled socket would otherwise pin a worker thread forever
@@ -25,6 +30,26 @@ _TTL_SECONDS = 600  # 10 min — quotes barely move intraday for this use, and i
 # which calculator handles via its avg-price fallback.
 _HISTORY_TIMEOUT_SECONDS = 8.0
 _BATCH_TIMEOUT_SECONDS = 20.0
+
+
+def _cache_store(ticker: str, stock: StockData, now: float) -> None:
+    """Insert one quote, sweeping expired entries and enforcing the size cap.
+
+    Called on the request thread (results are collected serially), so no lock is
+    needed here — the cache is only mutated from this single collection point.
+    """
+    if len(_CACHE) >= _MAX_CACHED_TICKERS:
+        # Drop everything past its TTL first (cheap, keeps hot entries).
+        expired = [k for k, (_sd, ts) in _CACHE.items() if now - ts >= _TTL_SECONDS]
+        for k in expired:
+            del _CACHE[k]
+        # If still at the cap (many fresh entries), evict oldest-first until under it.
+        if len(_CACHE) >= _MAX_CACHED_TICKERS:
+            for k in sorted(_CACHE, key=lambda k: _CACHE[k][1])[
+                : len(_CACHE) - _MAX_CACHED_TICKERS + 1
+            ]:
+                del _CACHE[k]
+    _CACHE[ticker] = (stock, now)
 
 
 def _market_for(ticker: str) -> Market:
@@ -90,21 +115,27 @@ def fetch_stock_data(tickers: list[str]) -> dict[str, StockData]:
     if to_fetch:
         pool = ThreadPoolExecutor(max_workers=min(8, len(to_fetch)))
         try:
-            # pool.map yields lazily; the timeout is enforced as we iterate. On a
-            # stall, a TimeoutError is raised and the symbols we never reached are
-            # left as misses (calculator falls back to their avg price).
-            fetched: list[StockData | None] = []
+            # Collect in COMPLETION order, not input order. pool.map yields lazily
+            # in submission order, so one slow (near-timeout) leading symbol would
+            # withhold every already-finished trailing symbol until the batch
+            # deadline, turning them into avoidable misses. as_completed hands us
+            # each result the moment it's ready; only symbols that truly don't
+            # finish within the batch deadline are left as misses (calculator
+            # falls back to their avg price).
+            futures = {pool.submit(_fetch_one, t): t for t in to_fetch}
             try:
-                for stock in pool.map(
-                    _fetch_one, to_fetch, timeout=_BATCH_TIMEOUT_SECONDS
-                ):
-                    fetched.append(stock)
+                for fut in as_completed(futures, timeout=_BATCH_TIMEOUT_SECONDS):
+                    ticker = futures[fut]
+                    try:
+                        stock = fut.result()
+                    except Exception:
+                        stock = None
+                    if stock is not None:
+                        _cache_store(ticker, stock, now)
+                        result[ticker] = stock
             except TimeoutError:
+                # Batch deadline reached — unfinished symbols stay as misses.
                 pass
-            for ticker, stock in zip(to_fetch, fetched, strict=False):
-                if stock is not None:
-                    _CACHE[ticker] = (stock, now)
-                    result[ticker] = stock
         finally:
             # Don't block the request on threads still stuck in a hung socket; let
             # them finish (or die) in the background instead of joining them here.

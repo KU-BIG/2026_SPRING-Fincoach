@@ -256,6 +256,122 @@ def _collect_sse_from_stream(lines: list[str]) -> list[dict]:
     return events
 
 
+def _parse_stream_output(chunks: list[str]) -> tuple[list[str], list[str]]:
+    """_stream_llm 이 뱉는 raw SSE 청크에서 (delta 리스트, error 리스트) 추출."""
+    deltas: list[str] = []
+    errors: list[str] = []
+    for chunk in chunks:
+        if not chunk.startswith("data: "):
+            continue
+        payload = chunk[6:].strip()
+        if payload == "[DONE]":
+            continue
+        obj = _json.loads(payload)
+        if "delta" in obj:
+            deltas.append(obj["delta"])
+        if "error" in obj:
+            errors.append(obj["error"])
+    return deltas, errors
+
+
+class _FailAfterDeltasStream:
+    """attempt 0 에서 델타 몇 개를 내보낸 뒤 스트림 중간에 예외를 던지는 mock."""
+
+    def __init__(self, deltas, exc):
+        self._deltas = deltas
+        self._exc = exc
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+    @property
+    def text_stream(self):
+        yield from self._deltas
+        raise self._exc
+
+
+class _OkStream:
+    def __init__(self, deltas):
+        self._deltas = deltas
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, *a):
+        return False
+
+    @property
+    def text_stream(self):
+        yield from self._deltas
+
+
+def test_stream_no_retry_after_partial_emit(monkeypatch):
+    """버그 재현→수정: 델타를 하나라도 emit 한 뒤 스트림이 끊기면 재시도하지
+    않는다. 재시도하면 스트림을 처음부터 다시 돌려 이미 보낸 토큰이 중복된다
+    ("안녕하안녕하세요"). 여기서는 stream() 이 정확히 1번만 호출되고, 초반
+    델타는 딱 한 번씩만 나오며, 그 뒤 에러 델타로 마감되는지 확인한다."""
+    import api.chat as chatmod
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+
+    calls = {"n": 0}
+
+    class _Client:
+        def __init__(self, *a, **k):
+            self.messages = self
+
+        def stream(self, **kwargs):
+            calls["n"] += 1
+            # attempt 0 emits two deltas then dies mid-stream.
+            return _FailAfterDeltasStream(["안녕", "하세요"], RuntimeError("mid-stream boom"))
+
+    monkeypatch.setattr(chatmod.anthropic, "Anthropic", _Client)
+
+    chunks = list(chatmod._stream_llm("sys", [], "안녕?"))
+    deltas, errors = _parse_stream_output(chunks)
+
+    # stream() 은 딱 1번만 (재시도 없음).
+    assert calls["n"] == 1
+    # 초반 델타는 각각 한 번씩만 — 중복 재전송 없음.
+    assert deltas.count("안녕") == 1
+    assert deltas.count("하세요") == 1
+    # 부분 응답을 유지한 채 에러 델타만 덧붙였다.
+    assert errors and "boom" in errors[0]
+
+
+def test_stream_retries_only_on_zero_emit_failure(monkeypatch):
+    """반대 방향 검증: 델타를 하나도 못 내보낸 초기 연결 실패는 1회 재시도한다.
+    attempt 0 은 즉시 실패, attempt 1 은 성공 → 최종 정상 델타가 나온다."""
+    import api.chat as chatmod
+
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "sk-test")
+
+    calls = {"n": 0}
+
+    class _Client:
+        def __init__(self, *a, **k):
+            self.messages = self
+
+        def stream(self, **kwargs):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                # emit 없이 즉시 실패 (초기 연결 실패 재현).
+                return _FailAfterDeltasStream([], RuntimeError("connect refused"))
+            return _OkStream(["정상", " 응답"])
+
+    monkeypatch.setattr(chatmod.anthropic, "Anthropic", _Client)
+
+    chunks = list(chatmod._stream_llm("sys", [], "안녕?"))
+    deltas, errors = _parse_stream_output(chunks)
+
+    assert calls["n"] == 2  # 재시도 발생
+    assert "".join(deltas).startswith("정상 응답")
+    assert not errors
+
+
 def test_stream_no_api_key_returns_demo_mode():
     with patch.dict("os.environ", {}, clear=True), \
             client.stream("POST", "/api/chat/stream", json={"question": "안녕"}) as res:

@@ -839,7 +839,10 @@ export default function Portfolio() {
       }
 
       if (inputs.length === 0) {
-        analysisReqRef.current++; // invalidate any in-flight analysis
+        // Invalidate BOTH in-flight requests, else a late summary response would overwrite
+        // the null we just set and the deleted dashboard would reappear.
+        analysisReqRef.current++;
+        summaryReqRef.current++;
         setUserSummary(null);
         setAnalysis(DEMO_ANALYSIS);
         setAnalysisSource("demo");

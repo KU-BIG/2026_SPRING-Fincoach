@@ -45,6 +45,30 @@ def mock_stock_data() -> dict[str, StockData]:
             return_5d=1.1,
             volatility_20d=0.015,
         ),
+        # Cover the rest of api.market DEFAULT_TICKERS so a full live-fetch outage still
+        # returns the whole requested set instead of silently dropping 000660.KS / NVDA.
+        "000660.KS": StockData(
+            ticker="000660.KS",
+            name="SK하이닉스",
+            market=Market.KR,
+            date=date.today(),
+            close=178000,
+            change_pct=2.10,
+            volume=3210000,
+            return_5d=4.5,
+            volatility_20d=0.025,
+        ),
+        "NVDA": StockData(
+            ticker="NVDA",
+            name="NVIDIA",
+            market=Market.US,
+            date=date.today(),
+            close=131.40,
+            change_pct=1.85,
+            volume=41000000,
+            return_5d=3.8,
+            volatility_20d=0.028,
+        ),
     }
 
 

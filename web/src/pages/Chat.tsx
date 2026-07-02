@@ -17,9 +17,14 @@ export default function Chat() {
   const [source, setSource] = useState<DataSource>("demo");
   const { user, loading, configured } = useAuth();
   const userRef = useRef(user);
+  // Mirror `configured` in a ref too: the Enter-key handler binds sendMessage once on mount,
+  // so a stale `configured=false` (auth still loading) would wrongly route the first message
+  // to the demo branch. The ref always reflects the latest value.
+  const configuredRef = useRef(configured);
   useEffect(() => {
     userRef.current = user;
-  }, [user]);
+    configuredRef.current = configured;
+  }, [user, configured]);
 
   const holdingsRef = useRef<HoldingInput[] | null>(null);
 
@@ -222,7 +227,7 @@ export default function Chat() {
     // 데모/비로그인은 유료 LLM 을 호출하지 않는다. 로그인해야 실시간 응답이 나가고,
     // 그래야 백엔드 Authorization 토큰 검증(401 게이트)도 통과한다. 여기서 미로그인을
     // 걸러 canned 응답을 즉시 보여줘 데모 흐름을 그대로 유지한다.
-    if (!userRef.current || !configured) {
+    if (!userRef.current || !configuredRef.current) {
       const { bubble: demoBubble, content: demoContent } = appendCoachBubble();
       swapTypingToContent(demoBubble, demoContent);
       demoContent.textContent =

@@ -9,6 +9,7 @@ POST /api/portfolio/analysis  — 유저 holdings 기반 LLM 분석
 from __future__ import annotations
 
 import math
+import threading
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, ValidationError, field_validator
@@ -18,9 +19,14 @@ from portfolio_analyzer import get_analysis_report, get_portfolio_data
 
 router = APIRouter()
 
-# 메모리 캐시 — LLM 호출은 느리므로 캐싱 (GET=데모용, POST=유저별)
+# 메모리 캐시 — LLM 호출은 느리므로 캐싱 (GET=데모용, POST=유저별).
+# 이 라우트 핸들러들은 sync def 라 anyio 스레드풀에서 병렬 실행된다. 락 없이
+# "if 캐시 None → 대입" 사이에 다른 스레드가 끼어들면 두 스레드가 모두 miss 를
+# 보고 같은 (유료) LLM 분석을 중복 호출한다. 락으로 check-compute-store 를
+# 직렬화해 유료 호출이 키당 한 번만 일어나게 한다.
 _analysis_cache_demo: dict | None = None
 _analysis_cache_user: dict[str, dict] = {}  # 캐시 키: holdings 해시
+_analysis_cache_lock = threading.Lock()
 
 
 class HoldingIn(BaseModel):
@@ -84,9 +90,14 @@ def portfolio_summary_demo() -> dict:
 @router.get("/api/portfolio/analysis")
 def portfolio_analysis_demo(force_refresh: bool = Query(default=False)) -> dict:
     global _analysis_cache_demo
-    if _analysis_cache_demo is None or force_refresh:
-        _analysis_cache_demo = get_analysis_report(force_refresh=force_refresh)
-    return _analysis_cache_demo
+    # Serialize the check-compute-store so concurrent misses don't both invoke
+    # the (paid) LLM. The report call happens inside the lock: for the demo path
+    # it's a single shared cache slot, so a brief serialization is acceptable and
+    # avoids duplicate paid calls.
+    with _analysis_cache_lock:
+        if _analysis_cache_demo is None or force_refresh:
+            _analysis_cache_demo = get_analysis_report(force_refresh=force_refresh)
+        return _analysis_cache_demo
 
 
 # ── POST (로그인 유저) ───────────────────────────────────────────────────────
@@ -122,12 +133,16 @@ async def portfolio_analysis_user(
         )
     )
 
-    if cache_key not in _analysis_cache_user or force_refresh:
-        # 캐시 크기 제한 — OOM 방지
-        if len(_analysis_cache_user) > 1000:
-            _analysis_cache_user.clear()
-        _analysis_cache_user[cache_key] = get_analysis_report(
-            force_refresh=force_refresh,
-            holdings=holdings,
-        )
-    return _analysis_cache_user[cache_key]
+    # Serialize under the shared cache lock so concurrent requests for the same
+    # cache_key don't both make the paid LLM call, and the size-cap clear doesn't
+    # race a concurrent read/write.
+    with _analysis_cache_lock:
+        if cache_key not in _analysis_cache_user or force_refresh:
+            # 캐시 크기 제한 — OOM 방지
+            if len(_analysis_cache_user) > 1000:
+                _analysis_cache_user.clear()
+            _analysis_cache_user[cache_key] = get_analysis_report(
+                force_refresh=force_refresh,
+                holdings=holdings,
+            )
+        return _analysis_cache_user[cache_key]

@@ -30,10 +30,8 @@ Demo / CI safety
 
 from __future__ import annotations
 
-import base64
-import binascii
-import json
 import os
+import threading
 import time
 
 import httpx
@@ -46,8 +44,13 @@ _CACHE_TTL_SEC = 60.0
 # Cap the cache so a flood of distinct tokens can't grow it without bound.
 _MAX_CACHED_TOKENS = 10_000
 
-# token -> (expires_at_monotonic, user_id)
+# token -> (expires_at_monotonic, user_id).
+# require_user() is a sync FastAPI dependency, so it runs in anyio's thread pool
+# and multiple requests touch this dict concurrently. Guard every read/write with
+# a lock: without it the len>cap eviction races (dict mutated during iteration)
+# and two threads can both miss + both hit Supabase for the same token.
 _verify_cache: dict[str, tuple[float, str]] = {}
+_verify_cache_lock = threading.Lock()
 
 
 class AuthUser:
@@ -84,49 +87,29 @@ def _bearer_token(authorization: str | None) -> str | None:
     return token or None
 
 
-def unverified_sub(token: str) -> str | None:
-    """Best-effort read of the JWT ``sub`` claim WITHOUT verifying the signature.
-
-    Used only as a rate-limit key. This is spoof-resistant for that purpose:
-    a forged token is rejected with 401 at the auth dependency before reaching a
-    paid handler, and a genuine token's ``sub`` cannot be altered without
-    invalidating the signature. Never use this for authorization decisions.
-    """
-    parts = token.split(".")
-    if len(parts) != 3:
-        return None
-    payload_b64 = parts[1]
-    padding = "=" * (-len(payload_b64) % 4)
-    try:
-        raw = base64.urlsafe_b64decode(payload_b64 + padding)
-        claims = json.loads(raw)
-    except (binascii.Error, ValueError, json.JSONDecodeError):
-        return None
-    sub = claims.get("sub")
-    return sub if isinstance(sub, str) and sub else None
-
-
 def _cache_get(token: str, now: float) -> str | None:
-    entry = _verify_cache.get(token)
-    if entry is None:
-        return None
-    expires_at, user_id = entry
-    if now >= expires_at:
-        _verify_cache.pop(token, None)
-        return None
-    return user_id
+    with _verify_cache_lock:
+        entry = _verify_cache.get(token)
+        if entry is None:
+            return None
+        expires_at, user_id = entry
+        if now >= expires_at:
+            _verify_cache.pop(token, None)
+            return None
+        return user_id
 
 
 def _cache_put(token: str, user_id: str, now: float) -> None:
-    if len(_verify_cache) > _MAX_CACHED_TOKENS:
-        # Drop expired entries first; if still full, clear (bounded memory beats
-        # perfect hit rate for a demo-scale service).
-        for k, (exp, _uid) in list(_verify_cache.items()):
-            if now >= exp:
-                _verify_cache.pop(k, None)
+    with _verify_cache_lock:
         if len(_verify_cache) > _MAX_CACHED_TOKENS:
-            _verify_cache.clear()
-    _verify_cache[token] = (now + _CACHE_TTL_SEC, user_id)
+            # Drop expired entries first; if still full, clear (bounded memory beats
+            # perfect hit rate for a demo-scale service).
+            for k, (exp, _uid) in list(_verify_cache.items()):
+                if now >= exp:
+                    _verify_cache.pop(k, None)
+            if len(_verify_cache) > _MAX_CACHED_TOKENS:
+                _verify_cache.clear()
+        _verify_cache[token] = (now + _CACHE_TTL_SEC, user_id)
 
 
 def _verify_with_supabase(token: str, url: str, anon: str) -> str | None:

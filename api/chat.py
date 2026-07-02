@@ -108,7 +108,14 @@ def _sse(payload: dict) -> str:
 def _stream_llm(
     system: str, history: list[MessageIn], question: str
 ) -> Generator[str, None, None]:
-    """SSE 토큰 스트림. API 키 없으면 데모 메시지 반환, LLM 실패 시 1회 재시도."""
+    """SSE 토큰 스트림. API 키 없으면 데모 메시지 반환.
+
+    재시도 정책: 델타를 한 개라도 내보낸 뒤 스트림이 끊기면 재시도하지 않는다.
+    클라이언트는 델타를 누적(acc += delta)하므로, 스트림을 처음부터 다시 돌리면
+    이미 받은 토큰이 중복 재전송돼 "안녕하안녕하세요…" 같은 중복이 생긴다.
+    그래서 재시도는 "델타 0개 상태의 초기 연결 실패"에만 허용하고, 이미 일부라도
+    내보낸 뒤 끊기면 부분 응답을 유지한 채 에러 델타만 덧붙인다.
+    """
     api_key = os.getenv("ANTHROPIC_API_KEY")
     if not api_key:
         demo = "[데모 모드] ANTHROPIC_API_KEY가 설정되지 않아 실제 LLM을 호출하지 않습니다."
@@ -122,19 +129,25 @@ def _stream_llm(
     model = os.getenv("LLM_MODEL", "claude-haiku-4-5-20251001")
 
     for attempt in range(2):
+        emitted = False
         try:
             with client.messages.stream(
                 model=model, max_tokens=1024, system=system, messages=msgs
             ) as stream:
                 for text in stream.text_stream:
+                    emitted = True
                     yield _sse({"delta": text})
             yield _sse({"delta": f"\n\n---\n{QA_DISCLAIMER}"})
             yield "data: [DONE]\n\n"
             return
         except Exception as exc:
-            if attempt == 1:
+            # Retry only a clean initial-connection failure (nothing emitted yet).
+            # If we already streamed some deltas, restarting would duplicate them
+            # on the client's accumulator — keep the partial and stop.
+            if emitted or attempt == 1:
                 yield _sse({"error": f"LLM 호출에 실패했습니다: {exc}"})
                 yield "data: [DONE]\n\n"
+                return
 
 
 # ── 엔드포인트 ─────────────────────────────────────────────────────────────

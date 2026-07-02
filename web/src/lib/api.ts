@@ -171,31 +171,45 @@ export async function streamChat(
     const decoder = new TextDecoder();
     let buf = "";
 
+    // Returns true when the stream is complete ([DONE] or an error event).
+    const handleEvent = (event: string): boolean => {
+      for (const line of event.split("\n")) {
+        const trimmed = line.trimStart();
+        if (!trimmed.startsWith("data:")) continue;
+        const payload = trimmed.slice(5).trim();
+        if (payload === "[DONE]") return true;
+        try {
+          const ev = JSON.parse(payload) as { delta?: string; error?: string };
+          if (ev.error) {
+            handlers.onError?.(ev.error);
+            return true;
+          }
+          if (ev.delta) handlers.onDelta(ev.delta);
+        } catch {
+          /* partial / non-JSON line — ignore */
+        }
+      }
+      return false;
+    };
+
     for (;;) {
       const { value, done } = await reader.read();
-      if (done) break;
-      buf += decoder.decode(value, { stream: true });
+      // stream:false on the final read flushes bytes split across a chunk boundary
+      // (mid-Korean-character), so the last glyph isn't dropped.
+      buf += decoder.decode(value, { stream: !done });
 
       let sep: number;
       while ((sep = buf.indexOf("\n\n")) >= 0) {
         const event = buf.slice(0, sep);
         buf = buf.slice(sep + 2);
-        for (const line of event.split("\n")) {
-          const trimmed = line.trimStart();
-          if (!trimmed.startsWith("data:")) continue;
-          const payload = trimmed.slice(5).trim();
-          if (payload === "[DONE]") return;
-          try {
-            const ev = JSON.parse(payload) as { delta?: string; error?: string };
-            if (ev.error) {
-              handlers.onError?.(ev.error);
-              return;
-            }
-            if (ev.delta) handlers.onDelta(ev.delta);
-          } catch {
-            /* partial / non-JSON line — ignore */
-          }
-        }
+        if (handleEvent(event)) return;
+      }
+
+      if (done) {
+        // Process a trailing event the backend closed without a final \n\n / [DONE],
+        // so the last delta isn't silently lost.
+        if (buf.trim()) handleEvent(buf);
+        return;
       }
     }
   } finally {

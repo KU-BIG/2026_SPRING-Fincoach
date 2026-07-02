@@ -29,8 +29,8 @@ _FINANCE_KEYWORDS: list[str] = [
 _NAME_TO_TICKER: dict[str, str] = {
     "삼성전자": "005930.KS",
     "SK하이닉스": "000660.KS",
-    "NAVER": "035420.KQ",
-    "카카오": "035720.KQ",
+    "NAVER": "035420.KS",
+    "카카오": "035720.KS",
     "현대차": "005380.KS",
     "Apple": "AAPL",
     "애플": "AAPL",

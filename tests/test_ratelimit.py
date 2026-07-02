@@ -68,9 +68,53 @@ def test_rate_limit_ignores_spoofed_xff() -> None:
     )
 
 
-def test_rate_limit_is_per_user_token() -> None:
-    """인증 토큰이 있으면 유저 id(JWT sub)로 버킷팅한다. 같은 IP라도 유저가
-    다르면 별개 버킷이고, 같은 유저는 한도를 공유한다."""
+def test_forged_jwt_sub_flood_is_blocked_by_ip(monkeypatch) -> None:
+    """공격 재현→방어: 미인증 요청이 매번 서로 다른 위조 JWT sub 를 보내도,
+    이 미들웨어는 (미검증) sub 를 버킷 키로 승격하지 않고 IP 로만 버킷팅하므로
+    같은 소켓 peer 로 묶여 한도에 걸려야 한다. sub 별 버킷 승격이 있었다면
+    무한히 우회돼 각 요청이 뒤단(require_user)의 Supabase 왕복을 유발했을 것이다.
+
+    미들웨어가 unverified_sub 같은 토큰 파싱을 아예 호출하지 않는지도 함께
+    확인해, 위조 sub 가 키 계산에 관여할 여지가 없음을 못박는다.
+    """
+    import base64
+    import json as _json
+
+    import api.ratelimit as rl
+
+    def _forged_token(sub: str) -> str:
+        def _b64(obj: dict) -> str:
+            raw = _json.dumps(obj).encode()
+            return base64.urlsafe_b64encode(raw).decode().rstrip("=")
+
+        return f"{_b64({'alg': 'HS256'})}.{_b64({'sub': sub})}.forgedsig"
+
+    # If any token-parsing helper is (re)introduced and called from the key path,
+    # fail loudly — the whole point is that the unverified token never influences
+    # the bucket key.
+    if hasattr(rl, "unverified_sub"):
+        monkeypatch.setattr(
+            rl, "unverified_sub",
+            lambda *_a, **_k: (_ for _ in ()).throw(
+                AssertionError("rate-limit key must not parse the unverified token")
+            ),
+        )
+
+    client = _client(limit=3)
+    # Every request forges a different sub. All share one socket peer → one bucket.
+    for i in range(3):
+        headers = {"Authorization": f"Bearer {_forged_token(f'attacker-{i}')}"}
+        assert client.post("/api/chat/stream", headers=headers).status_code == 200
+    # 4th forged-sub request over the limit → 429 (bypass blocked before any
+    # Supabase round-trip in require_user).
+    over = {"Authorization": f"Bearer {_forged_token('attacker-999')}"}
+    assert client.post("/api/chat/stream", headers=over).status_code == 429
+
+
+def test_authenticated_requests_share_ip_bucket() -> None:
+    """검증 전 단계라 유저별 버킷팅은 하지 않는다 — 같은 소켓 peer 의 요청은
+    (서로 다른 유저 토큰이라도) 하나의 IP 버킷을 공유해 한도가 적용된다.
+    유저별 세분화가 필요하면 require_user 이후 레이어에서 처리한다."""
     import base64
     import json as _json
 
@@ -84,9 +128,8 @@ def test_rate_limit_is_per_user_token() -> None:
     client = _client(limit=2)
     alice = {"Authorization": f"Bearer {_token('alice')}"}
     bob = {"Authorization": f"Bearer {_token('bob')}"}
-    for _ in range(2):
-        assert client.post("/api/chat/stream", headers=alice).status_code == 200
-    # alice 한도 초과
-    assert client.post("/api/chat/stream", headers=alice).status_code == 429
-    # bob 는 별개 버킷
+    # alice + bob share the socket-peer IP bucket.
+    assert client.post("/api/chat/stream", headers=alice).status_code == 200
     assert client.post("/api/chat/stream", headers=bob).status_code == 200
+    # 3rd request (either user) over the shared IP limit → 429.
+    assert client.post("/api/chat/stream", headers=alice).status_code == 429
