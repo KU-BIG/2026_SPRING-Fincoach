@@ -799,54 +799,43 @@ export default function Portfolio() {
     try {
       /* Supabase에 저장 (로그인 + 환경 구성 시) */
       if (user && supabase) {
-        // Prefer the atomic replace_holdings RPC (single transaction — closes the two-tab race
-        // where a stale diff-delete could remove a peer tab's just-saved row). If the migration
-        // (supabase/migrations/002_replace_holdings_rpc.sql) isn't applied yet, PostgREST returns
-        // "function not found" (PGRST202); fall back to the previous upsert + sanitized diff-delete
-        // so saving works before and after the migration. The RPC takes auth.uid() itself, so the
-        // payload carries no user_id.
-        const payload = inputs.map((h) => ({
-          ticker: h.ticker,
-          name: h.name,
-          shares: h.shares,
-          avg_price: h.avg_price,
-          currency: h.currency || "KRW",
-        }));
-        const { error: rpcError } = await supabase.rpc("replace_holdings", { p_holdings: payload });
-        const rpcMissing =
-          !!rpcError &&
-          (rpcError.code === "PGRST202" ||
-            /replace_holdings|function.*(not found|does not exist)/i.test(rpcError.message ?? ""));
-        if (rpcError && !rpcMissing) throw rpcError;
-        if (rpcMissing) {
-          // Migration not applied — fall back to the manual (non-atomic) sequence.
-          if (inputs.length > 0) {
-            const rows = payload.map((h) => ({ user_id: user.id, ...h }));
-            // Upsert first (so a delete failure can't lose data), then drop the removed holdings
-            // via a sanitized .in() diff — never a raw `not in (...)` string.
-            const { error: upsertError } = await supabase.from("holdings").upsert(rows, { onConflict: "user_id,ticker" });
-            if (upsertError) throw upsertError;
-            const keep = new Set(rows.map((r) => r.ticker));
-            const { data: existing, error: fetchError } = await supabase
+        // NOTE: an atomic replace_holdings(jsonb) RPC (supabase/migrations/002) is the real fix
+        // for the two-tab concurrent-save race, but calling a not-yet-applied function stalled the
+        // save on prod, so we keep the manual upsert + sanitized diff-delete until the migration is
+        // applied. Re-wire the RPC (with a fast fail-fast guard) only after 002 is live.
+        if (inputs.length > 0) {
+          const rows = inputs.map((h) => ({
+            user_id: user.id,
+            ticker: h.ticker,
+            name: h.name,
+            shares: h.shares,
+            avg_price: h.avg_price,
+            currency: h.currency || "KRW",
+          }));
+          // Upsert first (so a delete failure can't lose data), then drop the removed holdings via
+          // a sanitized .in() diff — never a raw `not in (...)` string. Errors are checked.
+          const { error: upsertError } = await supabase.from("holdings").upsert(rows, { onConflict: "user_id,ticker" });
+          if (upsertError) throw upsertError;
+          const keep = new Set(rows.map((r) => r.ticker));
+          const { data: existing, error: fetchError } = await supabase
+            .from("holdings")
+            .select("ticker")
+            .eq("user_id", user.id);
+          if (fetchError) throw fetchError;
+          const toDelete = (existing ?? [])
+            .map((r: { ticker: string }) => r.ticker)
+            .filter((t) => !keep.has(t));
+          if (toDelete.length) {
+            const { error: delError } = await supabase
               .from("holdings")
-              .select("ticker")
-              .eq("user_id", user.id);
-            if (fetchError) throw fetchError;
-            const toDelete = (existing ?? [])
-              .map((r: { ticker: string }) => r.ticker)
-              .filter((t) => !keep.has(t));
-            if (toDelete.length) {
-              const { error: delError } = await supabase
-                .from("holdings")
-                .delete()
-                .eq("user_id", user.id)
-                .in("ticker", toDelete);
-              if (delError) throw delError;
-            }
-          } else {
-            const { error: delAllError } = await supabase.from("holdings").delete().eq("user_id", user.id);
-            if (delAllError) throw delAllError;
+              .delete()
+              .eq("user_id", user.id)
+              .in("ticker", toDelete);
+            if (delError) throw delError;
           }
+        } else {
+          const { error: delAllError } = await supabase.from("holdings").delete().eq("user_id", user.id);
+          if (delAllError) throw delAllError;
         }
       }
 
