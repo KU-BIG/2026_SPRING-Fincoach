@@ -20,7 +20,11 @@ def _client(limit: int = 3, window: int = 60) -> TestClient:
         return {"ok": True}
 
     @app.get("/api/market/summary")
-    def _market() -> dict:  # 비-LLM — 제한 제외
+    def _market() -> dict:  # 공개 외부-fetch 엔드포인트 — 제한 대상 (#161/#162)
+        return {"ok": True}
+
+    @app.get("/api/health")
+    def _health() -> dict:  # 비-제한 prefix — 제외 대상
         return {"ok": True}
 
     return TestClient(app)
@@ -35,10 +39,25 @@ def test_llm_endpoint_blocked_after_limit() -> None:
     assert resp.headers.get("Retry-After") == "60"
 
 
-def test_non_llm_endpoint_not_limited() -> None:
+def test_non_rate_limited_endpoint_not_limited() -> None:
+    """제한 prefix 밖(/api/health)은 한도와 무관하게 통과한다."""
     client = _client(limit=2)
     for _ in range(5):
+        assert client.get("/api/health").status_code == 200
+
+
+def test_market_endpoint_blocked_after_limit() -> None:
+    """공개 GET /api/market/summary 도 IP 레이트리밋에 걸린다 (#161/#162).
+
+    require_user 없이 공개 유지하되, 무토큰 동시 GET 플러드가 yfinance/pykrx
+    스레드풀을 고갈시키지 못하도록 IP 버킷으로 한도를 건다.
+    """
+    client = _client(limit=3)
+    for _ in range(3):
         assert client.get("/api/market/summary").status_code == 200
+    resp = client.get("/api/market/summary")
+    assert resp.status_code == 429
+    assert resp.headers.get("Retry-After") == "60"
 
 
 def test_rate_limit_is_per_trusted_ip() -> None:

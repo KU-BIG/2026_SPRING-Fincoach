@@ -5,7 +5,7 @@ from unittest.mock import patch
 from fastapi.testclient import TestClient
 
 from api.main import app
-from api.market import DEFAULT_TICKERS
+from api.market import DEFAULT_TICKERS, MAX_TICKERS
 from shared.mocks import mock_market_output
 
 client = TestClient(app)
@@ -104,3 +104,52 @@ def test_post_market_summary_deduplicates_and_uppercases_tickers():
 
     assert res.status_code == 200
     mock.assert_called_once_with(["AAPL", "NVDA"])
+
+
+# ── H1/M2: 티커 개수 상한 (DoS 방지) ─────────────────────────────────────────
+
+
+def test_market_summary_at_cap_still_ok():
+    """정확히 MAX_TICKERS 개는 통과 — 경계값이 막히지 않는지 확인."""
+    tickers = ",".join(f"T{i}" for i in range(MAX_TICKERS))
+    with patch("api.market.collect_market", return_value=mock_market_output()) as mock:
+        res = client.get(f"/api/market/summary?tickers={tickers}")
+
+    assert res.status_code == 200
+    # 상한과 같은 개수의 고유 티커가 그대로 전달된다.
+    (called_arg,) = mock.call_args.args
+    assert len(called_arg) == MAX_TICKERS
+
+
+def test_market_summary_over_cap_returns_422():
+    """MAX_TICKERS 초과 요청은 422 — collect_market 를 아예 호출하지 않는다.
+
+    PoC 재현: ``?tickers=T1,...,T<huge>`` 무토큰 GET 이 스레드풀을 태우는 것을
+    막는다. 무제한 fan-out 이 외부 fetch 로 이어지기 전에 경계에서 거부한다.
+    """
+    tickers = ",".join(f"T{i}" for i in range(MAX_TICKERS + 5))
+    with patch("api.market.collect_market", return_value=mock_market_output()) as mock:
+        res = client.get(f"/api/market/summary?tickers={tickers}")
+
+    assert res.status_code == 422
+    mock.assert_not_called()
+
+
+def test_market_summary_huge_ticker_flood_rejected_before_fetch():
+    """대량 티커 플러드(2000개)도 fetch 전에 422 로 단락된다."""
+    tickers = ",".join(f"T{i}" for i in range(2000))
+    with patch("api.market.collect_market", return_value=mock_market_output()) as mock:
+        res = client.get(f"/api/market/summary?tickers={tickers}")
+
+    assert res.status_code == 422
+    mock.assert_not_called()
+
+
+def test_market_prefix_is_rate_limited():
+    """/api/market 이 IP 레이트리밋 프리픽스에 포함돼 있어야 한다 (#161/#162).
+
+    미들웨어가 붙지 않으면 무토큰 동시 GET 플러드로 스레드풀을 고갈시킬 수 있다.
+    """
+    from api.ratelimit import RATE_LIMITED_PREFIXES
+
+    assert "/api/market/summary".startswith(RATE_LIMITED_PREFIXES)

@@ -5,12 +5,13 @@ from __future__ import annotations
 import json
 import os
 from collections.abc import Generator
+from typing import Literal
 
 import anthropic
 from dotenv import load_dotenv
 from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from api.auth import AuthUser, require_user
 from api.portfolio import HoldingIn
@@ -22,17 +23,26 @@ load_dotenv()
 
 router = APIRouter()
 
+# 입력 크기 상한 (M2) — 무제한 입력으로 프롬프트/토큰 비용을 태우는 것을 막는다.
+_MAX_QUESTION_LEN = 2000
+_MAX_CONTENT_LEN = 4000
+_MAX_HISTORY_LEN = 20
+
 
 # ── 요청/응답 스키마 ────────────────────────────────────────────────────────
 
 class MessageIn(BaseModel):
-    role: str
-    content: str
+    # role 을 bare str 로 두면 클라이언트가 ``role:"system"`` 히스토리를 주입해
+    # 면책/no-매수매도 가드를 우회하는 프롬프트 인젝션(재일브레이크)이 가능하다.
+    # 클라이언트가 보낼 수 있는 role 은 user/assistant 로만 제한한다. system 은
+    # 서버가 _build_system_prompt 로만 넣는다 (H3).
+    role: Literal["user", "assistant"]
+    content: str = Field(max_length=_MAX_CONTENT_LEN)
 
 
 class ChatRequest(BaseModel):
-    question: str
-    history: list[MessageIn] = []
+    question: str = Field(max_length=_MAX_QUESTION_LEN)
+    history: list[MessageIn] = Field(default_factory=list, max_length=_MAX_HISTORY_LEN)
     holdings: list[HoldingIn] | None = None
 
 

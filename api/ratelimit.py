@@ -38,10 +38,15 @@ TRUSTED_CLIENT_IP_HEADERS: tuple[bytes, ...] = (
     b"true-client-ip",
 )
 
-# LLM을 호출하는(=비용 발생) 엔드포인트 prefix만 제한
+# 비용/자원을 태우는 엔드포인트 prefix만 제한.
 RATE_LIMITED_PREFIXES: tuple[str, ...] = (
-    "/api/chat",                # /api/chat, /api/chat/stream
+    "/api/chat",                # /api/chat, /api/chat/stream (LLM)
     "/api/portfolio/analysis",  # GET/POST 분석 (LLM)
+    # GET /api/market/summary 는 데모 대시보드용으로 인증 없이 공개돼 있어
+    # (require_user 없음) yfinance/pykrx 스레드풀을 직접 태운다. 티커 상한만으로는
+    # 무토큰 동시 GET 플러드로 스레드풀을 고갈시킬 수 있으므로, 공개 경로를
+    # 유지하되 IP 레이트리밋을 적용해 남용을 막는다 (#161/#162).
+    "/api/market",              # GET /api/market/summary (외부 데이터 fetch)
 )
 
 # IP 추적 딕셔너리 상한 — 초과 시 만료 항목 정리 (무한 증가 방지)

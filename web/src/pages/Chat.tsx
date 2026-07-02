@@ -34,20 +34,25 @@ export default function Chat() {
       holdingsRef.current = null;
       return;
     }
+    let alive = true;
     supabase
       .from("holdings")
       .select("ticker, name, shares, avg_price, currency")
       .then(({ data }) => {
-        if (data !== null) {
-          holdingsRef.current = data.map((h: { ticker: string; name: string; shares: number; avg_price: number; currency: string }) => ({
-            ticker: h.ticker,
-            name: h.name,
-            shares: h.shares,
-            avg_price: h.avg_price,
-            currency: h.currency || "KRW",
-          }));
-        }
+        // Guard a fast user A->B switch: A's late response must not write A's holdings into
+        // B's ref, where they would ride along as B's next chat context.
+        if (!alive || data === null) return;
+        holdingsRef.current = data.map((h: { ticker: string; name: string; shares: number; avg_price: number; currency: string }) => ({
+          ticker: h.ticker,
+          name: h.name,
+          shares: h.shares,
+          avg_price: h.avg_price,
+          currency: h.currency || "KRW",
+        }));
       });
+    return () => {
+      alive = false;
+    };
   }, [user]);
 
   const [conversations, setConversations] = useState<Conversation[]>([]);

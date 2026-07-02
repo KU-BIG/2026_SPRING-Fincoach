@@ -12,12 +12,20 @@ import math
 import threading
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request
-from pydantic import BaseModel, ValidationError, field_validator
+from pydantic import BaseModel, Field, ValidationError, field_validator
 
 from api.auth import AuthUser, require_user
 from portfolio_analyzer import get_analysis_report, get_portfolio_data
 
 router = APIRouter()
+
+# 입력 크기 상한 (M2) — 무제한 문자열/리스트로 메모리·계산 비용을 태우는 것을 막는다.
+_MAX_TICKER_LEN = 30
+_MAX_NAME_LEN = 80
+_MAX_HOLDINGS = 100
+# Upper magnitude bound: a finite-but-astronomical value (e.g. 1e308) passes the finite check
+# yet overflows to inf in shares*price, and round(inf) raises -> a 500. No real holding is this big.
+_MAX_NUMERIC = 1e12
 
 # 메모리 캐시 — LLM 호출은 느리므로 캐싱 (GET=데모용, POST=유저별).
 # 이 라우트 핸들러들은 sync def 라 anyio 스레드풀에서 병렬 실행된다. 락 없이
@@ -30,8 +38,8 @@ _analysis_cache_lock = threading.Lock()
 
 
 class HoldingIn(BaseModel):
-    ticker: str
-    name: str = ""
+    ticker: str = Field(max_length=_MAX_TICKER_LEN)
+    name: str = Field(default="", max_length=_MAX_NAME_LEN)
     shares: float = 0
     avg_price: float = 0
     currency: str = ""
@@ -40,15 +48,16 @@ class HoldingIn(BaseModel):
     @classmethod
     def _finite_and_non_negative(cls, v: float) -> float:
         # Pydantic accepts NaN/Infinity and negatives for a bare float. Left unchecked,
-        # NaN/Inf reach calculator.round() and raise (a 500) and negatives silently
-        # produce wrong values. Reject at the API boundary so the client gets a 422.
-        if not math.isfinite(v) or v < 0:
-            raise ValueError("must be a finite, non-negative number")
+        # NaN/Inf (and finite-but-huge values that overflow shares*price to inf) reach
+        # calculator.round() and raise (a 500); negatives silently produce wrong values.
+        # Reject at the API boundary so the client gets a 422.
+        if not math.isfinite(v) or v < 0 or v > _MAX_NUMERIC:
+            raise ValueError("must be a finite number between 0 and 1e12")
         return v
 
 
 class PortfolioRequest(BaseModel):
-    holdings: list[HoldingIn]
+    holdings: list[HoldingIn] = Field(max_length=_MAX_HOLDINGS)
 
 
 async def _parse_portfolio_request(request: Request) -> PortfolioRequest:
