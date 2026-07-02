@@ -662,6 +662,11 @@ export default function Portfolio() {
   const ranRef = useRef(false);
   const [analysis, setAnalysis] = useState<AnalysisView>(DEMO_ANALYSIS);
   const [analysisSource, setAnalysisSource] = useState<DataSource>("demo");
+  /* Latest-request guards: summary/analysis are async (the analysis is a slow LLM call) and
+     fire from more than one place, so a stale response must not overwrite a newer one.
+     Bump on send; apply the result only if it is still the latest. */
+  const analysisReqRef = useRef(0);
+  const summaryReqRef = useRef(0);
 
   /* 데모 모드: 홈 "데모 보기"(/portfolio?demo=1)에서 진입. 공유 useDemoMode 훅을 써서
      ?demo=1 또는 sessionStorage 플래그가 있으면 true가 된다(페이지 이동해도 유지되어
@@ -730,19 +735,26 @@ export default function Portfolio() {
     return () => { alive = false; };
   }, [user]);
 
-  /* holdings 로드 후 자동으로 포트폴리오 요약 + 분석 호출 */
+  /* holdings 최초 로드 시 1회만 요약 + 분석 호출. 편집 중(holdingRows 변경)에는 재호출하지
+     않는다 — 재계산은 "저장 & 분석"(handleSave)의 몫이다. 매 키입력마다 분석(느린 LLM)을
+     쏘면 이전 holdings 응답이 최신을 덮어써 분석 카드가 엉뚱한 포트폴리오를 설명하던
+     버그의 원인이었다. 시퀀스 가드로 stale 응답은 버린다. */
   useEffect(() => {
     if (!holdingsLoaded) return;
     const inputs = rowsToInputs(holdingRows);
     if (!inputs.length) return;
 
+    const sid = ++summaryReqRef.current;
     postPortfolioSummary(inputs)
-      .then(setUserSummary)
+      .then((s) => {
+        if (sid === summaryReqRef.current) setUserSummary(s);
+      })
       .catch(() => {});
 
+    const aid = ++analysisReqRef.current;
     postPortfolioAnalysis(inputs)
       .then((r) => {
-        if (!isLiveAnalysis(r)) return;
+        if (aid !== analysisReqRef.current || !isLiveAnalysis(r)) return;
         setAnalysis({
           sub: [r.portfolio_type, r.investor_match].filter(Boolean).join(" · "),
           summary: r.summary,
@@ -754,7 +766,10 @@ export default function Portfolio() {
         setAnalysisSource("live");
       })
       .catch(() => {});
-  }, [holdingsLoaded, holdingRows]);
+    // Intentionally only [holdingsLoaded]: fetch once for the saved holdings on load, not on
+    // every keystroke; handleSave recomputes on "저장 & 분석".
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [holdingsLoaded]);
 
   const handleSave = useCallback(async () => {
     const inputs = rowsToInputs(holdingRows);
@@ -789,13 +804,15 @@ export default function Portfolio() {
       }
 
       /* 포트폴리오 요약 */
+      const sid = ++summaryReqRef.current;
       const summary = await postPortfolioSummary(inputs);
-      setUserSummary(summary);
+      if (sid === summaryReqRef.current) setUserSummary(summary);
 
       /* AI 분석 */
+      const aid = ++analysisReqRef.current;
       postPortfolioAnalysis(inputs)
         .then((r) => {
-          if (!isLiveAnalysis(r)) return;
+          if (aid !== analysisReqRef.current || !isLiveAnalysis(r)) return;
           setAnalysis({
             sub: [r.portfolio_type, r.investor_match].filter(Boolean).join(" · "),
             summary: r.summary,
@@ -816,9 +833,10 @@ export default function Portfolio() {
   useEffect(() => {
     if (holdingsLoaded) return; // 유저 데이터가 있으면 POST 분석을 씀
     let alive = true;
+    const aid = ++analysisReqRef.current;
     getPortfolioAnalysis()
       .then((r) => {
-        if (!alive || !isLiveAnalysis(r)) return;
+        if (!alive || aid !== analysisReqRef.current || !isLiveAnalysis(r)) return;
         setAnalysis({
           sub: [r.portfolio_type, r.investor_match].filter(Boolean).join(" · "),
           summary: r.summary,
