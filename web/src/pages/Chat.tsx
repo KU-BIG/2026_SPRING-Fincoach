@@ -219,6 +219,19 @@ export default function Chat() {
     input.value = "";
     scrollToBottom();
 
+    // 데모/비로그인은 유료 LLM 을 호출하지 않는다. 로그인해야 실시간 응답이 나가고,
+    // 그래야 백엔드 Authorization 토큰 검증(401 게이트)도 통과한다. 여기서 미로그인을
+    // 걸러 canned 응답을 즉시 보여줘 데모 흐름을 그대로 유지한다.
+    if (!userRef.current || !configured) {
+      const { bubble: demoBubble, content: demoContent } = appendCoachBubble();
+      swapTypingToContent(demoBubble, demoContent);
+      demoContent.textContent =
+        "지금은 데모 모드예요. 로그인하면 실시간으로 답해드릴게요.";
+      setSource("demo");
+      finishCoach(demoBubble);
+      return;
+    }
+
     sendingRef.current = true;
     setSending(true);
     const prior = [...historyRef.current];

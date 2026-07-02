@@ -3,12 +3,21 @@
 import json as _json
 from unittest.mock import patch
 
+import pytest
 from fastapi.testclient import TestClient
 
+from api.auth import AuthUser, require_user
 from api.main import app
 from shared.disclaimers import QA_DISCLAIMER
 
 client = TestClient(app)
+
+
+# By default auth is DISABLED in tests (no SUPABASE_* env), so require_user()
+# returns an anonymous user and the existing POST tests below keep passing
+# without sending a token. The dedicated auth tests further down exercise the
+# enabled path (401 without a token, 200 with a valid one).
+
 
 
 # ── /api/portfolio/summary ────────────────────────────────────────────────────
@@ -343,3 +352,126 @@ def test_stream_no_holdings_field_passes_none():
         assert res.status_code == 200
 
     assert captured["holdings"] is None
+
+
+# ── 인증 게이트 (#134) — 유료 LLM/compute 엔드포인트 보호 ────────────────────
+#
+# 검증 방식: Supabase GET /auth/v1/user (apikey=anon key + Bearer token).
+# SUPABASE_URL/SUPABASE_ANON_KEY 가 있으면 auth 활성 → 토큰 없으면 401.
+# 없으면(데모/CI) auth 비활성 → 위 기존 테스트가 토큰 없이 그대로 통과.
+
+_AUTH_ENV = {"SUPABASE_URL": "https://demo.supabase.co", "SUPABASE_ANON_KEY": "anon-public-key"}
+
+
+def _reset_rate_limit() -> None:
+    """모듈 전역 client 가 누적한 레이트리밋 카운트를 비운다. 미들웨어 스택은
+    첫 요청 때 지연 생성되므로 한 번 요청을 흘려보낸 뒤 인스턴스를 찾아 리셋한다."""
+    from api.ratelimit import RateLimitMiddleware
+
+    client.get("/api/health")  # force middleware stack build
+    node = app.middleware_stack
+    while node is not None:
+        if isinstance(node, RateLimitMiddleware):
+            node._hits.clear()
+            return
+        node = getattr(node, "app", None)
+
+
+@pytest.fixture
+def _clear_auth_cache():
+    """토큰 검증 캐시 + 레이트리밋 카운트를 비워 테스트 간 격리."""
+    import api.auth as authmod
+
+    authmod._verify_cache.clear()
+    _reset_rate_limit()
+    yield
+    authmod._verify_cache.clear()
+
+
+def _fake_supabase_user_response(*, ok: bool, user_id: str = "user-123"):
+    """httpx.get 대체 — Supabase /auth/v1/user 응답을 흉내낸다."""
+
+    class _Resp:
+        status_code = 200 if ok else 401
+
+        @staticmethod
+        def json():
+            return {"id": user_id} if ok else {"error": "invalid token"}
+
+    def _get(url, headers=None, timeout=None):
+        return _Resp()
+
+    return _get
+
+
+def test_post_chat_no_token_returns_401(_clear_auth_cache):
+    """auth 활성인데 토큰 없이 POST /api/chat → 401 (LLM 호출 전에 차단)."""
+    with patch.dict("os.environ", _AUTH_ENV):
+        res = client.post("/api/chat", json={"question": "안녕"})
+    assert res.status_code == 401
+
+
+def test_post_chat_stream_no_token_returns_401(_clear_auth_cache):
+    with patch.dict("os.environ", _AUTH_ENV):
+        res = client.post("/api/chat/stream", json={"question": "안녕"})
+    assert res.status_code == 401
+
+
+def test_post_portfolio_analysis_no_token_returns_401(_clear_auth_cache):
+    with patch.dict("os.environ", _AUTH_ENV):
+        res = client.post("/api/portfolio/analysis", json={"holdings": USER_HOLDINGS})
+    assert res.status_code == 401
+
+
+def test_post_portfolio_summary_no_token_returns_401(_clear_auth_cache):
+    with patch.dict("os.environ", _AUTH_ENV):
+        res = client.post("/api/portfolio/summary", json={"holdings": USER_HOLDINGS})
+    assert res.status_code == 401
+
+
+def test_post_chat_invalid_token_returns_401(_clear_auth_cache):
+    """Supabase 가 토큰을 거부(non-200)하면 401."""
+    with patch.dict("os.environ", _AUTH_ENV), \
+            patch("api.auth.httpx.get", _fake_supabase_user_response(ok=False)):
+        res = client.post(
+            "/api/chat",
+            json={"question": "안녕"},
+            headers={"Authorization": "Bearer bogus"},
+        )
+    assert res.status_code == 401
+
+
+def test_post_chat_valid_token_returns_200(_clear_auth_cache):
+    """Supabase 가 토큰을 승인하면(200 + user id) 통과 → LLM(mock) 200."""
+    with patch.dict("os.environ", _AUTH_ENV), \
+            patch("api.auth.httpx.get", _fake_supabase_user_response(ok=True)), \
+            patch("api.chat._call_llm", return_value="답변"):
+        res = client.post(
+            "/api/chat",
+            json={"question": "안녕"},
+            headers={"Authorization": "Bearer good-token"},
+        )
+    assert res.status_code == 200
+    assert "답변" in res.json()["answer"]
+
+
+def test_post_portfolio_analysis_valid_token_via_override(_clear_auth_cache):
+    """dependency_overrides 로 가짜 유저 주입 → 토큰 왕복 없이 200."""
+    app.dependency_overrides[require_user] = lambda: AuthUser("test-user")
+    try:
+        with patch.dict("os.environ", _AUTH_ENV), \
+                patch("api.portfolio.get_analysis_report", return_value=MOCK_ANALYSIS):
+            res = client.post("/api/portfolio/analysis", json={"holdings": USER_HOLDINGS})
+        assert res.status_code == 200
+        assert "summary" in res.json()
+    finally:
+        app.dependency_overrides.pop(require_user, None)
+
+
+def test_demo_get_endpoints_stay_public(_clear_auth_cache):
+    """데모 GET 은 auth 활성이어도 토큰 없이 공개 200 이어야 한다."""
+    with patch.dict("os.environ", _AUTH_ENV):
+        assert client.get("/api/portfolio/summary").status_code == 200
+        with patch("api.portfolio.get_analysis_report", return_value=MOCK_ANALYSIS):
+            assert client.get("/api/portfolio/analysis").status_code == 200
+        assert client.get("/api/market/summary").status_code == 200

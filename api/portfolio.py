@@ -10,9 +10,10 @@ from __future__ import annotations
 
 import math
 
-from fastapi import APIRouter, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from pydantic import BaseModel, ValidationError, field_validator
 
+from api.auth import AuthUser, require_user
 from portfolio_analyzer import get_analysis_report, get_portfolio_data
 
 router = APIRouter()
@@ -91,7 +92,9 @@ def portfolio_analysis_demo(force_refresh: bool = Query(default=False)) -> dict:
 # ── POST (로그인 유저) ───────────────────────────────────────────────────────
 
 @router.post("/api/portfolio/summary")
-async def portfolio_summary_user(request: Request) -> dict:
+async def portfolio_summary_user(
+    request: Request, _user: AuthUser = Depends(require_user)
+) -> dict:
     req = await _parse_portfolio_request(request)
     holdings = [h.model_dump() for h in req.holdings]
     data = get_portfolio_data(holdings=holdings)
@@ -105,6 +108,7 @@ async def portfolio_summary_user(request: Request) -> dict:
 async def portfolio_analysis_user(
     request: Request,
     force_refresh: bool = Query(default=False),
+    _user: AuthUser = Depends(require_user),
 ) -> dict:
     req = await _parse_portfolio_request(request)
     holdings = [h.model_dump() for h in req.holdings]

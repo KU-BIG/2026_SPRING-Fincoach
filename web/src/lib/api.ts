@@ -4,9 +4,22 @@
    tunnel URL to enable live data; otherwise every call fails fast and the
    caller falls back to the demo showcase. */
 
+import { supabase } from "./supabase";
+
 const API_BASE = import.meta.env.VITE_API_BASE ?? "";
 
 export type DataSource = "live" | "demo";
+
+/* Bearer token for the paid (LLM/compute) endpoints. Returns the logged-in
+   user's Supabase access token, or "" when not configured / not signed in
+   (the demo build has no supabase client, so this is always ""). The backend
+   requires this on POST chat/analysis/summary when Supabase auth is enabled. */
+async function authHeader(): Promise<Record<string, string>> {
+  if (!supabase) return {};
+  const { data } = await supabase.auth.getSession();
+  const token = data.session?.access_token;
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
 
 export interface Position {
   ticker: string;
@@ -74,7 +87,11 @@ export interface HoldingInput {
 async function postJSON<T>(path: string, body: unknown, timeoutMs = 5000): Promise<T> {
   const res = await fetch(API_BASE + path, {
     method: "POST",
-    headers: { "Content-Type": "application/json", Accept: "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      ...(await authHeader()),
+    },
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(timeoutMs),
   });
@@ -144,7 +161,7 @@ export async function streamChat(
   try {
     const res = await fetch(API_BASE + "/api/chat/stream", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", ...(await authHeader()) },
       body: JSON.stringify({ question, history, holdings: holdings ?? null }),
       signal: ctrl.signal,
     });

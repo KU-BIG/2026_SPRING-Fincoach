@@ -24,6 +24,21 @@ services:
         value: "https://fincoach.bsghcal.com,https://fincoach-app.pages.dev"
       - key: LLM_MODEL
         value: "claude-haiku-4-5-20251001"
+      # Supabase project URL + anon (publishable) key. Both are PUBLIC values —
+      # the anon key already ships in the web bundle and per-user security is
+      # enforced by Postgres RLS, not by hiding it. Used to verify a caller's
+      # access token via GET {SUPABASE_URL}/auth/v1/user before any paid LLM /
+      # compute call. When BOTH are set, POST chat/analysis/summary require a
+      # valid Supabase session (401 otherwise); GET demo routes stay public.
+      # When unset (e.g. before Supabase is wired up), auth is disabled and the
+      # API behaves as before. Set BOTH in the Render dashboard (sync: false) — use the
+      # same values as the frontend's VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY. They must
+      # NOT ship as placeholders here: a non-empty bad URL would activate auth against a dead
+      # host and 401 every logged-in user, so we leave them dashboard-managed (empty => off).
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_ANON_KEY
+        sync: false
       # Live yfinance quotes for user holdings. Unset => mock prices (keeps CI/local offline-safe).
       - key: FINCOACH_LIVE_PRICES
         value: "1"

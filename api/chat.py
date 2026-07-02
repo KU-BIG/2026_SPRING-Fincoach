@@ -8,10 +8,11 @@ from collections.abc import Generator
 
 import anthropic
 from dotenv import load_dotenv
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 
+from api.auth import AuthUser, require_user
 from api.portfolio import HoldingIn
 from coach_chat.context_builder import build_context
 from shared.disclaimers import QA_DISCLAIMER
@@ -139,7 +140,7 @@ def _stream_llm(
 # ── 엔드포인트 ─────────────────────────────────────────────────────────────
 
 @router.post("/api/chat", response_model=ChatResponse)
-def chat(req: ChatRequest) -> ChatResponse:
+def chat(req: ChatRequest, _user: AuthUser = Depends(require_user)) -> ChatResponse:
     history = [
         ChatMessage(role=m.role, content=m.content)  # type: ignore[arg-type]
         for m in req.history
@@ -159,7 +160,9 @@ def chat(req: ChatRequest) -> ChatResponse:
 
 
 @router.post("/api/chat/stream")
-def chat_stream(req: ChatRequest) -> StreamingResponse:
+def chat_stream(
+    req: ChatRequest, _user: AuthUser = Depends(require_user)
+) -> StreamingResponse:
     history = [
         ChatMessage(role=m.role, content=m.content)  # type: ignore[arg-type]
         for m in req.history
