@@ -139,6 +139,56 @@ def test_collect_market_fallback_when_yfinance_fails():
     assert "AAPL" in result.stock_data
 
 
+# --- market_date: 전면 outage staleness (ADR 0013 deferred) ---
+
+def test_market_date_is_weekday_on_full_outage():
+    """실시세 전면 실패(전부 mock 폴백) 시 market_date가 비거래일(주말)이 아니어야 함."""
+    with (
+        patch("market_intelligence.engine.fetch_kr_stocks", return_value={}),
+        patch("market_intelligence.engine.fetch_us_stocks", return_value={}),
+    ):
+        result = collect_market(["005930.KS", "AAPL"])
+
+    # 전면 outage → stock_data는 mock으로만 채워짐. market_date는 today가 아니라
+    # 가장 최근 평일이어야 한다 (주말이면 금요일로 back off).
+    assert result.market_date.weekday() < 5  # Mon..Fri
+
+
+def test_market_date_uses_real_date_when_available():
+    """실데이터가 있으면 market_date는 그 실데이터의 최신 날짜(max)를 쓴다."""
+    real = StockData(
+        ticker="005930.KS",
+        name="삼성전자",
+        market=Market.KR,
+        date=date(2026, 6, 5),  # 금요일
+        close=71500,
+        change_pct=1.42,
+        volume=12345678,
+        return_5d=3.2,
+    )
+    with (
+        patch(
+            "market_intelligence.engine.fetch_kr_stocks",
+            return_value={"005930.KS": real},
+        ),
+        patch("market_intelligence.engine.fetch_us_stocks", return_value={}),
+    ):
+        result = collect_market(["005930.KS", "AAPL"])
+
+    assert result.market_date == date(2026, 6, 5)
+
+
+def test_latest_weekday_backs_off_from_weekend():
+    """_latest_weekday: 주말이면 직전 금요일로 back off, 평일이면 그대로."""
+    from market_intelligence.engine import _latest_weekday
+
+    # 2026-06-06은 토요일, 2026-06-07은 일요일 → 둘 다 금요일(06-05)로.
+    assert _latest_weekday(date(2026, 6, 6)) == date(2026, 6, 5)
+    assert _latest_weekday(date(2026, 6, 7)) == date(2026, 6, 5)
+    # 평일은 그대로.
+    assert _latest_weekday(date(2026, 6, 5)) == date(2026, 6, 5)  # Friday
+
+
 # --- RSS 뉴스 경로 ---
 
 def test_fetch_news_real_data():

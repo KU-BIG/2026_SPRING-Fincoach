@@ -43,7 +43,9 @@ class MessageIn(BaseModel):
 class ChatRequest(BaseModel):
     question: str = Field(max_length=_MAX_QUESTION_LEN)
     history: list[MessageIn] = Field(default_factory=list, max_length=_MAX_HISTORY_LEN)
-    holdings: list[HoldingIn] | None = None
+    # Cap the array: holdings feed context_builder -> fetch_stock_data + collect_market, so an
+    # unbounded list is a fan-out DoS. Every other holdings input is capped; this one was not.
+    holdings: list[HoldingIn] | None = Field(default=None, max_length=100)
 
 
 class ChatResponse(BaseModel):

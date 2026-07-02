@@ -633,6 +633,18 @@ def test_chat_stream_rejects_system_role_in_history():
     assert res.status_code == 422
 
 
+def test_chat_rejects_oversized_holdings():
+    """100개 초과 holdings 는 422 — context_builder/collect_market fan-out DoS 방지."""
+    body = {
+        "question": "hi",
+        "holdings": [{"ticker": "AAPL", "shares": 1, "avg_price": 1} for _ in range(101)],
+    }
+    with patch("api.chat._call_llm", return_value="답변") as mock_llm:
+        res = client.post("/api/chat", json=body)
+    assert res.status_code == 422
+    mock_llm.assert_not_called()
+
+
 def test_chat_rejects_arbitrary_role_in_history():
     """user/assistant 이외의 임의 role(tool 등)도 거부된다."""
     body = {

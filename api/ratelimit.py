@@ -41,7 +41,7 @@ TRUSTED_CLIENT_IP_HEADERS: tuple[bytes, ...] = (
 # 비용/자원을 태우는 엔드포인트 prefix만 제한.
 RATE_LIMITED_PREFIXES: tuple[str, ...] = (
     "/api/chat",                # /api/chat, /api/chat/stream (LLM)
-    "/api/portfolio/analysis",  # GET/POST 분석 (LLM)
+    "/api/portfolio",           # /api/portfolio/summary (가격 fetch) + /analysis (LLM)
     # GET /api/market/summary 는 데모 대시보드용으로 인증 없이 공개돼 있어
     # (require_user 없음) yfinance/pykrx 스레드풀을 직접 태운다. 티커 상한만으로는
     # 무토큰 동시 GET 플러드로 스레드풀을 고갈시킬 수 있으므로, 공개 경로를
