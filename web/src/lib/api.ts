@@ -104,7 +104,8 @@ export function getPortfolioSummary(): Promise<PortfolioSummary> {
 }
 
 export function postPortfolioSummary(holdings: HoldingInput[]): Promise<PortfolioSummary> {
-  return postJSON<PortfolioSummary>("/api/portfolio/summary", { holdings });
+  // 15s (not the tight 5s default): a cold Render + live price fetch can spike past 5s.
+  return postJSON<PortfolioSummary>("/api/portfolio/summary", { holdings }, 15000);
 }
 
 /* The analysis endpoint is an LLM call (cached server-side). Without an API key

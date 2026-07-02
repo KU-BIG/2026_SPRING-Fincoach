@@ -851,10 +851,15 @@ export default function Portfolio() {
         return;
       }
 
-      /* 포트폴리오 요약 */
+      /* 포트폴리오 요약 — 실패해도 위 DB 저장은 이미 성공이므로, 이 fetch 실패를
+         "저장 실패"로 오판하지 않도록 로컬에서 삼킨다(대시보드만 이번엔 갱신 안 됨). */
       const sid = ++summaryReqRef.current;
-      const summary = await postPortfolioSummary(inputs);
-      if (sid === summaryReqRef.current) setUserSummary(summary);
+      try {
+        const summary = await postPortfolioSummary(inputs);
+        if (sid === summaryReqRef.current) setUserSummary(summary);
+      } catch {
+        /* summary fetch failed (timeout/network) — save already succeeded, so no save error */
+      }
 
       /* AI 분석 */
       const aid = ++analysisReqRef.current;
