@@ -22,20 +22,25 @@ def _holdings_to_accounts(holdings: list[dict]) -> list[Account]:
         # ticker 기반으로 currency/market 자동 판별
         ticker = h.get("ticker", "")
         if ticker.endswith(".KS") or ticker.endswith(".KQ"):
+            # Korean listings are priced in KRW. The ticker suffix is authoritative,
+            # so a client-supplied `currency` (e.g. "USD") is ignored here — trusting
+            # it would multiply an already-KRW price by the USD->KRW fx (~1400x).
             currency = "KRW"
             market = "KR"
         else:
-            currency = "USD"
+            # US listings have no suffix; honor the client currency when it is a
+            # recognized value, otherwise default to USD.
             market = "US"
+            raw_currency = h.get("currency", "")
+            currency = raw_currency if raw_currency in ("KRW", "USD") else "USD"
 
-        raw_currency = h.get("currency", "")
         parsed.append(Holding(
             name=h.get("name", ticker),
             ticker=ticker,
             market=market,
             quantity=float(h.get("shares", h.get("quantity", 0))),
             avg_price=float(h.get("avg_price", 0)),
-            currency=raw_currency if raw_currency in ("KRW", "USD") else currency,
+            currency=currency,
         ))
 
     return [Account(account_name="내 포트폴리오", holdings=parsed)]
@@ -95,6 +100,55 @@ def _fallback_analysis() -> dict:
     }
 
 
+def _first_text_block(response) -> str:
+    """Return the first text block's content from an Anthropic response.
+
+    The API may return non-text blocks (e.g. tool_use) before the text, so we can't
+    assume `content[0]` is text. Falls back to the raw first block's `text` if none
+    of the blocks carry a text type, and to an empty string when nothing matches.
+    """
+    for block in getattr(response, "content", []) or []:
+        if getattr(block, "type", None) == "text" and getattr(block, "text", None):
+            return block.text
+    first = (getattr(response, "content", None) or [None])[0]
+    return getattr(first, "text", "") or ""
+
+
+def _extract_json_object(text: str) -> str:
+    """Extract the first balanced ``{...}`` JSON object from arbitrary model text.
+
+    The model sometimes wraps JSON in a ```json fence or prepends prose, so anchoring
+    on the leading fence is fragile. Scanning for a brace-balanced span (string- and
+    escape-aware) recovers the object wherever it sits. Returns the stripped input
+    unchanged when no object is found, letting the caller's json.loads raise and the
+    outer try/except fall back cleanly.
+    """
+    depth = 0
+    start = -1
+    in_string = False
+    escaped = False
+    for i, ch in enumerate(text):
+        if in_string:
+            if escaped:
+                escaped = False
+            elif ch == "\\":
+                escaped = True
+            elif ch == '"':
+                in_string = False
+            continue
+        if ch == '"':
+            in_string = True
+        elif ch == "{":
+            if depth == 0:
+                start = i
+            depth += 1
+        elif ch == "}" and depth > 0:
+            depth -= 1
+            if depth == 0 and start != -1:
+                return text[start : i + 1]
+    return text.strip()
+
+
 def _call_llm_analysis(portfolio_data: dict) -> dict:
     """LLM에 포트폴리오 분석 요청. JSON 응답 파싱."""
     import anthropic
@@ -141,14 +195,8 @@ def _call_llm_analysis(portfolio_data: dict) -> dict:
         max_tokens=1024,
         messages=[{"role": "user", "content": prompt}],
     )
-    text = response.content[0].text.strip()
-    # LLM이 ```json ... ``` 마크다운으로 감싸는 경우 제거
-    if text.startswith("```"):
-        text = text.split("```")[1]
-        if text.startswith("json"):
-            text = text[4:]
-        text = text.strip()
-    parsed = json.loads(text)
+    text = _first_text_block(response)
+    parsed = json.loads(_extract_json_object(text))
     parsed["disclaimer"] = REPORT_DISCLAIMER
     return parsed
 

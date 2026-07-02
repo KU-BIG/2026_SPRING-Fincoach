@@ -19,6 +19,13 @@ from shared.models import Market, StockData
 _CACHE: dict[str, tuple[StockData, float]] = {}
 _TTL_SECONDS = 600  # 10 min — quotes barely move intraday for this use, and it caps yfinance calls.
 
+# Per-symbol network timeout and an overall wall-clock cap for one batch. yfinance has
+# no timeout of its own, so a stalled socket would otherwise pin a worker thread forever
+# and eventually exhaust FastAPI's thread pool. Timed-out symbols are treated as misses,
+# which calculator handles via its avg-price fallback.
+_HISTORY_TIMEOUT_SECONDS = 8.0
+_BATCH_TIMEOUT_SECONDS = 20.0
+
 
 def _market_for(ticker: str) -> Market:
     return Market.KR if ticker.endswith((".KS", ".KQ")) else Market.US
@@ -38,12 +45,12 @@ def _fetch_one(ticker: str) -> StockData | None:
 
     norm = _normalize(ticker)
     try:
-        hist = yf.Ticker(norm).history(period="5d")
+        hist = yf.Ticker(norm).history(period="5d", timeout=_HISTORY_TIMEOUT_SECONDS)
         closes = hist["Close"].dropna()
         # A KOSPI miss for a 6-digit code may actually be a KOSDAQ symbol — retry with .KQ.
         if len(closes) == 0 and norm.endswith(".KS"):
             norm = norm[:-3] + ".KQ"
-            hist = yf.Ticker(norm).history(period="5d")
+            hist = yf.Ticker(norm).history(period="5d", timeout=_HISTORY_TIMEOUT_SECONDS)
             closes = hist["Close"].dropna()
         if len(closes) == 0:
             return None
@@ -81,10 +88,25 @@ def fetch_stock_data(tickers: list[str]) -> dict[str, StockData]:
             to_fetch.append(t)
 
     if to_fetch:
-        with ThreadPoolExecutor(max_workers=min(8, len(to_fetch))) as pool:
-            fetched = list(pool.map(_fetch_one, to_fetch))
-        for ticker, stock in zip(to_fetch, fetched, strict=False):
-            if stock is not None:
-                _CACHE[ticker] = (stock, now)
-                result[ticker] = stock
+        pool = ThreadPoolExecutor(max_workers=min(8, len(to_fetch)))
+        try:
+            # pool.map yields lazily; the timeout is enforced as we iterate. On a
+            # stall, a TimeoutError is raised and the symbols we never reached are
+            # left as misses (calculator falls back to their avg price).
+            fetched: list[StockData | None] = []
+            try:
+                for stock in pool.map(
+                    _fetch_one, to_fetch, timeout=_BATCH_TIMEOUT_SECONDS
+                ):
+                    fetched.append(stock)
+            except TimeoutError:
+                pass
+            for ticker, stock in zip(to_fetch, fetched, strict=False):
+                if stock is not None:
+                    _CACHE[ticker] = (stock, now)
+                    result[ticker] = stock
+        finally:
+            # Don't block the request on threads still stuck in a hung socket; let
+            # them finish (or die) in the background instead of joining them here.
+            pool.shutdown(wait=False)
     return result

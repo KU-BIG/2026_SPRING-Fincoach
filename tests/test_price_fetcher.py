@@ -65,6 +65,34 @@ def test_get_portfolio_data_live_path_uses_fetched_price(monkeypatch):
     assert pos["pnl_pct"] == 100.0
 
 
+def test_fetch_stock_data_timeout_yields_misses(monkeypatch):
+    """A stalled fetch must not hang the batch: slow symbols are dropped as misses.
+
+    We shrink the batch timeout and make one symbol sleep past it. The slow symbol is
+    omitted (calculator would fall back to avg price) while the fast one still returns.
+    """
+    import time as _time
+
+    pf._CACHE.clear()
+    monkeypatch.setattr(pf, "_BATCH_TIMEOUT_SECONDS", 0.3)
+
+    def _slow_or_fast(t: str):
+        if t == "SLOW":
+            _time.sleep(5)  # would pin a worker forever without the timeout
+            return _fake_sd(t)
+        return _fake_sd(t)
+
+    monkeypatch.setattr(pf, "_fetch_one", _slow_or_fast)
+
+    start = _time.monotonic()
+    out = pf.fetch_stock_data(["FAST", "SLOW"])
+    elapsed = _time.monotonic() - start
+
+    # Returns promptly (well under the 5s sleep) and the slow symbol is a miss.
+    assert elapsed < 3
+    assert "SLOW" not in out
+
+
 def test_get_portfolio_data_without_env_is_offline(monkeypatch):
     """Unset env keeps the mock path (no network) so CI/local stay offline-safe."""
     monkeypatch.delenv("FINCOACH_LIVE_PRICES", raising=False)

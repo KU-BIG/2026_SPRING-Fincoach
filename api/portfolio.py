@@ -8,8 +8,10 @@ POST /api/portfolio/analysis  — 유저 holdings 기반 LLM 분석
 
 from __future__ import annotations
 
-from fastapi import APIRouter, Query
-from pydantic import BaseModel
+import math
+
+from fastapi import APIRouter, HTTPException, Query, Request
+from pydantic import BaseModel, ValidationError, field_validator
 
 from portfolio_analyzer import get_analysis_report, get_portfolio_data
 
@@ -27,9 +29,44 @@ class HoldingIn(BaseModel):
     avg_price: float = 0
     currency: str = ""
 
+    @field_validator("shares", "avg_price")
+    @classmethod
+    def _finite_and_non_negative(cls, v: float) -> float:
+        # Pydantic accepts NaN/Infinity and negatives for a bare float. Left unchecked,
+        # NaN/Inf reach calculator.round() and raise (a 500) and negatives silently
+        # produce wrong values. Reject at the API boundary so the client gets a 422.
+        if not math.isfinite(v) or v < 0:
+            raise ValueError("must be a finite, non-negative number")
+        return v
+
 
 class PortfolioRequest(BaseModel):
     holdings: list[HoldingIn]
+
+
+async def _parse_portfolio_request(request: Request) -> PortfolioRequest:
+    """Parse and validate the request body into a PortfolioRequest, returning 422 on
+    bad input.
+
+    We take the raw Request instead of binding PortfolioRequest as a parameter so that
+    a non-finite float (NaN/Infinity) never reaches FastAPI's default validation error
+    body: that body echoes the offending input and is rendered with allow_nan=False,
+    which turns a would-be 422 into a 500. Parsing here lets us reject with a clean,
+    JSON-serializable 422 message.
+    """
+    try:
+        payload = await request.json()
+    except Exception as exc:  # malformed JSON body
+        raise HTTPException(status_code=422, detail="Invalid JSON body") from exc
+    try:
+        return PortfolioRequest.model_validate(payload)
+    except ValidationError as exc:
+        # Build a payload free of non-finite float inputs so the 422 always serializes.
+        errors = [
+            {"loc": list(e.get("loc", ())), "msg": e.get("msg", "invalid value")}
+            for e in exc.errors()
+        ]
+        raise HTTPException(status_code=422, detail=errors) from exc
 
 
 # ── GET (데모/비로그인) ──────────────────────────────────────────────────────
@@ -54,7 +91,8 @@ def portfolio_analysis_demo(force_refresh: bool = Query(default=False)) -> dict:
 # ── POST (로그인 유저) ───────────────────────────────────────────────────────
 
 @router.post("/api/portfolio/summary")
-def portfolio_summary_user(req: PortfolioRequest) -> dict:
+async def portfolio_summary_user(request: Request) -> dict:
+    req = await _parse_portfolio_request(request)
     holdings = [h.model_dump() for h in req.holdings]
     data = get_portfolio_data(holdings=holdings)
     return {
@@ -64,14 +102,20 @@ def portfolio_summary_user(req: PortfolioRequest) -> dict:
 
 
 @router.post("/api/portfolio/analysis")
-def portfolio_analysis_user(
-    req: PortfolioRequest,
+async def portfolio_analysis_user(
+    request: Request,
     force_refresh: bool = Query(default=False),
 ) -> dict:
+    req = await _parse_portfolio_request(request)
     holdings = [h.model_dump() for h in req.holdings]
-    # 유저별 캐시 키: ticker+수량+단가 조합 (수량/단가 변경 시 재분석)
+    # 유저별 캐시 키: ticker+수량+단가+통화 조합 (변경 시 재분석).
+    # currency를 포함해야 통화만 다른 요청이 같은 키로 충돌하지 않는다
+    # (KR 티커는 서버가 KRW로 강제하지만 US 티커는 통화가 값에 영향을 준다).
     cache_key = ",".join(
-        sorted(f"{h['ticker']}:{h.get('shares',0)}:{h.get('avg_price',0)}" for h in holdings)
+        sorted(
+            f"{h['ticker']}:{h.get('shares', 0)}:{h.get('avg_price', 0)}:{h.get('currency', '')}"
+            for h in holdings
+        )
     )
 
     if cache_key not in _analysis_cache_user or force_refresh:

@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   stocks,
@@ -252,11 +252,13 @@ function HoldingsForm({
   setRows,
   onSave,
   saving,
+  saveError,
 }: {
   rows: HoldingRow[];
   setRows: React.Dispatch<React.SetStateAction<HoldingRow[]>>;
   onSave: () => void;
   saving: boolean;
+  saveError?: string | null;
 }) {
   const update = (i: number, field: keyof HoldingRow, value: string) => {
     setRows((prev) => prev.map((r, j) => (j === i ? { ...r, [field]: value } : r)));
@@ -270,7 +272,7 @@ function HoldingsForm({
 
   /* 전체 종목 목록(stocks.json)을 폼이 처음 뜰 때 한 번 로드. 실패하면 내장 목록 유지.
      로드되면 리렌더를 유발해 열려 있는 드롭다운도 전체 목록으로 갱신한다. */
-  const [, setCatalogReady] = useState(false);
+  const [catalogReady, setCatalogReady] = useState(false);
   useEffect(() => {
     ensureFullCatalog().then(() => setCatalogReady(true));
   }, []);
@@ -294,8 +296,13 @@ function HoldingsForm({
     setOpenAt(null);
   };
 
-  const matches =
-    openAt != null ? searchCatalog(rows[openAt.row]?.[openAt.field] ?? "") : [];
+  // Memoized so the ~2,800-item catalog scan only reruns when the query, open field, or the
+  // loaded full catalog (catalogReady) changes — not on every unrelated re-render.
+  const query = openAt != null ? rows[openAt.row]?.[openAt.field] ?? "" : "";
+  const matches = useMemo(() => {
+    void catalogReady; // re-run once the module-level full catalog (ACTIVE_CATALOG) has loaded
+    return openAt != null ? searchCatalog(query) : [];
+  }, [openAt, query, catalogReady]);
 
   const Dropdown = ({ i }: { i: number }) =>
     openAt && openAt.row === i && matches.length > 0 ? (
@@ -464,6 +471,11 @@ function HoldingsForm({
         >
           {saving ? "저장 중..." : "저장 & 분석"}
         </button>
+        {saveError && (
+          <span role="alert" style={{ fontSize: "13px", color: "var(--red)", alignSelf: "center" }}>
+            {saveError}
+          </span>
+        )}
       </div>
     </section>
   );
@@ -662,6 +674,8 @@ export default function Portfolio() {
   const ranRef = useRef(false);
   const [analysis, setAnalysis] = useState<AnalysisView>(DEMO_ANALYSIS);
   const [analysisSource, setAnalysisSource] = useState<DataSource>("demo");
+  const [analyzing, setAnalyzing] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
   /* Latest-request guards: summary/analysis are async (the analysis is a slow LLM call) and
      fire from more than one place, so a stale response must not overwrite a newer one.
      Bump on send; apply the result only if it is still the latest. */
@@ -752,9 +766,12 @@ export default function Portfolio() {
       .catch(() => {});
 
     const aid = ++analysisReqRef.current;
+    setAnalyzing(true);
     postPortfolioAnalysis(inputs)
       .then((r) => {
-        if (aid !== analysisReqRef.current || !isLiveAnalysis(r)) return;
+        if (aid !== analysisReqRef.current) return;
+        setAnalyzing(false);
+        if (!isLiveAnalysis(r)) return;
         setAnalysis({
           sub: [r.portfolio_type, r.investor_match].filter(Boolean).join(" · "),
           summary: r.summary,
@@ -765,15 +782,20 @@ export default function Portfolio() {
         });
         setAnalysisSource("live");
       })
-      .catch(() => {});
+      .catch(() => {
+        if (aid === analysisReqRef.current) setAnalyzing(false);
+      });
     // Intentionally only [holdingsLoaded]: fetch once for the saved holdings on load, not on
     // every keystroke; handleSave recomputes on "저장 & 분석".
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [holdingsLoaded]);
 
   const handleSave = useCallback(async () => {
-    const inputs = rowsToInputs(holdingRows);
+    // De-dupe by ticker (last wins) — the same ticker in two rows would make the upsert hit
+    // the same conflict target twice ("cannot affect row a second time") and fail the whole save.
+    const inputs = [...new Map(rowsToInputs(holdingRows).map((h) => [h.ticker, h])).values()];
     setSaving(true);
+    setSaveError(null);
     try {
       /* Supabase에 저장 (로그인 + 환경 구성 시) */
       if (user && supabase) {
@@ -786,20 +808,42 @@ export default function Portfolio() {
             avg_price: h.avg_price,
             currency: h.currency || "KRW",
           }));
-          // upsert 먼저, delete 나중에 (실패 시 데이터 유실 방지)
-          await supabase.from("holdings").upsert(rows, { onConflict: "user_id,ticker" });
-          const keepTickers = rows.map((r) => r.ticker);
-          await supabase.from("holdings").delete().eq("user_id", user.id).not("ticker", "in", `(${keepTickers.join(",")})`);
+          // Upsert first (so a delete failure can't lose data), then drop the removed holdings.
+          // Delete via a sanitized .in() diff — NOT a raw `not in (...)` string: real tickers
+          // contain '.'/'-' and user-typed ones can contain commas/parens/quotes that break
+          // unquoted PostgREST syntax and delete the wrong rows. Errors are checked, not swallowed.
+          const { error: upsertError } = await supabase.from("holdings").upsert(rows, { onConflict: "user_id,ticker" });
+          if (upsertError) throw upsertError;
+          const keep = new Set(rows.map((r) => r.ticker));
+          const { data: existing, error: fetchError } = await supabase
+            .from("holdings")
+            .select("ticker")
+            .eq("user_id", user.id);
+          if (fetchError) throw fetchError;
+          const toDelete = (existing ?? [])
+            .map((r: { ticker: string }) => r.ticker)
+            .filter((t) => !keep.has(t));
+          if (toDelete.length) {
+            const { error: delError } = await supabase
+              .from("holdings")
+              .delete()
+              .eq("user_id", user.id)
+              .in("ticker", toDelete);
+            if (delError) throw delError;
+          }
         } else {
           // 전체 삭제
-          await supabase.from("holdings").delete().eq("user_id", user.id);
+          const { error: delAllError } = await supabase.from("holdings").delete().eq("user_id", user.id);
+          if (delAllError) throw delAllError;
         }
       }
 
       if (inputs.length === 0) {
+        analysisReqRef.current++; // invalidate any in-flight analysis
         setUserSummary(null);
         setAnalysis(DEMO_ANALYSIS);
         setAnalysisSource("demo");
+        setAnalyzing(false);
         return;
       }
 
@@ -810,9 +854,12 @@ export default function Portfolio() {
 
       /* AI 분석 */
       const aid = ++analysisReqRef.current;
+      setAnalyzing(true);
       postPortfolioAnalysis(inputs)
         .then((r) => {
-          if (aid !== analysisReqRef.current || !isLiveAnalysis(r)) return;
+          if (aid !== analysisReqRef.current) return;
+          setAnalyzing(false);
+          if (!isLiveAnalysis(r)) return;
           setAnalysis({
             sub: [r.portfolio_type, r.investor_match].filter(Boolean).join(" · "),
             summary: r.summary,
@@ -823,7 +870,13 @@ export default function Portfolio() {
           });
           setAnalysisSource("live");
         })
-        .catch(() => {});
+        .catch(() => {
+          if (aid === analysisReqRef.current) setAnalyzing(false);
+        });
+    } catch (e) {
+      // A save error must not be swallowed — the DB write may have partially failed.
+      console.error("포트폴리오 저장 실패", e);
+      setSaveError("저장에 실패했어요. 잠시 후 다시 시도해주세요.");
     } finally {
       setSaving(false);
     }
@@ -1028,6 +1081,7 @@ export default function Portfolio() {
               setRows={setHoldingRows}
               onSave={handleSave}
               saving={saving}
+              saveError={saveError}
             />
           </div>
           {userSummary && <UserPortfolioDashboard summary={userSummary} />}
@@ -1354,7 +1408,17 @@ export default function Portfolio() {
           <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", flexWrap: "wrap", gap: "10px" }}>
             <div className="subhead" style={{ fontSize: "17px", display: "flex", alignItems: "center", gap: "10px" }}>
               AI 분석
-              <SourceBadge source={analysisSource} liveLabel="실시간 분석" demoLabel="데모 분석" />
+              {analyzing ? (
+                <span
+                  aria-live="polite"
+                  style={{ fontSize: "12px", fontWeight: 600, color: "var(--fg-secondary)", background: "var(--bg-elevated-2)", border: "1px solid var(--frost)", borderRadius: "999px", padding: "4px 12px", display: "inline-flex", alignItems: "center", gap: "6px" }}
+                >
+                  <span className="analyzing-dot" style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--red)", display: "inline-block" }} />
+                  분석 중...
+                </span>
+              ) : (
+                <SourceBadge source={analysisSource} liveLabel="실시간 분석" demoLabel="데모 분석" />
+              )}
             </div>
             {analysis.sub && (
               <div style={{ display: "flex", gap: "8px", flexWrap: "wrap" }}>

@@ -123,3 +123,65 @@ def test_get_stock_chart_custom_period():
     result = get_stock_chart("AAPL", period="3mo")
     assert result["ticker"] == "AAPL"
     assert result["period"] == "3mo"
+
+
+# --- C2: KR ticker forces KRW, client currency override ignored ---
+
+def test_kr_ticker_ignores_client_usd_currency():
+    """005930.KS(KRW) 종목에 currency=USD를 주더라도 fx가 곱해지면 안 된다.
+
+    mock 종가 71500 * 10주 = 715,000원. currency override가 먹으면 1400배(1,001,000,000)로 뻥튀기된다.
+    """
+    holdings = [
+        {"ticker": "005930.KS", "name": "삼성전자", "shares": 10, "avg_price": 70000, "currency": "USD"}
+    ]
+    data = get_portfolio_data(holdings=holdings)
+    assert data["summary"]["total_value_krw"] == 715_000
+
+
+def test_kr_ticker_currency_matches_krw_baseline():
+    """currency=USD 결과가 currency=KRW 결과와 동일해야 한다 (KR 티커는 통화 무시)."""
+    base = {"ticker": "005930.KS", "name": "삼성전자", "shares": 10, "avg_price": 70000}
+    usd = get_portfolio_data(holdings=[{**base, "currency": "USD"}])
+    krw = get_portfolio_data(holdings=[{**base, "currency": "KRW"}])
+    assert usd["summary"]["total_value_krw"] == krw["summary"]["total_value_krw"]
+
+
+def test_kq_ticker_forces_krw():
+    """.KQ(코스닥) 티커도 KRW로 강제된다."""
+    holdings = [
+        {"ticker": "247540.KQ", "name": "에코프로비엠", "shares": 2, "avg_price": 100000, "currency": "USD"}
+    ]
+    data = get_portfolio_data(holdings=holdings)
+    # 시세 없음 -> avg_price fallback: 2 * 100000 = 200,000원 (fx 미적용)
+    assert data["summary"]["total_value_krw"] == 200_000
+
+
+# --- M6: robust LLM JSON extraction ---
+
+def test_extract_json_object_plain():
+    from portfolio_analyzer.analyzer import _extract_json_object
+
+    assert _extract_json_object('{"summary": "ok"}') == '{"summary": "ok"}'
+
+
+def test_extract_json_object_with_leading_prose_and_fence():
+    import json
+
+    from portfolio_analyzer.analyzer import _extract_json_object
+
+    text = 'Here is your analysis:\n```json\n{"summary": "ok", "portfolio_type": "성장형"}\n```'
+    parsed = json.loads(_extract_json_object(text))
+    assert parsed["summary"] == "ok"
+    assert parsed["portfolio_type"] == "성장형"
+
+
+def test_extract_json_object_ignores_braces_inside_strings():
+    import json
+
+    from portfolio_analyzer.analyzer import _extract_json_object
+
+    text = 'prefix {"note": "a } brace in a string", "x": 1} suffix'
+    parsed = json.loads(_extract_json_object(text))
+    assert parsed["note"] == "a } brace in a string"
+    assert parsed["x"] == 1

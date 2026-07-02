@@ -124,6 +124,71 @@ def test_post_portfolio_empty_holdings():
     assert res.status_code == 200
 
 
+# ── C1: NaN/Inf/음수 shares·avg_price → 422 (not 500) ────────────────────────
+
+# TestClient's json= refuses to serialize NaN/Infinity, so post raw bodies the way
+# a real HTTP client (or a buggy/malicious one) would.
+_raw_client = TestClient(app, raise_server_exceptions=False)
+
+
+def _raw_post(path: str, body: str):
+    return _raw_client.post(
+        path, content=body.encode(), headers={"content-type": "application/json"}
+    )
+
+
+def test_post_portfolio_summary_rejects_nan_shares():
+    body = '{"holdings":[{"ticker":"005930.KS","name":"x","shares":NaN,"avg_price":70000}]}'
+    res = _raw_post("/api/portfolio/summary", body)
+    assert res.status_code == 422
+
+
+def test_post_portfolio_summary_rejects_inf_avg_price():
+    body = '{"holdings":[{"ticker":"005930.KS","name":"x","shares":10,"avg_price":Infinity}]}'
+    res = _raw_post("/api/portfolio/summary", body)
+    assert res.status_code == 422
+
+
+def test_post_portfolio_summary_rejects_negative_shares():
+    res = client.post(
+        "/api/portfolio/summary",
+        json={"holdings": [{"ticker": "005930.KS", "name": "x", "shares": -5, "avg_price": 70000}]},
+    )
+    assert res.status_code == 422
+
+
+def test_post_portfolio_summary_rejects_negative_avg_price():
+    res = client.post(
+        "/api/portfolio/summary",
+        json={"holdings": [{"ticker": "AAPL", "name": "x", "shares": 5, "avg_price": -10}]},
+    )
+    assert res.status_code == 422
+
+
+def test_post_portfolio_summary_accepts_valid_holdings():
+    """정상 입력은 여전히 200 (검증이 유효값을 막지 않는지 확인)."""
+    res = client.post("/api/portfolio/summary", json={"holdings": USER_HOLDINGS})
+    assert res.status_code == 200
+
+
+# ── M5: 분석 캐시키가 currency를 구분하는지 ─────────────────────────────────
+
+
+def test_post_portfolio_analysis_cache_key_distinguishes_currency():
+    """티커·수량·단가가 같고 currency만 다르면 별개로 캐시돼 재분석돼야 한다."""
+    import api.portfolio as apmod
+
+    apmod._analysis_cache_user.clear()
+    krw = {"holdings": [{"ticker": "AAPL", "shares": 5, "avg_price": 180, "currency": "KRW"}]}
+    usd = {"holdings": [{"ticker": "AAPL", "shares": 5, "avg_price": 180, "currency": "USD"}]}
+
+    with patch("api.portfolio.get_analysis_report", return_value=MOCK_ANALYSIS) as mock_fn:
+        client.post("/api/portfolio/analysis", json=krw)
+        client.post("/api/portfolio/analysis", json=usd)
+
+    assert mock_fn.call_count == 2
+
+
 # ── /api/chat ─────────────────────────────────────────────────────────────────
 
 

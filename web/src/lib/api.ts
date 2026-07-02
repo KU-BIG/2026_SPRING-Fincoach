@@ -105,9 +105,12 @@ export function postPortfolioAnalysis(
 }
 
 export function isLiveAnalysis(r: AnalysisReport): boolean {
-  return Boolean(
-    r.portfolio_type && r.portfolio_type !== "-" && (r.strengths.length || r.risks.length),
-  );
+  // A partial/null backend body must not throw here (it lands in a swallowing .catch and
+  // silently drops to demo). Guard array access before reading .length.
+  if (!r || !r.portfolio_type || r.portfolio_type === "-") return false;
+  const strengths = Array.isArray(r.strengths) ? r.strengths.length : 0;
+  const risks = Array.isArray(r.risks) ? r.risks.length : 0;
+  return strengths > 0 || risks > 0;
 }
 
 export function getMarketSummary(): Promise<MarketSummary> {
