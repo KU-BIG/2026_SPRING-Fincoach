@@ -74,10 +74,12 @@ class RateLimitMiddleware:
         window_seconds: int | None = None,
     ) -> None:
         self.app = app
-        # 60/min: /api/portfolio/summary (cheap price fetch) shares this bucket with the LLM
-        # endpoints and the dashboard auto-loads it on every visit/save, so 20 was too tight for
-        # an active session. Still bounds abuse. Override with RATE_LIMIT_LLM_PER_MIN in prod.
-        self.limit = limit if limit is not None else _env_int("RATE_LIMIT_LLM_PER_MIN", 60)
+        # 600/min: with auth disabled the bucket is keyed by IP, so a demo where several people
+        # share one venue network all count against one bucket. The dashboard also auto-loads the
+        # summary on every visit/save, so a low cap throttled the room. 600 keeps a real flood
+        # bounded while letting a demo crowd through. Turn on auth (per-user keys) and lower this
+        # via RATE_LIMIT_LLM_PER_MIN for production.
+        self.limit = limit if limit is not None else _env_int("RATE_LIMIT_LLM_PER_MIN", 600)
         self.window = (
             window_seconds
             if window_seconds is not None
