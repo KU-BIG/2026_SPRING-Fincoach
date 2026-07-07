@@ -4,6 +4,7 @@ import SourceBadge from "../components/SourceBadge";
 import LoginGate from "../components/LoginGate";
 import { useAuth } from "../auth/context";
 import { supabase } from "../lib/supabase";
+import { renderMarkdown } from "../lib/markdown";
 
 type Conversation = { id: string; title: string };
 
@@ -74,19 +75,19 @@ export default function Chat() {
     if (msgs) msgs.scrollTop = msgs.scrollHeight;
   };
 
-  const appendCoachBubble = (): { bubble: HTMLDivElement; content: HTMLSpanElement } => {
+  const appendCoachBubble = (): { bubble: HTMLDivElement; content: HTMLDivElement } => {
     const msgs = messagesRef.current!;
     const bubble = document.createElement("div");
     bubble.className = "bubble coach";
     bubble.innerHTML = '<span class="typing"><span></span><span></span><span></span></span>';
-    const content = document.createElement("span");
-    content.style.whiteSpace = "pre-wrap";
+    const content = document.createElement("div");
+    content.className = "md-content";
     msgs.appendChild(bubble);
     scrollToBottom();
     return { bubble, content };
   };
 
-  const swapTypingToContent = (bubble: HTMLDivElement, content: HTMLSpanElement) => {
+  const swapTypingToContent = (bubble: HTMLDivElement, content: HTMLDivElement) => {
     bubble.innerHTML = "";
     bubble.appendChild(content);
   };
@@ -138,12 +139,17 @@ export default function Chat() {
     for (const msg of data) {
       const bubble = document.createElement("div");
       bubble.className = `bubble ${msg.role === "user" ? "user" : "coach"}`;
-      bubble.textContent = msg.content;
       if (msg.role === "assistant") {
+        const content = document.createElement("div");
+        content.className = "md-content";
+        content.innerHTML = renderMarkdown(msg.content);
+        bubble.appendChild(content);
         const meta = document.createElement("div");
         meta.className = "meta";
         meta.textContent = "FC · 이전";
         bubble.appendChild(meta);
+      } else {
+        bubble.textContent = msg.content;
       }
       msgs.appendChild(bubble);
     }
@@ -256,7 +262,7 @@ export default function Chat() {
         swapTypingToContent(bubble, content);
         swapped = true;
       }
-      content.textContent = acc;
+      content.innerHTML = renderMarkdown(acc);
       scrollToBottom();
     };
 
