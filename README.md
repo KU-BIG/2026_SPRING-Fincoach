@@ -2,6 +2,14 @@
 
 내 포트폴리오를 아는 AI 금융 코치. KUBIG 컨퍼런스 3팀 프로젝트.
 
+## 이 repo에 대해
+
+이 repo는 [youdie006/KUBIG_conf3](https://github.com/youdie006/KUBIG_conf3)를 제출 시점 기준으로 `git push --mirror`한 아카이브 복제본입니다. 전체 브랜치와 커밋 히스토리(작성자, 날짜 포함)는 그대로 보존되어 있습니다.
+
+- **포함되지 않은 것**: PR, Issue, Wiki (git 데이터가 아니라 mirror 대상이 아님)
+- **실제 개발은 원본 repo에서 계속됩니다.** 이 repo는 특정 시점의 스냅샷이며 이후 업데이트되지 않습니다.
+- PR/Issue 논의 기록이 필요하면 원본 repo를 참고해주세요.
+
 ## 팀
 
 - 병승: 아키텍처, shared 모듈, 통합/리뷰
